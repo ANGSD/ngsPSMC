@@ -6,31 +6,47 @@
 #include "hmm_psmc.h"
 #include "compute.c"
 
-double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **PP){
-
-  /*
-  for (unsigned l = 1; l < numWind + 1; l++) //This block is needed if eimission probabilities depend on estimated parameters, e.g. on time disctretisation 
-    qi += log(emis[K][l])*fw[K][l]*bw[K][l];
-    qi /= pix;
-  */
-  double qi = 0;
-  qi += nP[1][i]*PP[1][i] + nP[2][i]*PP[2][i] + nP[3][i]*PP[3][i] + nP[4][i]*PP[4][i] + nP[5][i]*PP[5][i] + nP[6][i]*PP[6][i] + nP[7][i]*PP[7][i];
-
-  return qi;
+double addProtect3(double a,double b, double c){
+  //function does: log(exp(a)+exp(b)+exp(c)) while protecting for underflow
+  double maxVal;// = std::max(a,std::max(b,c));
+  if(a>b&&a>c)
+    maxVal=a;
+  else if(b>c)
+    maxVal=b;
+  else
+    maxVal=c;
+  double sumVal = exp(a-maxVal)+exp(b-maxVal)+exp(c-maxVal);
+  return log(sumVal) + maxVal;
 }
 
-
-void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,double rho){
-  ComputeP1(tk,tk_l,P[1],epsize,rho);
-  ComputeP5(tk,tk_l,P[5],epsize);
-  ComputeP6(tk,tk_l,P[6],epsize,rho);
-  ComputeP2(tk_l,P[2],P[5]);
-  ComputeP3(tk,tk_l,P[3],epsize,rho);
-  ComputeP4(tk,tk_l,P[4],epsize,rho);
-  ComputeP7(tk,tk_l,P[7],epsize,rho);
-  ComputeP0(tk_l,P[0],P[5]);
+double addProtect4(double a,double b, double c,double d){
+  //function does: log(exp(a)+exp(b)+exp(c)) while protecting for underflow
+  double maxVal;// = std::max(a,std::max(b,c));
+  if(a>b&&a>c&&a>d)
+    maxVal=a;
+  else if(b>a&&b>c&&b>d)
+    maxVal=b;
+  else if(c>a&&c>b&&c>d)
+    maxVal=c;
+  else
+    maxVal=d;
+  double sumVal = exp(a-maxVal)+exp(b-maxVal)+exp(c-maxVal)+exp(d-maxVal);
+  return log(sumVal) + maxVal;
 }
+double addProtectN(double a[],int len){
+  //function does: log(sum(exp(a))) while protecting for underflow
+  double maxVal = a[0];
 
+  for(int i=1;i<10;i++)
+    if(maxVal<a[i])
+      maxVal=a[i];
+
+  double sumVal = 0;
+  for(int i=1;i<10;i++)
+    sumVal += exp(a[i]-maxVal);
+
+  return log(sumVal) + maxVal;
+}
 double addProtect2(double a,double b){
   //function does: log(exp(a)+exp(b)) while protecting for underflow
   double maxVal;// = std::max(a,b));
@@ -57,6 +73,38 @@ void printmatrix(FILE *fp,double **mat,int x,int y){
   }
 
 }
+
+double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **PP){
+
+  /*
+  for (unsigned l = 1; l < numWind + 1; l++) //This block is needed if eimission probabilities depend on estimated parameters, e.g. on time disctretisation 
+    qi += log(emis[K][l])*fw[K][l]*bw[K][l];
+    qi /= pix;
+  */
+  double qi[7];
+  qi[0] = nP[1][i]+PP[1][i];
+  qi[1] = nP[2][i]+PP[2][i];
+  qi[2] = nP[3][i]+PP[3][i];
+  qi[3] = nP[4][i]+PP[4][i];
+  qi[4] = nP[5][i]+PP[5][i];
+  qi[5] = nP[6][i]+PP[6][i];
+  qi[6] = nP[7][i]+PP[7][i];
+
+  return addProtectN(qi,7);
+}
+
+
+void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,double rho){
+  ComputeP1(tk,tk_l,P[1],epsize,rho);
+  ComputeP5(tk,tk_l,P[5],epsize);
+  ComputeP6(tk,tk_l,P[6],epsize,rho);
+  ComputeP2(tk_l,P[2],P[5]);
+  ComputeP3(tk,tk_l,P[3],epsize,rho);
+  ComputeP4(tk,tk_l,P[4],epsize,rho);
+  ComputeP7(tk,tk_l,P[7],epsize,rho);
+  ComputeP0(tk_l,P[0],P[5]);
+}
+
 
 
 void ComputeSW(int maxTime,double W[],double sW[]){
@@ -114,7 +162,7 @@ void setEPSize(double *ary,int l,double *from_infile){
 void fastPSMC::calculate_FW_BW_PP_Probs(){
     //we first set the initial fwprobs to stationary distribution
     for(int i=0;i<tk_l;i++)
-      fw[i][0] =stationary[i];
+      fw[i][0] = stationary[i];
 
   
 
@@ -122,25 +170,18 @@ void fastPSMC::calculate_FW_BW_PP_Probs(){
     //v=0 is above and is the initial distribution, we therefore plug in at v+1
     for(int v=0;v<windows.size();v++){
       ComputeRs(v,fw);//<-prepare R1,R2
-      fw[0][v+1] = (fw[0][v]*P[1][0] + R1[0]*P[3][0] + fw[0][v]*P[4][0])*emis[0][v+1] ;
+      fw[0][v+1] = addProtect3(fw[0][v]+P[1][0] , R1[0]+P[3][0] , fw[0][v]+P[4][0])-emis[0][v+1] ;
       for (unsigned i = 1; i < tk_l; i++){
-	fw[i][v+1] = -777;
-	fw[i][v+1]= (fw[i][v]*P[1][i] + R2[i-1]*P[2][i-1] + R1[i]*P[3][i] + fw[i][v]*P[4][i])*emis[i][v+1];
+	fw[i][v+1]= addProtect4(fw[i][v]+P[1][i] , R2[i-1]+P[2][i-1] , R1[i]+P[3][i] , fw[i][v]+P[4][i])-emis[i][v+1];
       }
     }
     printmatrix(stdout,fw,tk_l,windows.size()+1);exit(0);
-    double tmp =0;
-    for(int i=0;i<tk_l;i++){
-      //      fprintf(stderr,"extracing at windows.size()-1:%d\n",windows.size()-1);
-      fprintf(stderr,"fw[%d][%lu]:%f\n",i,windows.size(),fw[i][windows.size()]);
-      tmp += log(fw[i][windows.size()]);
-    }
-    fprintf(stderr,"forward llh:%f\n",tmp);
+    double tmp[tk_l];
+    for(int i=0;i<tk_l;i++)
+      tmp[i] = fw[i][windows.size()];
 
-    pix = 0;
-    for (unsigned i = 0; i < tk_l; i++)
-      pix += fw[i][windows.size()-1]; 
- 
+    pix = addProtectN(tmp,tk_l);
+    fprintf(stderr,"forward(pic) llh:%f\n",pix);
 
 
     //now do backward algorithm
@@ -150,21 +191,20 @@ void fastPSMC::calculate_FW_BW_PP_Probs(){
     //we plug in values at v-1, therefore we break at v==1
     for(int v=windows.size();v>0;v--){
       ComputeRs(v,bw);//<-prepare R1,R2
-      bw[0][v-1] = (bw[0][v]*P[1][0] + R1[0]*P[3][0] + bw[0][v]*P[4][0])*emis[0][v] ;
+      bw[0][v-1] = addProtect3(bw[0][v]+P[1][0] , R1[0]+P[3][0] , bw[0][v]+P[4][0])-emis[0][v] ;
       for (unsigned i = 1; i < tk_l; i++)
-	bw[i][v-1] = (stationary[i]*bw[i][v]*emis[i][v]*P[1][i] + R2[i-1]*P[2][i-1] + R1[i]*P[3][i] + stationary[i]*bw[i][v]*emis[i][v]*P[4][i])/stationary[i];
+	bw[i][v-1] = addProtect4(stationary[i]+bw[i][v]+emis[i][v]+P[1][i],R2[i-1]+P[2][i-1],R1[i]+P[3][i],stationary[i]+bw[i][v]+emis[i][v]+P[4][i])-stationary[i]);
     }
     
-    tmp =0;
     for(int i=0;i<tk_l;i++)
-      tmp += log(bw[i][windows.size()]);
-    fprintf(stderr,"backward llh:%f\n",tmp);
+      tmp[i] = bw[i][windows.size()];
+    fprintf(stderr,"backward llh:%f\n",addProtectN(tmp,tk_l));
 
 
     //calculate post prob per window per state
     for(int v=1;v<windows.size();v++){
       for(int j=0;j<tk_l;j++)
-	pp[j][v] = fw[j][v]*bw[j][v];
+	pp[j][v] = fw[j][v]+bw[j][v];
 	
     }
     
@@ -252,7 +292,7 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
   fprintf(stderr,"\t-> [Calculating emissions with tk_l:%d and windows.size():%lu:%s ] start\n",tk_l,windows.size(),__TIME__);
   //initialize the first:
   for(int j=0;j<tk_l;j++)
-    emis[j][0] = 0;
+    emis[j][0] = log(0);
  
 
   for(int v=0;v<windows.size();v++){
@@ -260,7 +300,8 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
       emis[j][v+1] = 0;
       double inner = exp(-2.0*tk[j]*mu);
       for(int i=windows[v].from;i<windows[v].to;i++)
-	emis[j][v+1] += log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6)*(1-inner));
+	emis[j][v+1] += (exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6)*(1-inner));//<- check
+      emis[j][v+1] = log(emis[j][v+1]);
 
     }
   }
@@ -279,12 +320,12 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
   stationary(i) = exp(-sum_{j=0}^{i-1}{tau_j/lambda_j}*P2[i])
  */
 void fastPSMC::calculate_stationary(double *tk,int tk_l,double *lambda,double *results,double *P2){
-  results[0] = 1;//fix this
+  results[0] = log(1);//fix this
   for(int i=1;i<tk_l;i++){
     double tmp =0;
     for(int j=0;j<i-1;j++)
       tmp += (tk[j+1]-tk[j])/lambda[i];
-    results[i] = tmp*P2[i];
+    results[i] = log(tmp)+P2[i];
   }
 
 }
