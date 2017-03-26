@@ -6,59 +6,6 @@
 #include "hmm_psmc.h"
 #include "compute.c"
 
-double addProtect3(double a,double b, double c){
-  //function does: log(exp(a)+exp(b)+exp(c)) while protecting for underflow
-  double maxVal;// = std::max(a,std::max(b,c));
-  if(a>b&&a>c)
-    maxVal=a;
-  else if(b>c)
-    maxVal=b;
-  else
-    maxVal=c;
-  double sumVal = exp(a-maxVal)+exp(b-maxVal)+exp(c-maxVal);
-  return log(sumVal) + maxVal;
-}
-
-double addProtect4(double a,double b, double c,double d){
-  //function does: log(exp(a)+exp(b)+exp(c)) while protecting for underflow
-  double maxVal;// = std::max(a,std::max(b,c));
-  if(a>b&&a>c&&a>d)
-    maxVal=a;
-  else if(b>a&&b>c&&b>d)
-    maxVal=b;
-  else if(c>a&&c>b&&c>d)
-    maxVal=c;
-  else
-    maxVal=d;
-  double sumVal = exp(a-maxVal)+exp(b-maxVal)+exp(c-maxVal)+exp(d-maxVal);
-  return log(sumVal) + maxVal;
-}
-double addProtectN(double a[],int len){
-  //function does: log(sum(exp(a))) while protecting for underflow
-  double maxVal = a[0];
-
-  for(int i=1;i<10;i++)
-    if(maxVal<a[i])
-      maxVal=a[i];
-
-  double sumVal = 0;
-  for(int i=1;i<10;i++)
-    sumVal += exp(a[i]-maxVal);
-
-  return log(sumVal) + maxVal;
-}
-double addProtect2(double a,double b){
-  //function does: log(exp(a)+exp(b)) while protecting for underflow
-  double maxVal;// = std::max(a,b));
-  if(a>b)
-    maxVal=a;
-  else
-    maxVal=b;
-  double sumVal = exp(a-maxVal)+exp(b-maxVal);
-  return log(sumVal) + maxVal;
-}
-
-
 void printarray(FILE *fp,double *ary,int l){
   for(int i=0;i<l;i++)
     fprintf(fp,"%d)\t%f\n",i,ary[i]);
@@ -330,14 +277,15 @@ void fastPSMC::calculate_stationary(double *tk,int tk_l,double *lambda,double *r
 
 }
 void fastPSMC::ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,double **bw,double *stationary){
-    ComputeP11(numWind,tk_l,P[1],PP[1],fw,bw,stationary);
-    ComputeP22(numWind,tk_l,P,PP,fw,bw,stationary);
-    ComputeP33(numWind,tk_l,P[3],PP[3],fw,bw,stationary);
-    ComputeP44(numWind,tk_l,P[4],PP[4],fw,bw,stationary);
-    ComputeP55(numWind,tk_l,P,PP,fw,bw,stationary);
-    ComputeP66(numWind,tk_l,P,PP,fw,bw,stationary);
-    ComputeP77(numWind,tk_l,P,PP,fw,bw,stationary);
-  }
+  static double *workspace = new double [numWind];
+  ComputeP11(numWind,tk_l,P[1],PP[1],fw,bw,stationary,workspace);
+  ComputeP22(numWind,tk_l,P,PP,fw,bw,stationary);
+  ComputeP33(numWind,tk_l,P[3],PP[3],fw,bw,stationary);
+  ComputeP44(numWind,tk_l,P[4],PP[4],fw,bw,stationary);
+  ComputeP55(numWind,tk_l,P,PP,fw,bw,stationary);
+  ComputeP66(numWind,tk_l,P,PP,fw,bw,stationary);
+  ComputeP77(numWind,tk_l,P,PP,fw,bw,stationary);
+}
 
 
 void fastPSMC::make_hmm(double *tk,int tk_l,double *gls,double *epsize){

@@ -1,42 +1,96 @@
 #include <math.h>
-void ComputeP11(unsigned numWind,int tk_l,double *P1,double *PP1,double **fw,double **bw,double *stationary){
+
+double addProtect3(double a,double b, double c){
+  //function does: log(exp(a)+exp(b)+exp(c)) while protecting for underflow
+  double maxVal;// = std::max(a,std::max(b,c));
+  if(a>b&&a>c)
+    maxVal=a;
+  else if(b>c)
+    maxVal=b;
+  else
+    maxVal=c;
+  double sumVal = exp(a-maxVal)+exp(b-maxVal)+exp(c-maxVal);
+  return log(sumVal) + maxVal;
+}
+
+double addProtect4(double a,double b, double c,double d){
+  //function does: log(exp(a)+exp(b)+exp(c)) while protecting for underflow
+  double maxVal;// = std::max(a,std::max(b,c));
+  if(a>b&&a>c&&a>d)
+    maxVal=a;
+  else if(b>a&&b>c&&b>d)
+    maxVal=b;
+  else if(c>a&&c>b&&c>d)
+    maxVal=c;
+  else
+    maxVal=d;
+  double sumVal = exp(a-maxVal)+exp(b-maxVal)+exp(c-maxVal)+exp(d-maxVal);
+  return log(sumVal) + maxVal;
+}
+double addProtectN(double a[],int len){
+  //function does: log(sum(exp(a))) while protecting for underflow
+  double maxVal = a[0];
+
+  for(int i=1;i<10;i++)
+    if(maxVal<a[i])
+      maxVal=a[i];
+
+  double sumVal = 0;
+  for(int i=1;i<10;i++)
+    sumVal += exp(a[i]-maxVal);
+
+  return log(sumVal) + maxVal;
+}
+double addProtect2(double a,double b){
+  //function does: log(exp(a)+exp(b)) while protecting for underflow
+  double maxVal;// = std::max(a,b));
+  if(a>b)
+    maxVal=a;
+  else
+    maxVal=b;
+  double sumVal = exp(a-maxVal)+exp(b-maxVal);
+  return log(sumVal) + maxVal;
+}
+
+
+void ComputeP11(unsigned numWin,int tk_l,double *P1,double *PP1,double **fw,double **bw,double *stationary,double *workspace){
+  
   for (unsigned i = 0; i < tk_l; i++){
-    PP1[i] = 0;
-    for (unsigned l = 1; l < numWind; l++)
-      PP1[i] += fw[i][l]*P1[i]*bw[l+1][i]/stationary[i];//NOTE: In appendix of K.H. paper it seems to be an extra emission probability for site l+1, it is already inside bw[]
+    workspace[i] = log(0);
+    for (unsigned l = 1; l < numWin; l++)
+      workspace[i] = fw[i][l]+P1[i]+bw[l+1][i]-stationary[i];//NOTE: In appendix of K.H. paper it seems to be an extra emission probability for site l+1, it is already inside bw[]
+    PP1[i] = addProtectN(workspace,numWin);
   }
 }
 
-void ComputeP22(unsigned numWind,int tk_l,double **P,double **PP,double **fw,double **bw,double *stationary){
+void ComputeP22(unsigned numWind,int tk_l,double **P,double *PP2,double **fw,double **bw,double *stationary){
   double R1[tk_l];
   double R2[tk_l];
-
+  double tmp[tk_l];
   for (unsigned i = 0; i < tk_l; i++)
-    PP[2][i] = 0;
-  for (unsigned l = 1; l < numWind; l++){
-    
-
-    R1[tk_l - 1] = 0;
+    PP2[i] = log(0);
+  for (unsigned l = 1; l < numWind; l++) {
+    R1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
-      R1[i] = R1[i+1] + fw[i+1][l];
-    double tmp = 0;
+      R1[i] = addProtect2(R1[i+1],fw[i+1][l]);
+    double tmp = log(0);
     for (unsigned i = 0; i < tk_l ; i++){
-      R2[i] = tmp*P[2][i]+fw[l][i]*P[6][i]+R1[i]*P[7][i];
+      R2[i] = addProtect3(tmp+P[2][i],fw[l][i]+P[6][i],R1[i]+P[7][i]);
       tmp = R2[i];
     }
     for (unsigned i = 1; i < tk_l; i++)
-      PP[2][i] += R2[i-1]*P[2][i]*bw[i][l+1]/stationary[i];
+      PP2[i] = R2[i-1]+P[2][i]+bw[i][l+1]-stationary[i];//CHECK
   }
 }
 
 void ComputeP33(unsigned numWind,int tk_l,double *P3,double *PP3,double **fw,double **bw,double *stationary){
   double R1[tk_l];
   for (unsigned i = 0; i < tk_l; i++)
-    PP3[i] = 0;
+    PP3[i] = log(0);
   for (unsigned l = 1; l < numWind; l++){
-    R1[tk_l - 1] = 0;
+    R1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
-      R1[i] = R1[i+1] + fw[i+1][l];
+      R1[i] = addProtect2( R1[i+1] , fw[i+1][l]);
     for (unsigned i = 0; i < tk_l - 1; i++)
       PP3[i] += R1[i]*P3[i]*bw[i][l]/stationary[i];
   }

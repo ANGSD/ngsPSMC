@@ -59,18 +59,17 @@ public:
   
 private:
   void ComputeR2(int v,double **mat){
-    //    fprintf(stderr,"tk_l:%d\n",tk_l);
-    double tmp = 0;
+    double tmp = log(0);
     for (unsigned i = 0; i < tk_l ; i++){
-      R2[i] = tmp*P[2][i]+mat[i][v]*P[6][i]+R1[i]*P[7][i];
+      R2[i] = addProtect3(tmp+P[2][i],mat[i][v]+P[6][i],R1[i]+P[7][i]);
       tmp = R2[i];
     }
   }
   
   void ComputeR1(int v,double **mat){
-    R1[tk_l - 1] = 0;
+    R1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
-      R1[i] = R1[i+1] + mat[i+1][v];
+      R1[i] = addProtect2(R1[i+1] , mat[i+1][v]);
   }
   
   void ComputeRs(int v,double **mat){
