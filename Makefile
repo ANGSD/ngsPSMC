@@ -25,22 +25,22 @@ endif
 
 ifdef HTSSRC
 %.o: %.c
-	$(CC) -c  $(CFLAGS) -I$(HTS_INCDIR) $*.c
+	$(CC) -c  $(CFLAGS) -I$(HTS_INCDIR) -std=c99 $*.c
 	$(CC) -MM $(CFLAGS)  -I$(HTS_INCDIR) $*.c >$*.d
 
 %.o: %.cpp
-	$(CXX) -c  $(CXXFLAGS)  -I$(HTS_INCDIR) $*.cpp
+	$(CXX) -c  $(CXXFLAGS)  -I$(HTS_INCDIR)  -std=c99  $*.cpp
 	$(CXX) -MM $(CXXFLAGS)  -I$(HTS_INCDIR) $*.cpp >$*.d
 
 ngsPSMC: $(OBJ)
 	$(CXX) $(FLAGS)  -o ngsPSMC *.o $(HTS_LIBDIR) -lz -lm -lbz2 -llzma -lpthread
 else
 %.o: %.c
-	$(CC) -c  $(CFLAGS)  $*.c
+	$(CC) -c  $(CFLAGS) -std=c99 $*.c
 	$(CC) -MM $(CFLAGS)  $*.c >$*.d
 
 %.o: %.cpp
-	$(CXX) -c  $(CXXFLAGS)  $*.cpp
+	$(CXX) -c  $(CXXFLAGS) -std=c99 $*.cpp
 	$(CXX) -MM $(CXXFLAGS)  $*.cpp >$*.d
 
 ngsPSMC: $(OBJ)
