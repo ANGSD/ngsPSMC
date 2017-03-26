@@ -193,7 +193,7 @@ void fastPSMC::calculate_FW_BW_PP_Probs(){
       ComputeRs(v,bw);//<-prepare R1,R2
       bw[0][v-1] = addProtect3(bw[0][v]+P[1][0] , R1[0]+P[3][0] , bw[0][v]+P[4][0])-emis[0][v] ;
       for (unsigned i = 1; i < tk_l; i++)
-	bw[i][v-1] = addProtect4(stationary[i]+bw[i][v]+emis[i][v]+P[1][i],R2[i-1]+P[2][i-1],R1[i]+P[3][i],stationary[i]+bw[i][v]+emis[i][v]+P[4][i])-stationary[i]);
+	bw[i][v-1] = addProtect4(stationary[i]+bw[i][v]+emis[i][v]+P[1][i],R2[i-1]+P[2][i-1],R1[i]+P[3][i],stationary[i]+bw[i][v]+emis[i][v]+P[4][i])-stationary[i];
     }
     
     for(int i=0;i<tk_l;i++)
@@ -300,7 +300,7 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
       emis[j][v+1] = 0;
       double inner = exp(-2.0*tk[j]*mu);
       for(int i=windows[v].from;i<windows[v].to;i++)
-	emis[j][v+1] += (exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6)*(1-inner));//<- check
+	emis[j][v+1] += (exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6)*(1-inner);//<- check
       emis[j][v+1] = log(emis[j][v+1]);
 
     }
