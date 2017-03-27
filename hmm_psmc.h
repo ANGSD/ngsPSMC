@@ -59,6 +59,7 @@ public:
   
 private:
   void ComputeR2(int v,double **mat){
+    double addProtect3(double,double,double);
     double tmp = log(0);
     for (unsigned i = 0; i < tk_l ; i++){
       R2[i] = addProtect3(tmp+P[2][i],mat[i][v]+P[6][i],R1[i]+P[7][i]);
@@ -67,6 +68,7 @@ private:
   }
   
   void ComputeR1(int v,double **mat){
+    double addProtect2(double,double);
     R1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
       R1[i] = addProtect2(R1[i+1] , mat[i+1][v]);
