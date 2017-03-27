@@ -281,7 +281,7 @@ void fastPSMC::ComputePii(unsigned numWind,int tk_l,double **P,double **PP,doubl
   ComputeP11(numWind,tk_l,P[1],PP[1],fw,bw,stationary,workspace);
   ComputeP22(numWind,tk_l,P,PP[2],fw,bw,stationary);
   ComputeP33(numWind,tk_l,P[3],PP[3],fw,bw,stationary);
-  ComputeP44(numWind,tk_l,P[4],PP[4],fw,bw,stationary);
+  ComputeP44(numWind,tk_l,P[4],PP[4],fw,bw,stationary,workspace);
   ComputeP55(numWind,tk_l,P,PP[5],fw,bw,stationary);
   ComputeP66(numWind,tk_l,P,PP[6],fw,bw,stationary);
   ComputeP77(numWind,tk_l,P,PP[7],fw,bw,stationary);
