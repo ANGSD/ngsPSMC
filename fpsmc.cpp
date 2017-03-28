@@ -111,16 +111,40 @@ int psmc_wrapper(args *pars,int block) {
 #endif
   
   //initialize all hmm (one for each chr), for now just a single
-  fastPSMC obj;
-  myMap::const_iterator it = pars->perc->mm.begin();
+  
+  std::vector<fastPSMC> objs;
+  for (myMap::const_iterator it = pars->perc->mm.begin() ;it!=pars->perc->mm.end();it++){
+    if(pars->chooseChr!=NULL)
+      it=pars->perc->mm.find(pars->chooseChr);
+    fastPSMC obj;
+    obj.setWindows(pars->perc,it->first,pars->start,pars->stop,pars->block);
+    //   obj.printWindows(stdout);
+    obj.allocate(tk_l);
+    objs.push_back(obj);
+    if(pars->chooseChr!=NULL)
+      break;
+  }
+  fprintf(stderr,"\t-> We have now allocated hmm's for: %lu chromosomes\n",objs.size());
+  // objs[0].make_hmm(tk,tk_l,epsize);
+  /*
+    printarrayf("stationary",obj.stationary,tk_l);
+    printarrayf("tk",tk,tk_l);
+    printarrayf("epsize",epsize,tk_l);
+    printmatrixf("P",obj.P,7,tk_l);
+    printmatrixf("emis",obj.emis,tk_l,obj.windows.size()+1);
+    printmatrixf("fw",obj.fw,tk_l,obj.windows.size()+1);
+    printarrayf("r1",obj.R1,tk_l);
+    printarrayf("r2",obj.R2,tk_l);
+  */
+  
   //calculate window end points
-  obj.setWindows(pars->perc,it->first,pars->start,pars->stop,pars->block);
+  
   //  obj.printWindows(stdout);
   //allocate internal structures needed
-  obj.allocate(tk_l);
+ 
   //make an hmm
 
-  obj.make_hmm(tk,tk_l,pars->perc->gls,epsize);
+  // objs[0].make_hmm(tk,tk_l,epsize);
   /*
     printarrayf("stationary",obj.stationary,tk_l);
     printarrayf("tk",tk,tk_l);

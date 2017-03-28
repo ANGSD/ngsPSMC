@@ -30,6 +30,7 @@ public:
   double **bw;//tk_l x nWindows+1
   double **pp;//tk_l x nWindows+1
   double **emis;//tk_l x nWindows+1
+  double *gls;//deep copy of the gls for a chr
   std::vector<wins> windows;
 
   fastPSMC(){
@@ -56,7 +57,7 @@ public:
   void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,double **bw,double *stationary);
   void calculate_stationary(double *tk,int tk_l,double *lambda,double *results,double **P);
   void calculate_FW_BW_PP_Probs();
-  void make_hmm(double *tk,int tk_l,double *gls,double *epsize);
+  void make_hmm(double *tk,int tk_l,double *epsize);
   
 private:
   void ComputeR2(int v,double **mat){

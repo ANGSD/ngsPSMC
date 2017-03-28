@@ -124,7 +124,7 @@ void fastPSMC::calculate_FW_BW_PP_Probs(){
       // exit(0);
 #endif
       fw[0][v+1] = addProtect3(fw[0][v]+P[1][0] , R1[0]+P[3][0] , fw[0][v]+P[4][0])+emis[0][v+1] ;
-      fprintf(stderr,"fw[0][1]:%f\n",0,v+1);
+      fprintf(stderr,"fw[0][1]:%f\n",fw[0][v+1]);
       for (unsigned i = 1; i < tk_l; i++){
 	fprintf(stderr,"l1:%f l2:%f l3:%f l4:%f\n",fw[i][v]+P[1][i] , R2[i-1]+P[2][i-1] , R1[i]+P[3][i] , fw[i][v]+P[4][i]);
 	fw[i][v+1]= addProtect4(fw[i][v]+P[1][i] , R2[i-1]+P[2][i-1] , R1[i]+P[3][i] , fw[i][v]+P[4][i])+emis[i][v+1];
@@ -208,6 +208,9 @@ void fastPSMC::allocate(int tk_l_arg){
  */
 void fastPSMC::setWindows(perpsmc *perc,char *chooseChr,int start,int stop,int block){
   myMap::const_iterator it = iter_init(perc,chooseChr,start,stop);
+  gls = new double[perc->last*2];
+  memcpy(gls,perc->gls,sizeof(double)*2);
+
   int beginIndex =0;
   int endIndex=0;
   int beginPos = 1;
@@ -302,7 +305,7 @@ void fastPSMC::ComputePii(unsigned numWind,int tk_l,double **P,double **PP,doubl
 }
 
 
-void fastPSMC::make_hmm(double *tk,int tk_l,double *gls,double *epsize){
+void fastPSMC::make_hmm(double *tk,int tk_l,double *epsize){
   fprintf(stderr,"\t-> [%s] start\n",__FUNCTION__ );
   //prepare global probs
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
