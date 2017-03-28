@@ -118,7 +118,7 @@ void fastPSMC::calculate_FW_BW_PP_Probs(){
     //v=0 is above and is the initial distribution, we therefore plug in at v+1
     for(int v=0;v<windows.size();v++){
       ComputeRs(v,fw);//<-prepare R1,R2
-#if 1
+#if 0
       printarrayf("r1",R1,tk_l);
       printarrayf("r2",R2,tk_l);
       // exit(0);
@@ -129,10 +129,11 @@ void fastPSMC::calculate_FW_BW_PP_Probs(){
 	fprintf(stderr,"l1:%f l2:%f l3:%f l4:%f\n",fw[i][v]+P[1][i] , R2[i-1]+P[2][i-1] , R1[i]+P[3][i] , fw[i][v]+P[4][i]);
 	fw[i][v+1]= addProtect4(fw[i][v]+P[1][i] , R2[i-1]+P[2][i-1] , R1[i]+P[3][i] , fw[i][v]+P[4][i])+emis[i][v+1];
 	fprintf(stderr,"fw[%d][%d]:%f\n",i,v+1,fw[i][v+1]);
-	exit(0);
+	//	exit(0);
       }
-      break;
+      //      break;
     }
+    fprintf(stderr,"PROGRSM BRESKING IN FW BW\n");
     return ;
     double tmp[tk_l];
     for(int i=0;i<tk_l;i++)

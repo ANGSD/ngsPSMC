@@ -243,7 +243,7 @@ int main(int argc,char **argv){
       fprintf(stderr,"\t-> E.g.: \'./ngsPSMC ");
       for(int i=0;i<argc;i++)
 	fprintf(stderr," %s",argv[i]);
-      fprintf(stderr," >sfs.ml.txt\'\n");   
+      fprintf(stderr," >psmc.ml.txt\'\n");   
     }
     main_psmc(argc,argv);
   }

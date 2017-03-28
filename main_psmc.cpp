@@ -120,6 +120,30 @@ void setpars( char *fname,psmc_par *pp) {
   fprintf(stderr,"\t-> Done reading parameters from file: \'%s\'\n",fname);
 }
 
+void readtkfile(args *p){
+  FILE *fp = NULL;
+  if(!(fp=fopen(p->tkfile,"wb"))){
+    fprintf(stderr,"\t-> Problem writing file: \'%s\'\n",p->tkfile);
+    exit(0);
+  }
+  char buf[4096];
+  std::vector<double> tk;
+  std::vector<double> lambda;
+  while(fgets(buf,4096,fp)){
+    if(buf[0]=='#')
+      continue;
+    tk.push_back(atof(strtok(buf,"\n\t ")));
+    lambda.push_back(atof(strtok(NULL,"\n\t ")));
+  }
+  fprintf(stderr,"number of tks read from file:%lu\n",tk.size());
+  p->tk= new double[tk.size()];
+  p->lambda = new double[tk.size()];
+  for(int i=0;i<tk.size();i++){
+    p->tk[i] = tk[i];
+    p->lambda[i] = lambda[i];
+  }
+}
+
 
 args * getArgs(int argc,char **argv){
   args *p = new args;
@@ -133,6 +157,7 @@ args * getArgs(int argc,char **argv){
   p->seed =0;
   p->block = 100;//default 100bp
   p->par =(psmc_par*) calloc(1,sizeof(psmc_par));
+  p->tkfile = NULL;
   if(argc==0)
     return p;
 
@@ -146,6 +171,8 @@ args * getArgs(int argc,char **argv){
       p->block = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-p"))
       p->par->pattern =  strdup(*(++argv));
+    else  if(!strcasecmp(*argv,"-tkfile"))
+      p->tkfile =  strdup(*(++argv));
     else  if(!strcasecmp(*argv,"-nSites"))
       p->nSites = atol(*(++argv));
     else  if(!strcasecmp(*argv,"-seed"))
@@ -174,6 +201,9 @@ args * getArgs(int argc,char **argv){
   //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
   if(p->par->pattern!=NULL&&p->par->params==NULL)
     p->par->par_map = psmc_parse_pattern(p->par->pattern, &p->par->n_free, &p->par->n);
+  
+  if(p->tkfile)
+    readtkfile(p);
   
   return p;
 }

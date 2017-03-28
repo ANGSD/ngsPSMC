@@ -25,6 +25,9 @@ typedef struct {
   long seed;//<-seed=-1 old version;seed=0 means time; othervise it will be used as seed
   int block;
   psmc_par *par;
+  char *tkfile;
+  double *tk;
+  double *lambda;
 }args;
 args * getArgs(int argc,char **argv);
 void destroy_args(args *p);
