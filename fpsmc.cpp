@@ -1,10 +1,16 @@
 #include <vector>
 #include <cassert>
 #include <cmath>
+#include <pthread.h>
 #include "psmcreader.h"
 #include "main_psmc.h"
 #include "hmm_psmc.h"
 #include "bfgs.h"
+#include <errno.h>
+
+int nThreads =1;
+
+int nChr =0;
 fastPSMC **objs = NULL;
 
 typedef struct{
@@ -92,6 +98,47 @@ void printarrayf(char *fname,double *m,int x){
   fclose(fp);
 }
 
+void *run_a_hmm(void *ptr){
+  size_t at =(size_t) ptr;
+  fprintf(stderr,"at:%lu\n",at);
+  sleep(drand48()*10);
+  objs[at]->make_hmm()
+  pthread_exit(NULL);
+}
+
+
+void main_analysis(double *tk,int tk_l,double *epsize){
+  pthread_t thread[nThreads];
+  if(nThreads==1)
+    for(int i=0;i<nChr;i++)
+      objs[i]->make_hmm(tk,tk_l,epsize);
+  else{
+    int hasDone = 0;
+    while(hasDone<nChr){
+      size_t t;
+      for(t=0;t<std::min(nThreads,nChr-hasDone);t++){
+	size_t at =hasDone+t;
+	if(pthread_create( &thread[t], NULL, run_a_hmm, (void*) at)){
+	  fprintf(stderr,"[%s] Problem spawning thread\n%s\n",__FUNCTION__,strerror(errno));
+	  exit(0);
+	}
+      }
+      for(t=0;t<std::min(nThreads,nChr-hasDone);t++){
+	size_t at =hasDone+t;
+	if(pthread_join( thread[t], NULL)){
+	  fprintf(stderr,"[%s] Problem joining thread\n%s\n",__FUNCTION__,strerror(errno));
+	  exit(0);
+	}
+      }
+      
+      
+    }
+
+  }
+
+}
+
+
 int psmc_wrapper(args *pars,int block) {
 #if 1 //print pars
   psmc_par *p=pars->par;
@@ -114,21 +161,20 @@ int psmc_wrapper(args *pars,int block) {
   //initialize all hmm (one for each chr), for now just a single
   
   objs = new fastPSMC*[pars->chooseChr?pars->perc->mm.size():1];
-  int at =0;
   for (myMap::const_iterator it = pars->perc->mm.begin() ;it!=pars->perc->mm.end();it++){
     if(pars->chooseChr!=NULL)
       iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop);
     else
       iter_init(pars->perc,it->first,pars->start,pars->stop);
-    fastPSMC *obj=objs[at++]=new fastPSMC;
+    fastPSMC *obj=objs[nChr++]=new fastPSMC;
     obj->setWindows(pars->perc->gls,pars->perc->pos,pars->perc->last,pars->block);
     //   obj.printWindows(stdout);
     obj->allocate(tk_l);
     if(pars->chooseChr!=NULL)
       break;
   }
-  fprintf(stderr,"\t-> We have now allocated hmm's for: %d chromosomes\n",at);
-  // objs[0].make_hmm(tk,tk_l,epsize);
+  fprintf(stderr,"\t-> We have now allocated hmm's for: %d chromosomes\n",nChr);
+  objs[0]->make_hmm(tk,tk_l,epsize);
   /*
     printarrayf("stationary",obj.stationary,tk_l);
     printarrayf("tk",tk,tk_l);
