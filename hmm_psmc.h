@@ -1,7 +1,7 @@
 /*
   Class that contains the perChr hmm
-
  */
+
 double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **PP);
 void setTk(int n, double *t, double max_t, double alpha, double *inp_ti);
 void setEPSize(double *ary,int l,double *from_infile);
@@ -14,6 +14,7 @@ struct wins{
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double mu,double **emis);
 
 class fastPSMC {
+public:
   double pix;
   int tk_l;
   double max_t;
@@ -30,7 +31,7 @@ class fastPSMC {
   double **pp;//tk_l x nWindows+1
   double **emis;//tk_l x nWindows+1
   std::vector<wins> windows;
-public:
+
   fastPSMC(){
     pix = -666;
     max_t = 15;
@@ -53,7 +54,7 @@ public:
   }
   void allocate(int tk_l);
   void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,double **bw,double *stationary);
-  void calculate_stationary(double *tk,int tk_l,double *lambda,double *results,double *P2);
+  void calculate_stationary(double *tk,int tk_l,double *lambda,double *results,double **P);
   void calculate_FW_BW_PP_Probs();
   void make_hmm(double *tk,int tk_l,double *gls,double *epsize);
   
@@ -70,8 +71,11 @@ private:
   void ComputeR1(int v,double **mat){
     double addProtect2(double,double);
     R1[tk_l - 1] = log(0);
-    for (int i = tk_l - 2; i >= 0 ; i--)
+    for (int i = tk_l - 2; i >= 0 ; i--){
       R1[i] = addProtect2(R1[i+1] , mat[i+1][v]);
+      // fprintf(stderr,"R1[%d]:%f\n",i,R1[i]);
+    }
+    //    exit(0);
   }
   
   void ComputeRs(int v,double **mat){

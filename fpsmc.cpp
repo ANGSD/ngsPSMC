@@ -65,6 +65,31 @@ void runoptim(double *tk,int tk_l,double *epsize,double rho,double **PP,double p
   double max_llh = findmax_bfgs(tk_l,pars,(void *)&data,qFunction,NULL,lbd,ubd,nbd,1);
 }
 
+void printarray(FILE *fp,double *ary,int l);
+void printmatrix(FILE *fp,double **mat,int x,int y);
+
+
+
+void printmatrixf(char *fname,double **m,int x,int y){
+  FILE *fp = NULL;
+  if(!(fp=fopen(fname,"wb"))){
+    fprintf(stderr,"\t-> Problem writing file: \'%s\'\n",fname);
+    exit(0);
+  }
+  printmatrix(fp,m,x,y);
+  fclose(fp);
+}
+
+void printarrayf(char *fname,double *m,int x){
+
+  FILE *fp = NULL;
+  if(!(fp=fopen(fname,"wb"))){
+    fprintf(stderr,"\t-> Problem writing file: \'%s\'\n",fname);
+    exit(0);
+  }
+  printarray(fp,m,x);
+  fclose(fp);
+}
 
 int psmc_wrapper(args *pars,int block) {
 #if 1 //print pars
@@ -74,7 +99,7 @@ int psmc_wrapper(args *pars,int block) {
     fprintf(stderr,"%i)\t%f\t%f\n",i,pars->par->times[i],pars->par->params[i]);
   
 #endif
-  int tk_l = pars->par->n+2;
+  int tk_l = pars->par->n+1;
   double *tk = new double [tk_l];
   double *epsize = new double [tk_l];
   setEPSize(epsize,tk_l,p->params);
@@ -96,7 +121,15 @@ int psmc_wrapper(args *pars,int block) {
   //make an hmm
 
   obj.make_hmm(tk,tk_l,pars->perc->gls,epsize);
-
+  /*
+    printarrayf("stationary",obj.stationary,tk_l);
+    printarrayf("tk",tk,tk_l);
+    printarrayf("epsize",epsize,tk_l);
+    printmatrixf("P",obj.P,7,tk_l);
+    printmatrixf("emis",obj.emis,tk_l,obj.windows.size()+1);
+    printmatrixf("fw",obj.fw,tk_l,obj.windows.size()+1);
+    printarrayf("r1",obj.R1,tk_l);
+    printarrayf("r2",obj.R2,tk_l);
+  */
   return 1;
 }
-

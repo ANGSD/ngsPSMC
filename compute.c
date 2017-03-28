@@ -1,5 +1,5 @@
 #include <math.h>
-
+#include <stdio.h>
 double addProtect3(double a,double b, double c){
   //function does: log(exp(a)+exp(b)+exp(c)) while protecting for underflow
   double maxVal;// = std::max(a,std::max(b,c));
@@ -167,16 +167,27 @@ void ComputeP77(unsigned numWind,int tk_l,double **P,double *PP7,double **fw,dou
 }
 
 //TODO: tk_l is in fact the number of time intervals
+/*
+  prob of not recombining given states
+*/
+
 void ComputeP1(double *tk,int tk_l,double *P,double *epsize,double rho){ 
   for (unsigned i = 0; i < tk_l-1; i++){
     P[i] = 1.0/(1.0+epsize[i]*2.0*rho);
     P[i] *= exp( -rho*2.0*tk[i] ) - exp(-rho*2.0*tk[i+1]-(tk[i+1]-tk[i])/epsize[i]);
     P[i] /= 1.0 - exp( -(tk[i+1]-tk[i])/epsize[i] );
     P[i] = log(P[i]);
+    //    fprintf(stderr,"P1[%d]:%f\n",i,P[i]);
   }
+
   //Last interval ends with +infinity
-  P[tk_l-1] = 1.0/(1.0+epsize[tk_l-1]*2.0*rho)* exp( -rho*2.0*tk[tk_l-1] );
+  P[tk_l-1] = log(1.0/(1.0+epsize[tk_l-1]*2.0*rho)* exp( -rho*2.0*tk[tk_l-1] ));
+  //  fprintf(stderr,"P1[%d]:%f\n",tk_l-1,P[tk_l-1]);
 }
+/*
+  prob of coalscne happens after timepoint k given that it happens after k-1
+
+ */
 
 void ComputeP5(double *tk,int tk_l,double *P,double *epsize){
   for (unsigned i = 0; i < tk_l-1; i++)
@@ -200,9 +211,10 @@ void ComputeP6(double *tk,int tk_l,double *P,double *epsize,double rho){
 
 
 void ComputeP2(int tk_l,double *P2,double *P5){
-    for (unsigned i = 0; i < tk_l; i++)
-      P2[i] = log(1.0 - exp(P5[i]));
-  }
+  for (unsigned i = 0; i < tk_l-1; i++)
+    P2[i] = log(1.0 - exp(P5[i]));
+  P2[tk_l-1]=-0.0;
+}
 
 
 
@@ -216,15 +228,23 @@ void ComputeP3(double *tk,int tk_l,double *P3,double *epsize,double rho){
   P3[tk_l-1] = exp(-tk[tk_l-1]*2.0*rho);
 }
 
+/*
+  Check P4
+
+ */
 
 void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
     P4[i] = log(1.0/(1.0 - exp(-(tk[i+1]-tk[i])/epsize[i]) ));
+    fprintf(stderr,"P[4] step1:%f\n",P4[i]);
     double tmp = 2.0*rho/(1.0 + 2*rho*epsize[i])*exp(-2*rho*tk[i]);
     tmp -= 2.0*exp(-(tk[i+1] - tk[i])/epsize[i] - 2.0*rho*tk[i] );
     tmp -= 2.0*rho*epsize[i]/(1.0 - epsize[i]*2.0*rho)*exp(-2.0*rho*tk[i]-2.0*(tk[i+1]-tk[i])/epsize[i]);
     tmp += 2.0/(1.0-epsize[i]*2.0*rho)/(1.0 + 2.0*rho)*exp(-rho*tk[i+1]-(tk[i+1]-tk[i])/epsize[i]);
+    fprintf(stderr,"P[4] step2:%f\n",tmp);
     P4[i] += log(tmp);
+    fprintf(stderr,"P[4][%d]:%f\n",i,P4[i]);
+    exit(0);
   }
   P4[tk_l-1] = log(2.0*rho/(1.0 + 2.0*rho*epsize[tk_l-1])*exp(-2.0*rho*tk[tk_l-1]));
 }
