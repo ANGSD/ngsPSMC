@@ -41,7 +41,7 @@ public:
     fprintf(stderr,"\t-> rho:%f mu:%f\n",rho,mu);
   }
   
-  void setWindows(perpsmc *perc,char *chooseChr,int start,int stop,int block);
+  void setWindows(double *gls_a,int *pos,int last,int block);
   void printWindows(FILE *fp){
     //print indices for endpoint of windows
     for(int w=0;w<windows.size();w++)

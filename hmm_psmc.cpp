@@ -206,10 +206,10 @@ void fastPSMC::allocate(int tk_l_arg){
 /*
   Function will set the indices for the windows
  */
-void fastPSMC::setWindows(perpsmc *perc,char *chooseChr,int start,int stop,int block){
-  myMap::const_iterator it = iter_init(perc,chooseChr,start,stop);
-  gls = new double[perc->last*2];
-  memcpy(gls,perc->gls,sizeof(double)*2);
+//void fastPSMC::setWindows(perpsmc *perc,char *chooseChr,int start,int stop,int block){
+void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
+  gls = new double[last*2];
+  memcpy(gls,gls_a,sizeof(double)*2);
 
   int beginIndex =0;
   int endIndex=0;
@@ -218,15 +218,15 @@ void fastPSMC::setWindows(perpsmc *perc,char *chooseChr,int start,int stop,int b
   
   while(1){
     wins w;
-    if(endPos>perc->pos[perc->last-1])
+    if(endPos>pos[last-1])
       break;
     
-    while(perc->pos[beginIndex]<beginPos)
+    while(pos[beginIndex]<beginPos)
       beginIndex++;
-    while(perc->pos[endIndex]<endPos)
+    while(pos[endIndex]<endPos)
       endIndex++;
 #if 0
-    fprintf(stdout,"\t-> endpiadsf:%d\n",perc->pos[endIndex]);
+    fprintf(stdout,"\t-> endpiadsf:%d\n",pos[endIndex]);
     fprintf(stdout,"\t-> winsize:%d bp:%d,ep:%d bi:%d ei:%d ei-bi:%d\n",block,beginPos,endPos,beginIndex,endIndex,endIndex-beginIndex);
 #endif
     w.from = beginIndex;
@@ -235,7 +235,6 @@ void fastPSMC::setWindows(perpsmc *perc,char *chooseChr,int start,int stop,int b
     beginPos+=block;
     endPos+=block;
   }
-  fprintf(stderr,"\t-> [%s] chr: \'%s\' has number of windows:%lu\n",__FUNCTION__,chooseChr,windows.size());
 }
 
 

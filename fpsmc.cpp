@@ -5,6 +5,7 @@
 #include "main_psmc.h"
 #include "hmm_psmc.h"
 #include "bfgs.h"
+fastPSMC **objs = NULL;
 
 typedef struct{
   double **nP;
@@ -112,19 +113,21 @@ int psmc_wrapper(args *pars,int block) {
   
   //initialize all hmm (one for each chr), for now just a single
   
-  std::vector<fastPSMC> objs;
+  objs = new fastPSMC*[pars->chooseChr?pars->perc->mm.size():1];
+  int at =0;
   for (myMap::const_iterator it = pars->perc->mm.begin() ;it!=pars->perc->mm.end();it++){
     if(pars->chooseChr!=NULL)
-      it=pars->perc->mm.find(pars->chooseChr);
-    fastPSMC obj;
-    obj.setWindows(pars->perc,it->first,pars->start,pars->stop,pars->block);
+      iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop);
+    else
+      iter_init(pars->perc,it->first,pars->start,pars->stop);
+    fastPSMC *obj=objs[at++]=new fastPSMC;
+    obj->setWindows(pars->perc->gls,pars->perc->pos,pars->perc->last,pars->block);
     //   obj.printWindows(stdout);
-    obj.allocate(tk_l);
-    objs.push_back(obj);
+    obj->allocate(tk_l);
     if(pars->chooseChr!=NULL)
       break;
   }
-  fprintf(stderr,"\t-> We have now allocated hmm's for: %lu chromosomes\n",objs.size());
+  fprintf(stderr,"\t-> We have now allocated hmm's for: %d chromosomes\n",at);
   // objs[0].make_hmm(tk,tk_l,epsize);
   /*
     printarrayf("stationary",obj.stationary,tk_l);
