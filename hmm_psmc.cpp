@@ -54,9 +54,11 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
   ComputeP7(tk,tk_l,P[7],epsize,rho);
   ComputeP0(tk_l,P[0],P[5]);
 }
+/*
+  Functions below are template for future ...
 
 
-
+ */
 void ComputeSW(int maxTime,double W[],double sW[]){
   double tmp = 0;
   for (int i = maxTime; i >=0 ; i--){
@@ -64,7 +66,6 @@ void ComputeSW(int maxTime,double W[],double sW[]){
     sW[i] = tmp;
   }
 }
-
 void UpdateEPSize(int maxTime, double W[],double sW[],double epSize[],double T[]){
   for (unsigned i = 1; i < maxTime; i++){
     double tmp;
@@ -258,7 +259,7 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
   for(int v=0;v<windows.size();v++){
     for(int j=0;j<tk_l;j++){
       emis[j][v+1] = 0;
-      double inner = exp(-2.0*tk[j]*theta);
+      double inner = exp(-2.0*tk[j]*theta); // this part relates to issue #1
       for(int i=windows[v].from;i<windows[v].to;i++)
 	emis[j][v+1] += log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6)*(1-inner));//<- check
     }
