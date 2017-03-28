@@ -11,6 +11,18 @@
 int nThreads =1;
 
 int nChr =0;
+
+
+typedef struct{
+  double *tk;
+  int tk_l;
+  double *epsize;
+  double rho;
+}shared_forhmm;
+
+shared_forhmm shmm;
+
+
 fastPSMC **objs = NULL;
 
 typedef struct{
@@ -102,38 +114,40 @@ void *run_a_hmm(void *ptr){
   size_t at =(size_t) ptr;
   fprintf(stderr,"at:%lu\n",at);
   sleep(drand48()*10);
-  objs[at]->make_hmm()
+  objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.rho);
   pthread_exit(NULL);
 }
 
 
-void main_analysis(double *tk,int tk_l,double *epsize){
+void main_analysis(double *tk,int tk_l,double *epsize,double rho){
+  shmm.tk=tk;
+  shmm.tk_l=tk_l;
+  shmm.rho=rho;
+  shmm.epsize=epsize;
+
   pthread_t thread[nThreads];
   if(nThreads==1)
     for(int i=0;i<nChr;i++)
-      objs[i]->make_hmm(tk,tk_l,epsize);
-  else{
-    int hasDone = 0;
-    while(hasDone<nChr){
-      size_t t;
-      for(t=0;t<std::min(nThreads,nChr-hasDone);t++){
-	size_t at =hasDone+t;
-	if(pthread_create( &thread[t], NULL, run_a_hmm, (void*) at)){
+      objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.rho);
+  else {
+    int at=0;
+    while(at<nChr){
+      int thisround = std::min(nChr-at,nThreads);
+      for(int t=0;t<thisround;t++){
+	size_t index = at+t;
+	if(pthread_create( &thread[t], NULL, run_a_hmm, (void*) index)){
 	  fprintf(stderr,"[%s] Problem spawning thread\n%s\n",__FUNCTION__,strerror(errno));
 	  exit(0);
 	}
       }
-      for(t=0;t<std::min(nThreads,nChr-hasDone);t++){
-	size_t at =hasDone+t;
+      for(int t=0;t<thisround;t++){
 	if(pthread_join( thread[t], NULL)){
 	  fprintf(stderr,"[%s] Problem joining thread\n%s\n",__FUNCTION__,strerror(errno));
 	  exit(0);
 	}
       }
-      
-      
+      at+=thisround;
     }
-
   }
 
 }
@@ -174,7 +188,7 @@ int psmc_wrapper(args *pars,int block) {
       break;
   }
   fprintf(stderr,"\t-> We have now allocated hmm's for: %d chromosomes\n",nChr);
-  objs[0]->make_hmm(tk,tk_l,epsize);
+  objs[0]->make_hmm(tk,tk_l,epsize,0.1);
   /*
     printarrayf("stationary",obj.stationary,tk_l);
     printarrayf("tk",tk,tk_l);

@@ -11,18 +11,14 @@ struct wins{
   int from;//inclusive
   int to;//inclusive
 };
-void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double mu,double **emis);
+//void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double **emis);
 
 class fastPSMC {
 public:
   double pix;
   int tk_l;
   double max_t;
-  //  unsigned maxTime; //number of time intervals
-  double rho;
-  double mu;
-  // double *tk;//tk is tk_l long
-  //  double *epsize;//tk_l long
+  double theta;
   double **P;
   double **PP;
   double *stationary,*R1,*R2;//tk_l long
@@ -36,9 +32,8 @@ public:
   fastPSMC(){
     pix = -666;
     max_t = 15;
-    rho = 0.207;
-    mu = 0.0001;
-    fprintf(stderr,"\t-> rho:%f mu:%f\n",rho,mu);
+    //rho = 0.207;
+    theta = 0.0001;
   }
   
   void setWindows(double *gls_a,int *pos,int last,int block);
@@ -57,7 +52,7 @@ public:
   void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,double **bw,double *stationary);
   void calculate_stationary(double *tk,int tk_l,double *lambda,double *results,double **P);
   void calculate_FW_BW_PP_Probs();
-  void make_hmm(double *tk,int tk_l,double *epsize);
+  void make_hmm(double *tk,int tk_l,double *epsize,double rho);
   
 private:
   void ComputeR2(int v,double **mat){

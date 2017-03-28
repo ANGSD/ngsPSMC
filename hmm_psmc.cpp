@@ -248,8 +248,8 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
   
   stationary(i) = exp(-sum_{j=0}^{i-1}{tau_j/lambda_j}*P2[i])
  */
-void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double mu,double **emis){
-  fprintf(stderr,"\t-> [Calculating emissions with tk_l:%d and windows.size():%lu:%s ] start\n",tk_l,windows.size(),__TIME__);
+void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis){
+  fprintf(stderr,"\t-> [Calculating emissions with tk_l:%d and windows.size():%lu:%s ] theta:%f start\n",tk_l,windows.size(),__TIME__,theta);
   //initialize the first:
   for(int j=0;j<tk_l;j++)
     emis[j][0] = log(0);
@@ -258,7 +258,7 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
   for(int v=0;v<windows.size();v++){
     for(int j=0;j<tk_l;j++){
       emis[j][v+1] = 0;
-      double inner = exp(-2.0*tk[j]*mu);
+      double inner = exp(-2.0*tk[j]*theta);
       for(int i=windows[v].from;i<windows[v].to;i++)
 	emis[j][v+1] += log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6)*(1-inner));//<- check
     }
@@ -304,12 +304,12 @@ void fastPSMC::ComputePii(unsigned numWind,int tk_l,double **P,double **PP,doubl
 }
 
 
-void fastPSMC::make_hmm(double *tk,int tk_l,double *epsize){
+void fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double rho){
   fprintf(stderr,"\t-> [%s] start\n",__FUNCTION__ );
   //prepare global probs
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
   //calculate emissions
-  calculate_emissions(tk,tk_l,gls,windows,mu,emis);
+  calculate_emissions(tk,tk_l,gls,windows,theta,emis);
   //  printmatrixf("emis",emis,tk_l,windows.size()+1);exit(0);
   
   calculate_stationary(tk,tk_l,epsize,stationary,P);
