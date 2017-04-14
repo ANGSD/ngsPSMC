@@ -235,7 +235,7 @@ void ComputeP3(double *tk,int tk_l,double *P3,double *epsize,double rho){
 
  */
 
-void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
+void ComputeP4_old(double *tk,int tk_l,double *P4,double *epsize,double rho){
   fprintf(stderr,"\t->[%s] rho: %f\n",__FUNCTION__,rho);
   for (unsigned i = 0; i < tk_l-1; i++){
     fprintf(stderr,"\t->[%s] epsize[%d]: %f tk[%d+1]: %f tk[%d]: %f tk[i+1]-tk[i]: %f\n",__FUNCTION__,i,epsize[i],i,tk[i+1],i,tk[i],tk[i+1]-tk[i]);
@@ -251,6 +251,7 @@ void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
     double part3exp = -2*(tk[i+1]-tk[i])/epsize[i]-2*rho*tk[i];
     part3 *= exp(-part3exp);
     
+
     double part4exp = -(tk[i+1]-tk[i])/epsize[i]-2*rho*tk[i];
     double part4 = 2*exp(part4exp);
     
@@ -265,7 +266,43 @@ void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
   }
   P4[tk_l-1] = log(2.0*rho/(1.0 + 2.0*rho*epsize[tk_l-1])*exp(-2.0*rho*tk[tk_l-1]));
 }
-	
+
+//this is the appendix version, ordering has been swapped to match, with rho=rho*2, it gives similar results
+void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
+  fprintf(stderr,"\t->[%s] rho: %f\n",__FUNCTION__,rho);
+  rho = rho*2.0;
+  for (unsigned i = 0; i < tk_l-1; i++){
+    fprintf(stderr,"\t->[%s] epsize[%d]: %f tk[%d+1]: %f tk[%d]: %f tk[i+1]-tk[i]: %f\n",__FUNCTION__,i,epsize[i],i,tk[i+1],i,tk[i],tk[i+1]-tk[i]);
+    double fact1 = 1.0/(1.0 - exp(-(tk[i+1]-tk[i])/epsize[i]) );
+
+    double part2 = (rho*epsize[i])/(1+epsize[i]*rho)*exp(rho*tk[i]);
+
+    double part4exp = -(tk[i+1]-tk[i])/epsize[i]-rho*tk[i];
+    double part4 = 2*exp(part4exp);
+
+    double part3 = (epsize[i]*rho)/(1-epsize[i]*rho);
+    double part3exp = -2*(tk[i+1]-tk[i])/epsize[i]-rho*tk[i];
+    part3 *= exp(-part3exp);
+
+    
+    double part1 = 2.0/((1-epsize[i]*rho)*(1+epsize[i]*rho));
+    double part1exp = -(tk[i+1]-tk[i])/epsize[i]-rho*tk[i+1];
+    part1 *= exp(part1exp);
+
+    
+    
+    double fact2= part1+part2-part3-part4;
+    
+    fprintf(stderr,"\t-> fact1: %f fact2: %f fact1*fact2: %f\n",fact1,fact2,fact1*fact2);
+    fprintf(stderr,"\t-> part1: %f part2: %f part3: %f part4: %f\n",part1,part2,part3,part4);
+    P4[i] = log(fact1)+log(fact2);
+    fprintf(stderr,"P[4][%d]: %f\n",i,P4[i]);
+
+    exit(0);
+  }
+  P4[tk_l-1] = log(2.0*rho/(1.0 + 2.0*rho*epsize[tk_l-1])*exp(-2.0*rho*tk[tk_l-1]));
+}
+
   
 void ComputeP7(double *tk,int tk_l,double *P7,double *epsize,double rho){
   for (unsigned i = 0; i < tk_l - 1; i++){
