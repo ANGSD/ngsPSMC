@@ -173,8 +173,9 @@ int psmc_wrapper(args *pars,int block) {
 #endif
   
   //initialize all hmm (one for each chr), for now just a single
-  
-  objs = new fastPSMC*[pars->chooseChr?pars->perc->mm.size():1];
+  int nobs = pars->chooseChr?1:pars->perc->mm.size();
+  fprintf(stderr,"\t-> nobs/nchr: %d\n",nobs);
+  objs = new fastPSMC*[nobs];
   for (myMap::const_iterator it = pars->perc->mm.begin() ;it!=pars->perc->mm.end();it++){
     if(pars->chooseChr!=NULL)
       iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop);

@@ -1,5 +1,7 @@
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+
 double addProtect3(double a,double b, double c){
   //function does: log(exp(a)+exp(b)+exp(c)) while protecting for underflow
   double maxVal;// = std::max(a,std::max(b,c));
