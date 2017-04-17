@@ -55,7 +55,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
   ComputeP0(tk_l,P[0],P[5]);
   printmatrixf("P.txt",P,8,tk_l);
   //  exit(0);
-  for(int p=0;p<8;p++){
+  for(int p=0;0&&p<8;p++){
     for(int i=0;i<tk_l;i++){
       fprintf(stderr,"P[%d][%d]: %f\n",p,i,P[p][i]);
       assert(exp(P[p][i])>=0&&exp(P[p][i])<=1);
@@ -134,16 +134,16 @@ void fastPSMC::calculate_FW_BW_PP_Probs(){
       // exit(0);
 #endif
       fw[0][v+1] = addProtect3(fw[0][v]+P[1][0] , R1[0]+P[3][0] , fw[0][v]+P[4][0])+emis[0][v+1] ;
-      fprintf(stderr,"fw[0][1]:%f\n",fw[0][v+1]);
+      //      fprintf(stderr,"fw[0][1]:%f\n",fw[0][v+1]);
       for (unsigned i = 1; i < tk_l; i++){
-	fprintf(stderr,"l1:%f l2:%f l3:%f l4:%f\n",fw[i][v]+P[1][i] , R2[i-1]+P[2][i-1] , R1[i]+P[3][i] , fw[i][v]+P[4][i]);
+	//fprintf(stderr,"l1:%f l2:%f l3:%f l4:%f\n",fw[i][v]+P[1][i] , R2[i-1]+P[2][i-1] , R1[i]+P[3][i] , fw[i][v]+P[4][i]);
 	fw[i][v+1]= addProtect4(fw[i][v]+P[1][i] , R2[i-1]+P[2][i-1] , R1[i]+P[3][i] , fw[i][v]+P[4][i])+emis[i][v+1];
-	fprintf(stderr,"fw[%d][%d]:%f\n",i,v+1,fw[i][v+1]);
+	//fprintf(stderr,"fw[%d][%d]:%f\n",i,v+1,fw[i][v+1]);
 	//	exit(0);
       }
       //      break;
     }
-    fprintf(stderr,"PROGRSM BRESKING IN FW BW\n");
+    //    fprintf(stderr,"PROGRSM BRESKING IN FW BW\n");
     return ;
     double tmp[tk_l];
     for(int i=0;i<tk_l;i++)
@@ -311,10 +311,15 @@ void fastPSMC::ComputePii(unsigned numWind,int tk_l,double **P,double **PP,doubl
   ComputeP55(numWind,tk_l,P,PP[5],fw,bw,stationary);
   ComputeP66(numWind,tk_l,P,PP[6],fw,bw,stationary);
   ComputeP77(numWind,tk_l,P,PP[7],fw,bw,stationary);
-  for(int i=0;i<tk_l;i++){
-    for(int p=0;p<8;p++)
-      assert(PP[p][i]>=0&&P[p][i]<=1);
+  printmatrixf("PP.txt",PP,8,tk_l);
+  //  exit(0);
+  for(int p=1;p<8;p++){
+    for(int i=0;i<tk_l;i++){
+      fprintf(stderr,"P[%d][%d]: %f\n",p,i,PP[p][i]);
+      assert(exp(PP[p][i])>=0&&exp(PP[p][i])<=1);
+    }
   }
+  exit(0);
 }
 
 
