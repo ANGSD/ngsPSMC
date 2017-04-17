@@ -51,11 +51,16 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
   ComputeP2(tk_l,P[2],P[5]);
   ComputeP3(tk,tk_l,P[3],epsize,rho);
   ComputeP4(tk,tk_l,P[4],epsize,rho);
-  ComputeP7(tk,tk_l,P[7],epsize,rho);
+  ComputeP7(tk,tk_l,P[7],P[3],epsize,rho);
   ComputeP0(tk_l,P[0],P[5]);
-  for(int i=0;i<tk_l;i++){
-    for(int p=0;p<8;p++)
-      assert(P[p][i]>=0&&P[p][i]<=1);
+  printmatrixf("P.txt",P,8,tk_l);
+  //  exit(0);
+  for(int p=0;p<8;p++){
+    for(int i=0;i<tk_l;i++){
+      fprintf(stderr,"P[%d][%d]: %f\n",p,i,P[p][i]);
+      assert(exp(P[p][i])>=0&&exp(P[p][i])<=1);
+    }
+
   }
 }
 /*
