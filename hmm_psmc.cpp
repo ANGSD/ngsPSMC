@@ -53,6 +53,10 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
   ComputeP4(tk,tk_l,P[4],epsize,rho);
   ComputeP7(tk,tk_l,P[7],epsize,rho);
   ComputeP0(tk_l,P[0],P[5]);
+  for(int i=0;i<tk_l;i++){
+    for(int p=0;p<8;p++)
+      assert(P[p][i]>=0&&P[p][i]<=1);
+  }
 }
 /*
   Functions below are template for future ...
@@ -302,6 +306,10 @@ void fastPSMC::ComputePii(unsigned numWind,int tk_l,double **P,double **PP,doubl
   ComputeP55(numWind,tk_l,P,PP[5],fw,bw,stationary);
   ComputeP66(numWind,tk_l,P,PP[6],fw,bw,stationary);
   ComputeP77(numWind,tk_l,P,PP[7],fw,bw,stationary);
+  for(int i=0;i<tk_l;i++){
+    for(int p=0;p<8;p++)
+      assert(PP[p][i]>=0&&P[p][i]<=1);
+  }
 }
 
 
