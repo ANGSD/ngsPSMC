@@ -228,7 +228,7 @@ void ComputeP3(double *tk,int tk_l,double *P3,double *epsize,double rho){
     P3[i] -= 1.0/(1.0 - epsize[i]*2.0*rho)*exp(-tk[i+1]*2.0*rho);
     P3[i] = log(P3[i]);
   }
-  P3[tk_l-1] = exp(-tk[tk_l-1]*2.0*rho);
+  P3[tk_l-1] = log(exp(-tk[tk_l-1]*2.0*rho));
 }
 
 /*

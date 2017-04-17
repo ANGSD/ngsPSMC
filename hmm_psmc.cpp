@@ -55,7 +55,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
   ComputeP0(tk_l,P[0],P[5]);
   printmatrixf("P.txt",P,8,tk_l);
   //  exit(0);
-  for(int p=0;0&&p<8;p++){
+  for(int p=0;1&&p<8;p++){
     for(int i=0;i<tk_l;i++){
       fprintf(stderr,"P[%d][%d]: %f\n",p,i,P[p][i]);
       assert(exp(P[p][i])>=0&&exp(P[p][i])<=1);
