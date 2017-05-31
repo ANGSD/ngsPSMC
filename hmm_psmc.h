@@ -2,6 +2,8 @@
   Class that contains the perChr hmm
  */
 
+#define DOTRANS 1
+
 double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **PP);
 void setTk(int n, double *t, double max_t, double alpha, double *inp_ti);
 void setEPSize(double *ary,int l,double *from_infile);
@@ -28,8 +30,9 @@ public:
   double **emis;//tk_l x nWindows+1
   double *gls;//deep copy of the gls for a chr
   std::vector<wins> windows;
-
+  double **trans;
   fastPSMC(){
+    trans = NULL;
     pix = -666;
     max_t = 15;
     //rho = 0.207;

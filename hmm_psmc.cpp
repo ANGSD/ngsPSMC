@@ -53,7 +53,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
   ComputeP4(tk,tk_l,P[4],epsize,rho);
   ComputeP7(tk,tk_l,P[7],P[3],epsize,rho);
   ComputeP0(tk_l,P[0],P[5]);
-  printmatrixf("P.txt",P,8,tk_l);
+  printmatrixf((char*)"P.txt",P,8,tk_l);
   //  exit(0);
   for(int p=0;1&&p<8;p++){
     for(int i=0;i<tk_l;i++){
@@ -211,7 +211,15 @@ void fastPSMC::allocate(int tk_l_arg){
     P[i] = new double[tk_l];
     PP[i]= new double[tk_l];
   }
- 
+  if(DOTRANS){
+    trans = new double *[tk_l];
+    for(int i=0;i<tk_l;i++){
+      trans[i] = new double[tk_l];
+      for(int j=0;j<tk_l;j++)
+	trans[i][j] = -888;//placeholder, to spot if something shouldnt be happening;
+    }
+
+  }
 }
 /*
   Function will set the indices for the windows
@@ -311,7 +319,7 @@ void fastPSMC::ComputePii(unsigned numWind,int tk_l,double **P,double **PP,doubl
   ComputeP55(numWind,tk_l,P,PP[5],fw,bw,stationary);
   ComputeP66(numWind,tk_l,P,PP[6],fw,bw,stationary);
   ComputeP77(numWind,tk_l,P,PP[7],fw,bw,stationary);
-  printmatrixf("PP.txt",PP,8,tk_l);
+  printmatrixf((char*)"PP.txt",PP,8,tk_l);
   //  exit(0);
   for(int p=1;p<8;p++){
     for(int i=0;i<tk_l;i++){
@@ -335,4 +343,10 @@ void fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double rho){
   //    printarray(stderr,stationary,tk_l);
   calculate_FW_BW_PP_Probs();
   fprintf(stderr,"\t-> [%s] stop\n",__FUNCTION__ );
+  if(DOTRANS){
+    for(int i=0;i<tk_l;i++)
+      for(int j=0;j<tk_l;j++)
+	trans[i][j] = calc_trans(i,j,P);
+  }
+  
 }

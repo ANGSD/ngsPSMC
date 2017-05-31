@@ -304,7 +304,7 @@ double ComputeXXX(int i,int j,double **P){
 }
 
 
-double trans(int k, int j,double **P){
+double calc_trans(int k, int j,double **P){
   double ret;
   if(k<j){
     double sum=0;
