@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+
+
 double addProtect3(double a,double b, double c){
   //function does: log(exp(a)+exp(b)+exp(c)) while protecting for underflow
   double maxVal;// = std::max(a,std::max(b,c));
@@ -287,4 +291,41 @@ void ComputeP0(int tk_l,double *P0,double *P5){ //probability P(T > i)
   P0[0] = P5[0];
   for (unsigned i = 1; i < tk_l; i++)
     P0[i] = P0[i-1]+P5[i];
+}
+
+double ComputeXXX(int i,int j,double **P){
+  assert(i<j);//check if needed
+  double sum =0;
+  int first = MIN(i,j);//check if needed
+  int last = MAX(i,j);//check if needed
+  for(int l=first+1;l<=last-1;j++)
+    sum += P[4][l];
+  return P[7][i]+P[2][j]+sum;
+}
+
+
+double trans(int k, int j,double **P){
+  double ret;
+  if(k<j){
+    double sum=0;
+    for(int l=k+1;k<=j-1;l++)
+      sum += P[5][l];
+    ret = P[6][k]+P[2][j]+sum;
+  }else if(j==k){
+    int sum =0;
+    for(int i=0;i<k;i++)
+      sum += exp(ComputeXXX(i,k,P));//underflow stuff
+    sum = log(sum);
+    ret = addProtect3(P[1][k],P[4][k],sum);
+  }else if(k>j){
+    int sum =0;
+    for(int i=0;i<k;i++)
+      sum += exp(ComputeXXX(i,k,P));//underflow stuff
+    ret = addProtect2(P[3][j],sum);
+  }else{
+    assert(0==1);
+    ret=0;//<- is never set, just to silence compiler
+  }
+  
+  return ret;
 }
