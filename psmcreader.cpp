@@ -1,6 +1,7 @@
 #include <sys/stat.h>
 
 #include <htslib/bgzf.h>
+#include <htslib/faidx.h>
 #include <zlib.h>
 #include "header.h"
 #include "psmcreader.h"
@@ -69,6 +70,7 @@ perpsmc * perpsmc_init(char *fname){
   ret->pos = NULL;
   ret->bgzf_pos=ret->bgzf_gls=NULL;
   ret->pos = NULL;
+  ret->pf = NULL;
   size_t clen;
   if(!fexists(fname)){
     fprintf(stderr,"\t-> Problem opening file: \'%s\'\n",fname);
@@ -83,12 +85,31 @@ perpsmc * perpsmc_init(char *fname){
   char buf[8];
   assert(fread(buf,1,8,fp)==8);
   ret->version = psmcversion(fname);
+  ret->nSites =0;
   fprintf(stderr,"\t-> Version of fname: \'%s\' is:%d\n",fname,ret->version);
   if(ret->version!=1){
-    fprintf(stderr,"\t-> Looks like you are trying to use a version of PSMC that does not exists\n");
-    exit(0);
+    fprintf(stderr,"\t-> Looks like you are trying to use a version of PSMC that does not exists, assuming its a fastafile\n");
+    fclose(fp);
+    fp=NULL;
+    ret->pf = perFasta_init(fname);
+    for(int i=0;i<faidx_nseq(ret->pf->fai);i++){
+      char *chr = strdup(faidx_iseq(ret->pf->fai,i));
+      fprintf(stderr,"%d) chr: %s\n",i,chr);
+      datum d;
+      d.nSites = faidx_seq_len(ret->pf->fai,chr);
+      d.pos=d.saf=0;
+      myMap::iterator it = ret->mm.find(chr);
+      if(it==ret->mm.end())
+	ret->mm[chr] =d ;
+      else{
+	fprintf(stderr,"Problem with chr: %s, key already exists, psmc file needs to be sorted. (sort your -rf that you used for input)\n",chr);
+	exit(0);
+      }
+
+    }
+    return ret;
   }
-  ret->nSites =0;
+
   while(fread(&clen,sizeof(size_t),1,fp)){
     char *chr = (char*)malloc(clen+1);
     assert(clen==fread(chr,1,clen,fp));
@@ -151,33 +172,54 @@ perpsmc * perpsmc_init(char *fname){
  //chr start stop is given from commandine
  myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop){
    assert(chr!=NULL);
+
    myMap::iterator it = pp->mm.find(chr);
    if(it==pp->mm.end()){
      fprintf(stderr,"\t-> [%s] Problem finding chr: %s\n",__FUNCTION__,chr);
      return it;
    }
-   my_bgzf_seek(pp->bgzf_gls,it->second.saf,SEEK_SET);
-   my_bgzf_seek(pp->bgzf_pos,it->second.pos,SEEK_SET);
+   fprintf(stderr,"%s->%lu\n",it->first,it->second.nSites);
+   if(pp->pf==NULL){
+     my_bgzf_seek(pp->bgzf_gls,it->second.saf,SEEK_SET);
+     my_bgzf_seek(pp->bgzf_pos,it->second.pos,SEEK_SET);
+   }
    //fprintf(stderr,"pp->gls:%p\n",pp->gls);
    if(pp->pos)
      delete [] pp->pos;
    if(pp->gls)
      delete [] pp->gls;
    pp->pos = new int[it->second.nSites];
-   my_bgzf_read(pp->bgzf_pos,pp->pos,sizeof(int)*it->second.nSites);
    pp->gls = new double[2*it->second.nSites];//<-valgrind complains about large somthing
-   my_bgzf_read(pp->bgzf_gls,pp->gls,2*sizeof(double)*it->second.nSites);
-   //   fprintf(stderr," end: %f %f\n",pp->gls[0],pp->gls[1]);
-   pp->first=0;
-   if(start!=-1)
-     while(pp->first<it->second.nSites&&pp->pos[pp->first]<start)
-       pp->first++;
    
-   pp->last = it->second.nSites;
-   if(stop!=-1&&stop<=pp->pos[pp->last-1]){
-     pp->last=pp->first;
-     while(pp->pos[pp->last]<stop) 
-       pp->last++;
+   if(pp->pf==NULL){
+     my_bgzf_read(pp->bgzf_pos,pp->pos,sizeof(int)*it->second.nSites);
+     my_bgzf_read(pp->bgzf_gls,pp->gls,2*sizeof(double)*it->second.nSites);
+     //   fprintf(stderr," end: %f %f\n",pp->gls[0],pp->gls[1]);
+     pp->first=0;
+     if(start!=-1)
+       while(pp->first<it->second.nSites&&pp->pos[pp->first]<start)
+	 pp->first++;
+     
+     pp->last = it->second.nSites;
+     if(stop!=-1&&stop<=pp->pos[pp->last-1]){
+       pp->last=pp->first;
+       while(pp->pos[pp->last]<stop) 
+	 pp->last++;
+     }
+   }else{
+     int asdf = it->second.nSites;
+     char *tmp = faidx_fetch_seq(pp->pf->fai, it->first, 0, 0x7fffffff, &asdf);
+     for(int i=0;i<it->second.nSites;i++){
+       pp->pos[i] = i*100;
+       pp->gls[2*i]=pp->gls[2*i+1]=0;
+       //K=het
+       if(tmp[i]=='K')
+	 pp->gls[2*i+1] = 1;
+       //       fprintf(stderr,"%c\n",tmp[i]);
+     }
+     free(tmp);
+     pp->first=0;
+     pp->last=it->second.nSites;
    }
    return it;
  }

@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #endif
-
+#include <cassert>
 #include "header.h"
 
 void normalize(double *tmp,size_t len){
@@ -58,6 +58,7 @@ void my_bgzf_write(BGZF *fp, const void *data, size_t length){
 
 }
 void my_bgzf_seek(BGZF *fp, int64_t pos, int whence){
+  assert(fp);
   if(bgzf_seek(fp,pos,whence)<0){
     fprintf(stderr,"\t-> Problems seeking in bgzf_seek");
     exit(0);

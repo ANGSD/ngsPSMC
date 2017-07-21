@@ -1,5 +1,6 @@
 #pragma once
 #include "psmcreader.h"
+#include "fastas.h"
 
 //from psmc
 typedef struct{
@@ -28,6 +29,7 @@ typedef struct {
   char *tkfile;
   double *tk;
   double *lambda;
+  perFasta *pf;
 }args;
 args * getArgs(int argc,char **argv);
 void destroy_args(args *p);

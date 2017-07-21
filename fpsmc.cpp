@@ -183,7 +183,7 @@ int psmc_wrapper(args *pars,int block) {
       iter_init(pars->perc,it->first,pars->start,pars->stop);
     fastPSMC *obj=objs[nChr++]=new fastPSMC;
     obj->setWindows(pars->perc->gls,pars->perc->pos,pars->perc->last,pars->block);
-    //   obj.printWindows(stdout);
+    //obj->printWindows(stdout);exit(0);
     obj->allocate(tk_l);
     if(pars->chooseChr!=NULL)
       break;

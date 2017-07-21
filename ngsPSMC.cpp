@@ -62,7 +62,7 @@ int print_header(int argc,char **argv){
   return 0;
 }
 
-void print(int argc,char **argv){
+void print_main(int argc,char **argv){
   
   if(argc<1){
     fprintf(stderr,"\t-> Must supply afile.saf.idx files \n");
@@ -232,7 +232,7 @@ int main(int argc,char **argv){
   ++argv;
   --argc;
   if(!strcasecmp(*argv,"print"))
-    print(--argc,++argv);
+    print_main(--argc,++argv);
   else if(!strcasecmp(*argv,"print_header"))
     print_header(--argc,++argv);
   else if(!strcasecmp(*argv,"makeold"))
