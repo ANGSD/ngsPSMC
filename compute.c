@@ -296,10 +296,8 @@ void ComputeP0(int tk_l,double *P0,double *P5){ //probability P(T > i)
 double ComputeXXX(int i,int j,double **P){
   assert(i<j);//check if needed
   double sum =0;
-  int first = MIN(i,j);//check if needed
-  int last = MAX(i,j);//check if needed
-  for(int l=first+1;l<=last-1;j++)
-    sum += P[4][l];
+  for(int l=i+1;l<=j-1;l++)
+    sum += P[5][l];
   return P[7][i]+P[2][j]+sum;
 }
 
@@ -308,24 +306,32 @@ double calc_trans(int k, int j,double **P){
   double ret;
   if(k<j){
     double sum=0;
-    for(int l=k+1;k<=j-1;l++)
+    for(int l=k+1;l<=j-1;l++)
       sum += P[5][l];
-    ret = P[6][k]+P[2][j]+sum;
+    ret = exp(P[6][k]+P[2][j]+sum);
+    ret += exp(ComputeXXX(k,j,P));//underflow stuff
+    ret = log(ret);
   }else if(j==k){
     int sum =0;
     for(int i=0;i<k;i++)
       sum += exp(ComputeXXX(i,k,P));//underflow stuff
-    sum = log(sum);
-    ret = addProtect3(P[1][k],P[4][k],sum);
+    //  sum = log(sum);
+    //    ret = addProtect3(P[1][k],P[4][k],sum);
+    ret = log(exp(P[1][k])+exp(P[4][k])+sum);
   }else if(k>j){
     int sum =0;
-    for(int i=0;i<k;i++)
+    for(int i=0;i<k;i++){
       sum += exp(ComputeXXX(i,k,P));//underflow stuff
-    ret = addProtect2(P[3][j],sum);
+    }
+    ret = log(exp(P[3][j])+sum);//addProtect2(P[3][j],log(sum));
   }else{
     assert(0==1);
     ret=0;//<- is never set, just to silence compiler
   }
-  
+  //  fprintf(stderr," %d %d :%f\n",k,j,ret);
+  if(isnan(ret)){
+    fprintf(stderr,"exiting\n");
+    exit(0);
+  }
   return ret;
 }

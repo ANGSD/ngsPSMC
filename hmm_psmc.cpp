@@ -223,6 +223,7 @@ void fastPSMC::allocate(int tk_l_arg){
 }
 /*
   Function will set the indices for the windows
+  first index and last index INCLUSIVE
  */
 //void fastPSMC::setWindows(perpsmc *perc,char *chooseChr,int start,int stop,int block){
 void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
@@ -231,10 +232,11 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
 
   int beginIndex =0;
   int endIndex=0;
-  int beginPos = 1;
+  int beginPos = 0;
   int endPos = beginPos+block-1;
   
   while(1){
+    //fprintf(stderr,"Beginpos:%d EndPos:%d\n",beginPos,endPos);
     wins w;
     if(endPos>pos[last-1])
       break;
@@ -243,16 +245,19 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
       beginIndex++;
     while(pos[endIndex]<endPos)
       endIndex++;
+    endIndex--;
 #if 0
-    fprintf(stdout,"\t-> endpiadsf:%d\n",pos[endIndex]);
+    fprintf(stdout,"\t-> endpos:%d\n",pos[endIndex]);
     fprintf(stdout,"\t-> winsize:%d bp:%d,ep:%d bi:%d ei:%d ei-bi:%d\n",block,beginPos,endPos,beginIndex,endIndex,endIndex-beginIndex);
 #endif
     w.from = beginIndex;
-    w.to = endIndex+1;
+    w.to = endIndex;
     windows.push_back(w);
     beginPos+=block;
     endPos+=block;
+    //    exit(0);
   }
+
 }
 
 
@@ -277,8 +282,11 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
     for(int j=0;j<tk_l;j++){
       emis[j][v+1] = 0;
       double inner = exp(-2.0*tk[j]*theta); // this part relates to issue #1
-      for(int i=windows[v].from;i<windows[v].to;i++)
+      for(int i=windows[v].from;i<windows[v].to;i++){
+	fprintf(stderr,"gls(%d,%d)=",2*i,2*i+1);
+	fprintf(stderr,"(%f,%f)\n",gls[2*i],gls[2*i+1]);
 	emis[j][v+1] += log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6)*(1-inner));//<- check
+      }
     }
   }
   fprintf(stderr,"\t-> [Calculating emissions with tk_l:%d and windows.size():%lu:%s ] stop\n",tk_l,windows.size(),__TIME__);
@@ -343,10 +351,14 @@ void fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double rho){
   //    printarray(stderr,stationary,tk_l);
   calculate_FW_BW_PP_Probs();
   fprintf(stderr,"\t-> [%s] stop\n",__FUNCTION__ );
+  //  exit(0);
   if(DOTRANS){
     for(int i=0;i<tk_l;i++)
-      for(int j=0;j<tk_l;j++)
+      for(int j=0;j<tk_l;j++){
+	//	fprintf(stderr,"i:%d j:%d\n",i,j);
 	trans[i][j] = calc_trans(i,j,P);
+      }
   }
+  printmatrixf("transitions.txt",trans,tk_l,tk_l);
   
 }
