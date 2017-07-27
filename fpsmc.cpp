@@ -167,9 +167,10 @@ int psmc_wrapper(args *pars,int block) {
   setEPSize(epsize,tk_l,p->params);
   //(nelems,array,max_t,alpha,array with values from file, can be NULL)
   setTk(tk_l,tk,15,0.01,p->times);//<- last position will be infinity
+  //  fprintf(stderr,"[%s] tk=(%f,%f)\n",__FUNCTION__,tk[0],tk[1]);//exit(0);
 #if 1
   for(int i=0;i<tk_l;i++)
-    fprintf(stderr,"[%d]:(%f,%f)\n",i,tk[i],epsize[i]);
+    fprintf(stderr,"(tk,epsize)[%d]:(%f,%f)\n",i,tk[i],epsize[i]);
 #endif
   
   //initialize all hmm (one for each chr), for now just a single
@@ -182,21 +183,32 @@ int psmc_wrapper(args *pars,int block) {
     else
       iter_init(pars->perc,it->first,pars->start,pars->stop);
     fastPSMC *obj=objs[nChr++]=new fastPSMC;
+    fprintf(stderr,"gls1:%f %f %f %f\n",pars->perc->gls[0],pars->perc->gls[1],pars->perc->gls[2],pars->perc->gls[3]);
     obj->setWindows(pars->perc->gls,pars->perc->pos,pars->perc->last,pars->block);
-    //    obj->printWindows(stdout);exit(0);
+    fprintf(stderr,"gls2:%f %f %f %f\n",pars->perc->gls[0],pars->perc->gls[1],pars->perc->gls[2],pars->perc->gls[3]);
+    //  obj->printWindows(stdout);exit(0);
     obj->allocate(tk_l);
     if(pars->chooseChr!=NULL)
       break;
   }
   fprintf(stderr,"\t-> We have now allocated hmm's for: %d chromosomes\n",nChr);
+  fprintf(stderr,"[%s] tk=(%f,%f)\n",__FUNCTION__,tk[0],tk[1]);//exit(0);
+  fprintf(stderr,"[%s] epsize=(%f,%f)\n",__FUNCTION__,epsize[0],epsize[1]);//exit(0);
   objs[0]->make_hmm(tk,tk_l,epsize,0.1);
+  printarrayf("tk",tk,tk_l);
+
+  printmatrixf("fw",objs[0]->fw,tk_l,objs[0]->windows.size()+1);
+  printmatrixf("bw",objs[0]->bw,tk_l,objs[0]->windows.size()+1);
+  printmatrixf("emis",objs[0]->emis,tk_l,objs[0]->windows.size()+1);
+  //printmatrixf("pp",objs[0]->pp,tk_l,objs[0]->windows.size()+1);
+  // 
   /*
     printarrayf("stationary",obj.stationary,tk_l);
-    printarrayf("tk",tk,tk_l);
+    
     printarrayf("epsize",epsize,tk_l);
     printmatrixf("P",obj.P,7,tk_l);
     printmatrixf("emis",obj.emis,tk_l,obj.windows.size()+1);
-    printmatrixf("fw",obj.fw,tk_l,obj.windows.size()+1);
+
     printarrayf("r1",obj.R1,tk_l);
     printarrayf("r2",obj.R2,tk_l);
   */

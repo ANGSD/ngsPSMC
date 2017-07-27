@@ -38,12 +38,12 @@ double addProtectN(double a[],int len){
   //function does: log(sum(exp(a))) while protecting for underflow
   double maxVal = a[0];
 
-  for(int i=1;i<10;i++)
+  for(int i=1;i<len;i++)
     if(maxVal<a[i])
       maxVal=a[i];
 
   double sumVal = 0;
-  for(int i=1;i<10;i++)
+  for(int i=1;i<len;i++)
     sumVal += exp(a[i]-maxVal);
 
   return log(sumVal) + maxVal;
@@ -178,7 +178,8 @@ void ComputeP77(unsigned numWind,int tk_l,double **P,double *PP7,double **fw,dou
   prob of not recombining given states
 */
 
-void ComputeP1(double *tk,int tk_l,double *P,double *epsize,double rho){ 
+void ComputeP1(double *tk,int tk_l,double *P,double *epsize,double rho){
+  fprintf(stderr,"[%s] tks=(%f,%f) epssize=(%f,%f)\n",__FUNCTION__,tk[0],tk[1],epsize[0],epsize[1]);
   for (unsigned i = 0; i < tk_l-1; i++){
     P[i] = 1.0/(1.0+epsize[i]*2.0*rho);
     P[i] *= exp( -rho*2.0*tk[i] ) - exp(-rho*2.0*tk[i+1]-(tk[i+1]-tk[i])/epsize[i]);
@@ -214,13 +215,16 @@ void ComputeP6(double *tk,int tk_l,double *P,double *epsize,double rho){
       P[i] = log(P[i]);
     }
     P[tk_l - 1] = log(0.0);
-  }
+}
 
 
 void ComputeP2(int tk_l,double *P2,double *P5){
-  for (unsigned i = 0; i < tk_l-1; i++)
+  for (unsigned i = 0; i < tk_l; i++){
+
     P2[i] = log(1.0 - exp(P5[i]));
-  P2[tk_l-1]=-0.0;
+    fprintf(stderr,"%d):p5:%f value:%f\n",i,P5[i],P2[i]);
+  //  P2[tk_l-1]=-0.0;
+  }
 }
 
 
@@ -232,7 +236,7 @@ void ComputeP3(double *tk,int tk_l,double *P3,double *epsize,double rho){
     P3[i] -= 1.0/(1.0 - epsize[i]*2.0*rho)*exp(-tk[i+1]*2.0*rho);
     P3[i] = log(P3[i]);
   }
-  P3[tk_l-1] = log(exp(-tk[tk_l-1]*2.0*rho));
+  P3[tk_l-1] = log(0.0);
 }
 
 /*
@@ -242,11 +246,13 @@ void ComputeP3(double *tk,int tk_l,double *P3,double *epsize,double rho){
 
 void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
   //  fprintf(stderr,"\t->[%s] rho: %f\n",__FUNCTION__,rho);
+  fprintf(stderr,"\t->[%s] epsizes=(%f,%f) \n",__FUNCTION__,epsize[0],epsize[1]);
   for (unsigned i = 0; i < tk_l-1; i++){
-    //fprintf(stderr,"\t->[%s] epsize[%d]: %f tk[%d+1]: %f tk[%d]: %f tk[i+1]-tk[i]: %f\n",__FUNCTION__,i,epsize[i],i,tk[i+1],i,tk[i],tk[i+1]-tk[i]);
+
     double fact1 = 1.0/(1.0 - exp(-(tk[i+1]-tk[i])/epsize[i]) );
 
     double part1 = 2.0/(1-4.0*epsize[i]*epsize[i]*rho*rho);
+    fprintf(stderr,"\tparst1fact1:%f\n",part1);
     double part1exp = -(tk[i+1]-tk[i])/epsize[i]-2*rho*tk[i+1];
     part1 *= exp(part1exp);
 
@@ -262,29 +268,34 @@ void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
     
     double fact2= part1+part2-part3-part4;
     
-    //fprintf(stderr,"\t-> fact1: %f fact2: %f fact1*fact2: %f\n",fact1,fact2,fact1*fact2);
-    //fprintf(stderr,"\t-> part1: %f part2: %f part3: %f part4: %f\n",part1,part2,part3,part4);
+    fprintf(stderr,"\t-> fact1: %f fact2: %f fact1*fact2: %f\n",fact1,fact2,fact1*fact2);
+    fprintf(stderr,"\t-> part1: %f part2: %f part3: %f part4: %f\n",part1,part2,part3,part4);
+    fprintf(stderr,"\t-> part1+part2: %f -part3-part4: %f \n",part1+part2,-part3-part4);
+    fprintf(stderr,"\t-> part1+part2-part3-part4: %f \n",part1+part2-part3-part4);
     P4[i] = log(fact1)+log(fact2);
     //    fprintf(stderr,"P[4][%d]: %f\n",i,P4[i]);
 
     //exit(0);
     //    assert(P4[i]>=0&&P4[i]<=1);
   }
-  P4[tk_l-1] = log(2.0*rho/(1.0 + 2.0*rho*epsize[tk_l-1])*exp(-2.0*rho*tk[tk_l-1]));
-  // assert(P4[tk_l-1]>=0&&P4[tk_l-1]<=1);
+
+  double top = 2.0*rho*epsize[tk_l-1];
+  double bottom = (1.0 + 2.0*rho*epsize[tk_l-1]);
+  double expot = exp(-2.0*rho*tk[tk_l-1]);
+  fprintf(stderr,"top:%f bot:%f exp:%f rho:%f epSize[tk_l-1]:%f\n",top,bottom,expot,rho,epsize[tk_l-1]);
+  P4[tk_l-1] = log(2.0*rho*epsize[tk_l-1]/(1.0 + 2.0*rho*epsize[tk_l-1])*exp(-2.0*rho*tk[tk_l-1]));
+  assert(exp(P4[tk_l-1])>=0&&exp(P4[tk_l-1])<=1);
 }
 
   
 void ComputeP7(double *tk,int tk_l,double *P7,double *P3,double *epsize,double rho){
-  for (unsigned i = 0; i < tk_l - 1; i++){
-    double exppart = -2*rho*(tk[i+1]-tk[i]);
-    P7[i] = (1-exp(exppart));
-    P7[i] = P7[i]-exp(P3[i]);
-    P7[i] = log(P7[i]);
-  }
+  for (unsigned i = 0; i < tk_l - 1; i++)
+    P7[i] = log(exp(-2.0*rho*tk[i])-exp(-2.0*rho*tk[i+1]) -exp(P3[i]));
+  
   unsigned i = tk_l - 1;
-  fprintf(stderr,"inner: %f\n",exp(-2.0*rho*tk[i]));
-  P7[i] = log(1.0 - exp(-2.0*rho*tk[i]));
+  
+  P7[i] = log(0.0);
+  fprintf(stderr,"P7 (%f,%f)\n",exp(P7[0]),exp(P7[1]));
 }
   
 void ComputeP0(int tk_l,double *P0,double *P5){ //probability P(T > i)
@@ -298,37 +309,46 @@ double ComputeXXX(int i,int j,double **P){
   double sum =0;
   for(int l=i+1;l<=j-1;l++)
     sum += P[5][l];
-  return P[7][i]+P[2][j]+sum;
+  double returnVal = P[7][i]+P[2][j]+sum;
+  fprintf(stderr,"ComputeXXX(%d,%d):%f\n",i,j,exp(returnVal));
+  return returnVal;
 }
 
 
 double calc_trans(int k, int j,double **P){
   double ret;
   if(k<j){
-    double sum=0;
+    double sumL=0;
     for(int l=k+1;l<=j-1;l++)
-      sum += P[5][l];
-    ret = exp(P[6][k]+P[2][j]+sum);
-    ret += exp(ComputeXXX(k,j,P));//underflow stuff
+      sumL += P[5][l];
+
+    ret = exp(P[6][k]+P[2][j]+sumL);
+    double sum =0;
+    for(int i=0;i<k;i++)
+      sum += exp(ComputeXXX(i,j,P));//underflow stuff
+    ret += sum;//underflow stuff
     ret = log(ret);
   }else if(j==k){
-    int sum =0;
-    for(int i=0;i<k;i++)
+    double sum =0;
+    for(int i=0;i<k;i++){
+      //      fprintf(stderr,"\t-> AAAAAAAAAAAA expComputeXXX:%f\n",exp(ComputeXXX(i,k,P)))
       sum += exp(ComputeXXX(i,k,P));//underflow stuff
+    }
+    //    fprintf(stderr,"sum:%f P1[1][k]:%f P[4][k]:%f\n",sum,exp(P[1][k]),exp(P[4][k]));
     //  sum = log(sum);
     //    ret = addProtect3(P[1][k],P[4][k],sum);
     ret = log(exp(P[1][k])+exp(P[4][k])+sum);
   }else if(k>j){
-    int sum =0;
-    for(int i=0;i<k;i++){
-      sum += exp(ComputeXXX(i,k,P));//underflow stuff
+    double sum =0;
+    for(int i=0;i<j;i++){
+      sum += exp(ComputeXXX(i,j,P));//underflow stuff
     }
     ret = log(exp(P[3][j])+sum);//addProtect2(P[3][j],log(sum));
   }else{
     assert(0==1);
     ret=0;//<- is never set, just to silence compiler
   }
-  //  fprintf(stderr," %d %d :%f\n",k,j,ret);
+  //  fprintf(stderr," %d %d :%f\n",k,j,exp(ret));
   if(isnan(ret)){
     fprintf(stderr,"exiting\n");
     exit(0);

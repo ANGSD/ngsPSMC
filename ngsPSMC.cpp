@@ -83,7 +83,7 @@ void print_main(int argc,char **argv){
       it = iter_init(pars->perc,it->first,pars->start,pars->stop);
 
     for(size_t s=pars->perc->first;s<pars->perc->last;s++)
-      fprintf(stdout,"%s\t%d\t%e\t%e\n",it->first,pars->perc->pos[s]+1,pars->perc->gls[2*s],pars->perc->gls[2*s+1]);
+      fprintf(stdout,"%s\t%d(%d,%d)\t%e\t%e\n",it->first,pars->perc->pos[s]+1,2*s,2*s+1,pars->perc->gls[2*s],pars->perc->gls[2*s+1]);
     
     if(pars->chooseChr!=NULL)
       break;

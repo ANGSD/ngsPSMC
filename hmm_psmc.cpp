@@ -11,7 +11,7 @@ void printarrayf(char *fname,double *m,int x);
 
 void printarray(FILE *fp,double *ary,int l){
   for(int i=0;i<l;i++)
-    fprintf(fp,"%d)\t%f\n",i,ary[i]);
+    fprintf(fp,"%f\t",i,ary[i]);
 
 }
 void printmatrix(FILE *fp,double **mat,int x,int y){
@@ -45,6 +45,9 @@ double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **
 
 
 void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,double rho){
+  fprintf(stderr,"[%s] rho:%f\n",__FUNCTION__,rho);
+  fprintf(stderr,"[%s] tks[0]:%f tks[1]:%f\n",__FUNCTION__,tk[0],tk[1]);
+  fprintf(stderr,"[%s] epsize[0]:%f epsize[1]:%f\n",__FUNCTION__,epsize[0],epsize[1]);
   ComputeP1(tk,tk_l,P[1],epsize,rho);
   ComputeP5(tk,tk_l,P[5],epsize);
   ComputeP6(tk,tk_l,P[6],epsize,rho);
@@ -57,7 +60,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
   //  exit(0);
   for(int p=0;1&&p<8;p++){
     for(int i=0;i<tk_l;i++){
-      fprintf(stderr,"P[%d][%d]: %f\n",p,i,P[p][i]);
+      //      fprintf(stderr,"P[%d][%d]: %f\n",p,i,P[p][i]);
       assert(exp(P[p][i])>=0&&exp(P[p][i])<=1);
     }
 
@@ -119,36 +122,42 @@ void setEPSize(double *ary,int l,double *from_infile){
 
 void fastPSMC::calculate_FW_BW_PP_Probs(){
     //we first set the initial fwprobs to stationary distribution
-    for(int i=0;i<tk_l;i++)
+  for(int i=0;i<tk_l;i++){
       fw[i][0] = stationary[i];
-
+      fprintf(stderr,"fw[%d]:stat[%d]:%f\n",i,i,fw[i][0]);
+  }
   
 
     //we now loop over windows.
     //v=0 is above and is the initial distribution, we therefore plug in at v+1
     for(int v=0;v<windows.size();v++){
       ComputeRs(v,fw);//<-prepare R1,R2
-#if 0
+#if 1
       printarrayf("r1",R1,tk_l);
       printarrayf("r2",R2,tk_l);
       // exit(0);
 #endif
       fw[0][v+1] = addProtect3(fw[0][v]+P[1][0] , R1[0]+P[3][0] , fw[0][v]+P[4][0])+emis[0][v+1] ;
-      //      fprintf(stderr,"fw[0][1]:%f\n",fw[0][v+1]);
+            fprintf(stderr,"fw[0][1]:%f\n",fw[0][v+1]);
       for (unsigned i = 1; i < tk_l; i++){
-	//fprintf(stderr,"l1:%f l2:%f l3:%f l4:%f\n",fw[i][v]+P[1][i] , R2[i-1]+P[2][i-1] , R1[i]+P[3][i] , fw[i][v]+P[4][i]);
+	fprintf(stderr,"l1:%f l2:%f l3:%f l4:%f \n",exp(fw[i][v]+P[1][i]) , exp(R2[i-1]+P[2][i-1]) ,exp( R1[i]+P[3][i] ),exp( fw[i][v]+P[4][i]));
+	//	fprintf(stderr,"P[1][%d]:%f P[3][%d]:%f\tP[4][%d]:%f fw[%d][%d]:%f P[2]\n",i,exp(P[1][i]),i,exp(P[3][i]),i,exp(P[4][i]),i,v,(fw[i][v] ));
+	fprintf(stderr,"p[2][%d]:%f R2[%d]:%f\n",i-1,exp(P[2][i-1]),i-1,exp(R2[i-1]));
 	fw[i][v+1]= addProtect4(fw[i][v]+P[1][i] , R2[i-1]+P[2][i-1] , R1[i]+P[3][i] , fw[i][v]+P[4][i])+emis[i][v+1];
 	//fprintf(stderr,"fw[%d][%d]:%f\n",i,v+1,fw[i][v+1]);
 	//	exit(0);
+	
       }
+      exit(0);
       //      break;
     }
     //    fprintf(stderr,"PROGRSM BRESKING IN FW BW\n");
-    return ;
+    fprintf(stderr,"tk_l:%d\n",tk_l);
     double tmp[tk_l];
-    for(int i=0;i<tk_l;i++)
+    for(int i=0;i<tk_l;i++){
       tmp[i] = fw[i][windows.size()];
-
+      //      fprintf(stderr,"tmp:%f\n",tmp[i]);
+    }
     pix = addProtectN(tmp,tk_l);
     fprintf(stderr,"forward(pic) llh:%f\n",pix);
 
@@ -228,8 +237,8 @@ void fastPSMC::allocate(int tk_l_arg){
 //void fastPSMC::setWindows(perpsmc *perc,char *chooseChr,int start,int stop,int block){
 void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
   gls = new double[last*2];
-  memcpy(gls,gls_a,sizeof(double)*2);
-
+  memcpy(gls,gls_a,last*sizeof(double)*2);
+  //  fprintf(stderr,"\t-> [%s] gls:(%f, %f,%f, %f) \n",__FUNCTION__,gls_a[0],gls_a[1],gls_a[2],gls_a[3] );
   int beginIndex =0;
   int endIndex=0;
   int beginPos = 0;
@@ -272,19 +281,22 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
   stationary(i) = exp(-sum_{j=0}^{i-1}{tau_j/lambda_j}*P2[i])
  */
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis){
-  fprintf(stderr,"\t-> [Calculating emissions with tk_l:%d and windows.size():%lu:%s ] theta:%f start\n",tk_l,windows.size(),__TIME__,theta);
+  fprintf(stderr,"\t-> [Calculating emissions with tk_l:%d and windows.size():%lu:%s ] theta:%f gls:(%f,%f,%f,%f) start\n",tk_l,windows.size(),__TIME__,theta,gls[0],gls[1],gls[2],gls[3]);
   //initialize the first:
   for(int j=0;j<tk_l;j++)
     emis[j][0] = log(0);
  
-  double tmp[windows.size()];
-  for(int v=0;v<windows.size();v++){
-    for(int j=0;j<tk_l;j++){
+  //  double tmp[windows.size()];
+  for(int v=0;v<windows.size();v++){//for each window
+    //    fprintf(stderr,"v:%d from:%d to:%d\n",v,windows[v].from,windows[v].to);
+    for(int j=0;j<tk_l;j++){//for each interval/state
+      //fprintf(stderr,"\tj:%d\n",j);
       emis[j][v+1] = 0;
       double inner = exp(-2.0*tk[j]*theta); // this part relates to issue #1
-      for(int i=windows[v].from;i<windows[v].to;i++){
-	fprintf(stderr,"gls(%d,%d)=",2*i,2*i+1);
-	fprintf(stderr,"(%f,%f)\n",gls[2*i],gls[2*i+1]);
+      //      fprintf(stderr,"\t\t%d from:%d to:%d inner:%f\n",j,windows[v].from,windows[v].to,inner);
+      for(int i=windows[v].from;i<=windows[v].to;i++){//for all elements in window
+	//	fprintf(stderr,"\t\t\tgls(%d,%d)=",2*i,2*i+1);
+	//	fprintf(stderr,"(%f,%f)\n",gls[2*i],gls[2*i+1]);
 	emis[j][v+1] += log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6)*(1-inner));//<- check
       }
     }
@@ -308,12 +320,12 @@ void fastPSMC::calculate_stationary(double *tk,int tk_l,double *lambda,double *r
   for(int i=1;i<tk_l;i++){
     results[i]  = P[2][i]+P[0][i-1];
   }
-#if 0 //check it sums to one
+#if 1 //check it sums to one
   double tmp=0;
   for(int i=0;i<tk_l;i++)
     tmp += exp(results[i]);
   fprintf(stderr,"\t-> sum of stationary:%f\n",tmp);
-  exit(0);
+  //  exit(0);
 
 #endif
 
@@ -331,7 +343,7 @@ void fastPSMC::ComputePii(unsigned numWind,int tk_l,double **P,double **PP,doubl
   //  exit(0);
   for(int p=1;p<8;p++){
     for(int i=0;i<tk_l;i++){
-      fprintf(stderr,"P[%d][%d]: %f\n",p,i,PP[p][i]);
+      //      fprintf(stderr,"P[%d][%d]: %f\n",p,i,PP[p][i]);
       assert(exp(PP[p][i])>=0&&exp(PP[p][i])<=1);
     }
   }
@@ -340,14 +352,15 @@ void fastPSMC::ComputePii(unsigned numWind,int tk_l,double **P,double **PP,doubl
 
 
 void fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double rho){
-  fprintf(stderr,"\t-> [%s] start\n",__FUNCTION__ );
+  //  fprintf(stderr,"\t-> [%s] tk=(%f,%f) gls:(%f, %f,%f, %f) \n",__FUNCTION__,tk[0],tk[1],gls[0],gls[1],gls[2],gls[3] );
   //prepare global probs
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
   //calculate emissions
   calculate_emissions(tk,tk_l,gls,windows,theta,emis);
-  //  printmatrixf("emis",emis,tk_l,windows.size()+1);exit(0);
-  
+  printmatrixf("emis",emis,tk_l,windows.size()+1);
+  //  fprintf(stderr,"asdfasfdsadfasdfa\n");
   calculate_stationary(tk,tk_l,epsize,stationary,P);
+  printarrayf("stationary",stationary,tk_l);
   //    printarray(stderr,stationary,tk_l);
   calculate_FW_BW_PP_Probs();
   fprintf(stderr,"\t-> [%s] stop\n",__FUNCTION__ );

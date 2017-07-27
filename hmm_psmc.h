@@ -62,7 +62,11 @@ private:
     double addProtect3(double,double,double);
     double tmp = log(0);
     for (unsigned i = 0; i < tk_l ; i++){
-      R2[i] = addProtect3(tmp+P[2][i],mat[i][v]+P[6][i],R1[i]+P[7][i]);
+      R2[i] = addProtect3(tmp+P[5][i],mat[i][v]+P[6][i],R1[i]+P[7][i]);
+      if(std::isnan(R2[i])){
+	fprintf(stderr,"R2[%d] evaluates to NaN p5:%f tmp:%f\n",i,P[5][i],tmp);
+	exit(0);
+      }
       tmp = R2[i];
     }
   }
@@ -71,10 +75,11 @@ private:
     double addProtect2(double,double);
     R1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--){
+      fprintf(stderr,"R1[%d]:%f mat[%d][%d]:%f\n",i+1,R1[i+1],i+1,v,mat[i+1][v]);
       R1[i] = addProtect2(R1[i+1] , mat[i+1][v]);
-      // fprintf(stderr,"R1[%d]:%f\n",i,R1[i]);
+      fprintf(stderr,"R1[%d]:%f\n",i,R1[i]);
     }
-    //    exit(0);
+    //exit(0);
   }
   
   void ComputeRs(int v,double **mat){

@@ -221,6 +221,8 @@ int main_psmc(int argc, char **argv){
 
   //we loop over the single chromosomes
   args *pars = getArgs(argc,argv);
+  for(int i=0;i<pars->par->n+1;i++)
+    fprintf(stderr,"%d) tk:%f lambda:%f\n",i,pars->par->times[i],pars->par->params[i]);
   if(!pars)
     return 0;
   //this will printout the header
