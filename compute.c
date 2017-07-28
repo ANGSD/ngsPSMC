@@ -1,3 +1,4 @@
+#pragma once
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,8 +7,9 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
-
 double addProtect3(double a,double b, double c){
+  if(isinf(a)&&isinf(b)&&isinf(c))
+    return log(0.0);
   //function does: log(exp(a)+exp(b)+exp(c)) while protecting for underflow
   double maxVal;// = std::max(a,std::max(b,c));
   if(a>b&&a>c)

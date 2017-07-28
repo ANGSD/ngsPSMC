@@ -1,8 +1,35 @@
 #include <vector>
 #include <ctime>
+#include  <cmath>
 #include <ctype.h>
 #include "main_psmc.h"
 #include "fpsmc.h"
+
+
+double lprod(double a,double b,double c,double d){
+  if(isinf(a)||isinf(b)||isinf(c)||isinf(d)){
+    //    fprintf(stderr,"Something is inf\n");
+    return log(0.0);
+  }else{
+    // fprintf(stderr,"Something is not inf\n");
+    return a+b+c+d;
+
+  }
+
+}
+
+
+double lprod(double a,double b){
+  if(isinf(a)||isinf(b)){
+    //    fprintf(stderr,"Something is inf\n");
+    return log(0.0);
+  }else{
+    // fprintf(stderr,"Something is not inf\n");
+    return a+b;
+
+  }
+
+}
 
 
 #define DEFAULT_PATTERN "4+5*3+4"

@@ -40,7 +40,9 @@ double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **
   qi[5] = nP[6][i]+PP[6][i];
   qi[6] = nP[7][i]+PP[7][i];
 
-  return addProtectN(qi,7);
+  int ret = addProtectN(qi,7);
+  assert(!isnan(ret));
+  return ret;
 }
 
 
@@ -137,13 +139,13 @@ void fastPSMC::calculate_FW_BW_PP_Probs(){
       printarrayf("r2",R2,tk_l);
       // exit(0);
 #endif
-      fw[0][v+1] = addProtect3(fw[0][v]+P[1][0] , R1[0]+P[3][0] , fw[0][v]+P[4][0])+emis[0][v+1] ;
+      fw[0][v+1] = addProtect3(lprod(fw[0][v],P[1][0]) , lprod(R1[0],P[3][0]) , lprod(fw[0][v],P[4][0]))+emis[0][v+1] ;
             fprintf(stderr,"fw[0][1]:%f\n",fw[0][v+1]);
       for (unsigned i = 1; i < tk_l; i++){
 	fprintf(stderr,"l1:%f l2:%f l3:%f l4:%f \n",exp(fw[i][v]+P[1][i]) , exp(R2[i-1]+P[2][i-1]) ,exp( R1[i]+P[3][i] ),exp( fw[i][v]+P[4][i]));
 	//	fprintf(stderr,"P[1][%d]:%f P[3][%d]:%f\tP[4][%d]:%f fw[%d][%d]:%f P[2]\n",i,exp(P[1][i]),i,exp(P[3][i]),i,exp(P[4][i]),i,v,(fw[i][v] ));
 	fprintf(stderr,"p[2][%d]:%f R2[%d]:%f\n",i-1,exp(P[2][i-1]),i-1,exp(R2[i-1]));
-	fw[i][v+1]= addProtect4(fw[i][v]+P[1][i] , R2[i-1]+P[2][i-1] , R1[i]+P[3][i] , fw[i][v]+P[4][i])+emis[i][v+1];
+	fw[i][v+1]= addProtect4(lprod(fw[i][v],P[1][i]) , lprod(R2[i-1],P[2][i-1]) , lprod(R1[i],P[3][i]) , lprod(fw[i][v],P[4][i]))+emis[i][v+1];
 	//fprintf(stderr,"fw[%d][%d]:%f\n",i,v+1,fw[i][v+1]);
 	//	exit(0);
 	
@@ -159,6 +161,7 @@ void fastPSMC::calculate_FW_BW_PP_Probs(){
       //      fprintf(stderr,"tmp:%f\n",tmp[i]);
     }
     pix = addProtectN(tmp,tk_l);
+    assert(!isnan(pix));
     fprintf(stderr,"forward(pic) llh:%f\n",pix);
 
 
@@ -169,15 +172,18 @@ void fastPSMC::calculate_FW_BW_PP_Probs(){
     //we plug in values at v-1, therefore we break at v==1
     for(int v=windows.size();v>0;v--){
       ComputeRs(v,bw);//<-prepare R1,R2
-      bw[0][v-1] = addProtect3(bw[0][v]+P[1][0] , R1[0]+P[3][0] , bw[0][v]+P[4][0])-emis[0][v] ;
+      bw[0][v-1] = addProtect3(lprod(bw[0][v],P[1][0] ),lprod( R1[0],P[3][0]) , lprod(bw[0][v],P[4][0]))-emis[0][v] ;
       for (unsigned i = 1; i < tk_l; i++)
-	bw[i][v-1] = addProtect4(stationary[i]+bw[i][v]+emis[i][v]+P[1][i],R2[i-1]+P[2][i-1],R1[i]+P[3][i],stationary[i]+bw[i][v]+emis[i][v]+P[4][i])-stationary[i];
+	bw[i][v-1] = addProtect4(lprod(stationary[i],bw[i][v],emis[i][v],P[1][i]),lprod(R2[i-1],P[2][i-1]),lprod(R1[i],P[3][i]),lprod(stationary[i],bw[i][v],emis[i][v],P[4][i]))-stationary[i];
       
     }
     
     for(int i=0;i<tk_l;i++)
       tmp[i] = bw[i][windows.size()];
-    fprintf(stderr,"backward llh:%f\n",addProtectN(tmp,tk_l));
+
+    double tmptmp= addProtectN(tmp,tk_l);
+    assert(!isnan(tmptmp));
+    fprintf(stderr,"backward llh:%f\n",tmptmp);
 
 
     //calculate post prob per window per state

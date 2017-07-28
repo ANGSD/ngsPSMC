@@ -1,7 +1,8 @@
 /*
   Class that contains the perChr hmm
  */
-
+double lprod(double a,double b);
+double lprod(double a,double b,double c,double d);
 #define DOTRANS 1
 
 double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **PP);
@@ -62,7 +63,11 @@ private:
     double addProtect3(double,double,double);
     double tmp = log(0);
     for (unsigned i = 0; i < tk_l ; i++){
-      R2[i] = addProtect3(tmp+P[5][i],mat[i][v]+P[6][i],R1[i]+P[7][i]);
+      double p1=  lprod(tmp,P[5][i]);
+      double p2= lprod(mat[i][v],P[6][i]);
+      double p3 = lprod(R1[i],P[7][i]);
+      fprintf(stderr,"p1:%f\tp2:%f\tp3:%f\n",p1,p2,p3);
+      R2[i] = addProtect3(p1,p2,p3);
       if(std::isnan(R2[i])){
 	fprintf(stderr,"R2[%d] evaluates to NaN p5:%f tmp:%f\n",i,P[5][i],tmp);
 	exit(0);
