@@ -183,9 +183,9 @@ int psmc_wrapper(args *pars,int block) {
     else
       iter_init(pars->perc,it->first,pars->start,pars->stop);
     fastPSMC *obj=objs[nChr++]=new fastPSMC;
-    fprintf(stderr,"gls1:%f %f %f %f\n",pars->perc->gls[0],pars->perc->gls[1],pars->perc->gls[2],pars->perc->gls[3]);
+    //    fprintf(stderr,"gls1:%f %f %f %f\n",pars->perc->gls[0],pars->perc->gls[1],pars->perc->gls[2],pars->perc->gls[3]);
     obj->setWindows(pars->perc->gls,pars->perc->pos,pars->perc->last,pars->block);
-    fprintf(stderr,"gls2:%f %f %f %f\n",pars->perc->gls[0],pars->perc->gls[1],pars->perc->gls[2],pars->perc->gls[3]);
+    //fprintf(stderr,"gls2:%f %f %f %f\n",pars->perc->gls[0],pars->perc->gls[1],pars->perc->gls[2],pars->perc->gls[3]);
     //  obj->printWindows(stdout);exit(0);
     obj->allocate(tk_l);
     if(pars->chooseChr!=NULL)

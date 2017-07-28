@@ -126,74 +126,78 @@ void fastPSMC::calculate_FW_BW_PP_Probs(){
     //we first set the initial fwprobs to stationary distribution
   for(int i=0;i<tk_l;i++){
       fw[i][0] = stationary[i];
-      fprintf(stderr,"fw[%d]:stat[%d]:%f\n",i,i,fw[i][0]);
+      //      fprintf(stderr,"fw[%d]:stat[%d]:%f\n",i,i,fw[i][0]);
   }
-  
+  //  double bwPrime[tk_l];
 
     //we now loop over windows.
     //v=0 is above and is the initial distribution, we therefore plug in at v+1
     for(int v=0;v<windows.size();v++){
       ComputeRs(v,fw);//<-prepare R1,R2
-#if 1
+#if 0
       printarrayf("r1",R1,tk_l);
       printarrayf("r2",R2,tk_l);
       // exit(0);
 #endif
       fw[0][v+1] = addProtect3(lprod(fw[0][v],P[1][0]) , lprod(R1[0],P[3][0]) , lprod(fw[0][v],P[4][0]))+emis[0][v+1] ;
-            fprintf(stderr,"fw[0][1]:%f\n",fw[0][v+1]);
-      for (unsigned i = 1; i < tk_l; i++){
-	fprintf(stderr,"l1:%f l2:%f l3:%f l4:%f \n",exp(fw[i][v]+P[1][i]) , exp(R2[i-1]+P[2][i-1]) ,exp( R1[i]+P[3][i] ),exp( fw[i][v]+P[4][i]));
-	//	fprintf(stderr,"P[1][%d]:%f P[3][%d]:%f\tP[4][%d]:%f fw[%d][%d]:%f P[2]\n",i,exp(P[1][i]),i,exp(P[3][i]),i,exp(P[4][i]),i,v,(fw[i][v] ));
-	fprintf(stderr,"p[2][%d]:%f R2[%d]:%f\n",i-1,exp(P[2][i-1]),i-1,exp(R2[i-1]));
-	fw[i][v+1]= addProtect4(lprod(fw[i][v],P[1][i]) , lprod(R2[i-1],P[2][i-1]) , lprod(R1[i],P[3][i]) , lprod(fw[i][v],P[4][i]))+emis[i][v+1];
-	//fprintf(stderr,"fw[%d][%d]:%f\n",i,v+1,fw[i][v+1]);
-	//	exit(0);
-	
-      }
-      exit(0);
-      //      break;
+      for (unsigned i = 1; i < tk_l; i++)
+	fw[i][v+1]= addProtect4(lprod(fw[i][v],P[1][i]) , lprod(R2[i-1],P[2][i]) , lprod(R1[i],P[3][i]) , lprod(fw[i][v],P[4][i]))+emis[i][v+1];
     }
-    //    fprintf(stderr,"PROGRSM BRESKING IN FW BW\n");
+
     fprintf(stderr,"tk_l:%d\n",tk_l);
     double tmp[tk_l];
-    for(int i=0;i<tk_l;i++){
+    for(int i=0;i<tk_l;i++)
       tmp[i] = fw[i][windows.size()];
-      //      fprintf(stderr,"tmp:%f\n",tmp[i]);
-    }
+
     pix = addProtectN(tmp,tk_l);
     assert(!isnan(pix));
     fprintf(stderr,"forward(pic) llh:%f\n",pix);
 
 
     //now do backward algorithm
-    for(int i=0;i<tk_l;i++)
-      bw[i][windows.size()] = stationary[i];
+    for(int i=0;i<tk_l;i++){
+      bw[i][windows.size()] = lprod(stationary[i],emis[i][windows.size()]);
+      
+    }
 
     //we plug in values at v-1, therefore we break at v==1
+    int iter =0;
     for(int v=windows.size();v>0;v--){
       ComputeRs(v,bw);//<-prepare R1,R2
-      bw[0][v-1] = addProtect3(lprod(bw[0][v],P[1][0] ),lprod( R1[0],P[3][0]) , lprod(bw[0][v],P[4][0]))-emis[0][v] ;
-      for (unsigned i = 1; i < tk_l; i++)
-	bw[i][v-1] = addProtect4(lprod(stationary[i],bw[i][v],emis[i][v],P[1][i]),lprod(R2[i-1],P[2][i-1]),lprod(R1[i],P[3][i]),lprod(stationary[i],bw[i][v],emis[i][v],P[4][i]))-stationary[i];
-      
+      double p1= lprod(bw[0][v],P[1][0]);
+      double p2= lprod( R1[0],P[3][0]) ;
+      double p3= lprod(bw[0][v],P[4][0]);
+      //      fprintf(stderr,"p1:%f\tp2:%f\tp3:%f emis:%f\n",p1,p2,p3,emis[0][v]);
+      bw[0][v-1] = addProtect3(lprod(bw[0][v],P[1][0]) , lprod( R1[0],P[3][0]) , lprod(bw[0][v],P[4][0]))+emis[0][v-1];
+      bw[0][v] -= lprod(stationary[0],emis[0][v]);
+      //fprintf(stderr,"bw[[0][%d]:%f\n",v,bw[0][v]);
+      for (unsigned i = 1; i < tk_l; i++){
+	bw[i][v-1] = addProtect4(lprod(bw[i][v],P[1][i]),lprod(R2[i-1],P[2][i]),lprod(R1[i],P[3][i]),lprod(bw[i][v],P[4][i]))+emis[i][v-1];
+	bw[i][v] -= lprod(stationary[i],emis[i][v]);
+	//	fprintf(stderr,"bw[[%d][%d]:%f stationary[i]:%d emis[i][v]:%f\n",i,v,bw[0][v],emis[i][v]);
+      }
+      iter++;
+      if(0&&iter==2)
+	break;
     }
     
     for(int i=0;i<tk_l;i++)
-      tmp[i] = bw[i][windows.size()];
-
+      tmp[i] = bw[i][1]+stationary[i]+emis[i][1];
     double tmptmp= addProtectN(tmp,tk_l);
     assert(!isnan(tmptmp));
     fprintf(stderr,"backward llh:%f\n",tmptmp);
 
 
     //calculate post prob per window per state
+    
     for(int v=1;v<windows.size();v++){
       for(int j=0;j<tk_l;j++)
-	pp[j][v] = fw[j][v]+bw[j][v];
-	
+	tmp[j] = fw[j][v]+bw[j][v];
+      tmptmp= addProtectN(tmp,tk_l);
+      assert(!isnan(tmptmp));
+      //   fprintf(stderr,"backward llh[%d]:%f\n",v,tmptmp);
     }
-    
-    fprintf(stderr,"[%s] stop\n",__FUNCTION__ );
+    //fprintf(stderr,"[%s] stop\n",__FUNCTION__ );
   }
 
 
@@ -304,6 +308,13 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
 	//	fprintf(stderr,"\t\t\tgls(%d,%d)=",2*i,2*i+1);
 	//	fprintf(stderr,"(%f,%f)\n",gls[2*i],gls[2*i+1]);
 	emis[j][v+1] += log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6)*(1-inner));//<- check
+	if(isinf(emis[j][v+1])){
+	  fprintf(stderr,"\t-> Huge bug in code contact developer. Emissions evaluates to zero\n");
+	  /*
+	    This will corrupt the computation of the backward probability.
+	  */
+	  exit(0);
+	}
       }
     }
   }
@@ -363,10 +374,10 @@ void fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double rho){
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
   //calculate emissions
   calculate_emissions(tk,tk_l,gls,windows,theta,emis);
-  printmatrixf("emis",emis,tk_l,windows.size()+1);
+  //  printmatrixf("emis",emis,tk_l,windows.size()+1);
   //  fprintf(stderr,"asdfasfdsadfasdfa\n");
   calculate_stationary(tk,tk_l,epsize,stationary,P);
-  printarrayf("stationary",stationary,tk_l);
+  // printarrayf("stationary",stationary,tk_l);
   //    printarray(stderr,stationary,tk_l);
   calculate_FW_BW_PP_Probs();
   fprintf(stderr,"\t-> [%s] stop\n",__FUNCTION__ );
@@ -377,7 +388,8 @@ void fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double rho){
 	//	fprintf(stderr,"i:%d j:%d\n",i,j);
 	trans[i][j] = calc_trans(i,j,P);
       }
+    printmatrixf("transitions.txt",trans,tk_l,tk_l);
   }
-  printmatrixf("transitions.txt",trans,tk_l,tk_l);
+
   
 }

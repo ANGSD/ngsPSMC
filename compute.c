@@ -181,7 +181,7 @@ void ComputeP77(unsigned numWind,int tk_l,double **P,double *PP7,double **fw,dou
 */
 
 void ComputeP1(double *tk,int tk_l,double *P,double *epsize,double rho){
-  fprintf(stderr,"[%s] tks=(%f,%f) epssize=(%f,%f)\n",__FUNCTION__,tk[0],tk[1],epsize[0],epsize[1]);
+  //  fprintf(stderr,"[%s] tks=(%f,%f) epssize=(%f,%f)\n",__FUNCTION__,tk[0],tk[1],epsize[0],epsize[1]);
   for (unsigned i = 0; i < tk_l-1; i++){
     P[i] = 1.0/(1.0+epsize[i]*2.0*rho);
     P[i] *= exp( -rho*2.0*tk[i] ) - exp(-rho*2.0*tk[i+1]-(tk[i+1]-tk[i])/epsize[i]);
@@ -224,7 +224,7 @@ void ComputeP2(int tk_l,double *P2,double *P5){
   for (unsigned i = 0; i < tk_l; i++){
 
     P2[i] = log(1.0 - exp(P5[i]));
-    fprintf(stderr,"%d):p5:%f value:%f\n",i,P5[i],P2[i]);
+    //    fprintf(stderr,"%d):p5:%f value:%f\n",i,P5[i],P2[i]);
   //  P2[tk_l-1]=-0.0;
   }
 }
@@ -248,13 +248,13 @@ void ComputeP3(double *tk,int tk_l,double *P3,double *epsize,double rho){
 
 void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
   //  fprintf(stderr,"\t->[%s] rho: %f\n",__FUNCTION__,rho);
-  fprintf(stderr,"\t->[%s] epsizes=(%f,%f) \n",__FUNCTION__,epsize[0],epsize[1]);
+  //  fprintf(stderr,"\t->[%s] epsizes=(%f,%f) \n",__FUNCTION__,epsize[0],epsize[1]);
   for (unsigned i = 0; i < tk_l-1; i++){
 
     double fact1 = 1.0/(1.0 - exp(-(tk[i+1]-tk[i])/epsize[i]) );
 
     double part1 = 2.0/(1-4.0*epsize[i]*epsize[i]*rho*rho);
-    fprintf(stderr,"\tparst1fact1:%f\n",part1);
+    //    fprintf(stderr,"\tparst1fact1:%f\n",part1);
     double part1exp = -(tk[i+1]-tk[i])/epsize[i]-2*rho*tk[i+1];
     part1 *= exp(part1exp);
 
@@ -269,11 +269,12 @@ void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
     double part4 = 2*exp(part4exp);
     
     double fact2= part1+part2-part3-part4;
-    
+    #if 0
     fprintf(stderr,"\t-> fact1: %f fact2: %f fact1*fact2: %f\n",fact1,fact2,fact1*fact2);
     fprintf(stderr,"\t-> part1: %f part2: %f part3: %f part4: %f\n",part1,part2,part3,part4);
     fprintf(stderr,"\t-> part1+part2: %f -part3-part4: %f \n",part1+part2,-part3-part4);
     fprintf(stderr,"\t-> part1+part2-part3-part4: %f \n",part1+part2-part3-part4);
+    #endif
     P4[i] = log(fact1)+log(fact2);
     //    fprintf(stderr,"P[4][%d]: %f\n",i,P4[i]);
 
@@ -297,7 +298,7 @@ void ComputeP7(double *tk,int tk_l,double *P7,double *P3,double *epsize,double r
   unsigned i = tk_l - 1;
   
   P7[i] = log(0.0);
-  fprintf(stderr,"P7 (%f,%f)\n",exp(P7[0]),exp(P7[1]));
+  //  fprintf(stderr,"P7 (%f,%f)\n",exp(P7[0]),exp(P7[1]));
 }
   
 void ComputeP0(int tk_l,double *P0,double *P5){ //probability P(T > i)
@@ -312,7 +313,7 @@ double ComputeXXX(int i,int j,double **P){
   for(int l=i+1;l<=j-1;l++)
     sum += P[5][l];
   double returnVal = P[7][i]+P[2][j]+sum;
-  fprintf(stderr,"ComputeXXX(%d,%d):%f\n",i,j,exp(returnVal));
+//  fprintf(stderr,"ComputeXXX(%d,%d):%f\n",i,j,exp(returnVal));
   return returnVal;
 }
 

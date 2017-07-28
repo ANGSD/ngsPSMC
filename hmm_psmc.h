@@ -3,7 +3,7 @@
  */
 double lprod(double a,double b);
 double lprod(double a,double b,double c,double d);
-#define DOTRANS 1
+#define DOTRANS 0
 
 double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **PP);
 void setTk(int n, double *t, double max_t, double alpha, double *inp_ti);
@@ -66,7 +66,7 @@ private:
       double p1=  lprod(tmp,P[5][i]);
       double p2= lprod(mat[i][v],P[6][i]);
       double p3 = lprod(R1[i],P[7][i]);
-      fprintf(stderr,"p1:%f\tp2:%f\tp3:%f\n",p1,p2,p3);
+      //      fprintf(stderr,"p1:%f\tp2:%f\tp3:%f\n",p1,p2,p3);
       R2[i] = addProtect3(p1,p2,p3);
       if(std::isnan(R2[i])){
 	fprintf(stderr,"R2[%d] evaluates to NaN p5:%f tmp:%f\n",i,P[5][i],tmp);
@@ -80,9 +80,9 @@ private:
     double addProtect2(double,double);
     R1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--){
-      fprintf(stderr,"R1[%d]:%f mat[%d][%d]:%f\n",i+1,R1[i+1],i+1,v,mat[i+1][v]);
+      //      fprintf(stderr,"R1[%d]:%f mat[%d][%d]:%f\n",i+1,R1[i+1],i+1,v,mat[i+1][v]);
       R1[i] = addProtect2(R1[i+1] , mat[i+1][v]);
-      fprintf(stderr,"R1[%d]:%f\n",i,R1[i]);
+      //fprintf(stderr,"R1[%d]:%f\n",i,R1[i]);
     }
     //exit(0);
   }

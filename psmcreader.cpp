@@ -212,7 +212,8 @@ perpsmc * perpsmc_init(char *fname){
      char *tmp = faidx_fetch_seq(pp->pf->fai, it->first, 0, 0x7fffffff, &asdf);
      for(int i=0;i<it->second.nSites;i++){
        pp->pos[i] = i*100;
-       pp->gls[2*i]=pp->gls[2*i+1]=log(0.0);
+//important relates to problems with divide by zero in compuation of  backward probablity
+       pp->gls[2*i]=pp->gls[2*i+1]=-500;
        //K=het
        if(tmp[i]=='K')
 	 pp->gls[2*i+1] = 0;
