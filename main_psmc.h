@@ -30,6 +30,7 @@ typedef struct {
   double *tk;
   double *lambda;
   perFasta *pf;
+  int which;
 }args;
 args * getArgs(int argc,char **argv);
 void destroy_args(args *p);

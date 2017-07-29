@@ -179,7 +179,7 @@ perpsmc * perpsmc_init(char *fname){
      fprintf(stderr,"\t-> [%s] Problem finding chr: %s\n",__FUNCTION__,chr);
      return it;
    }
-   fprintf(stderr,"%s->%lu\n",it->first,it->second.nSites);
+   //   fprintf(stderr,"%s->%lu\n",it->first,it->second.nSites);
    if(pp->pf==NULL){
      my_bgzf_seek(pp->bgzf_gls,it->second.saf,SEEK_SET);
      my_bgzf_seek(pp->bgzf_pos,it->second.pos,SEEK_SET);

@@ -5,7 +5,7 @@ double lprod(double a,double b);
 double lprod(double a,double b,double c,double d);
 #define DOTRANS 0
 
-double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **PP);
+double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **PP,int);
 void setTk(int n, double *t, double max_t, double alpha, double *inp_ti);
 void setEPSize(double *ary,int l,double *from_infile);
 #define PSMC_T_INF 1000.0
@@ -39,7 +39,8 @@ public:
     //rho = 0.207;
     theta = 0.0001;
   }
-  
+  double fwllh();
+  double bwllh();
   void setWindows(double *gls_a,int *pos,int last,int block);
   void printWindows(FILE *fp){
     //print indices for endpoint of windows

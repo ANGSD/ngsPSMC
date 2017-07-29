@@ -285,7 +285,7 @@ void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
   double top = 2.0*rho*epsize[tk_l-1];
   double bottom = (1.0 + 2.0*rho*epsize[tk_l-1]);
   double expot = exp(-2.0*rho*tk[tk_l-1]);
-  fprintf(stderr,"top:%f bot:%f exp:%f rho:%f epSize[tk_l-1]:%f\n",top,bottom,expot,rho,epsize[tk_l-1]);
+  //  fprintf(stderr,"top:%f bot:%f exp:%f rho:%f epSize[tk_l-1]:%f\n",top,bottom,expot,rho,epsize[tk_l-1]);
   P4[tk_l-1] = log(2.0*rho*epsize[tk_l-1]/(1.0 + 2.0*rho*epsize[tk_l-1])*exp(-2.0*rho*tk[tk_l-1]));
   assert(exp(P4[tk_l-1])>=0&&exp(P4[tk_l-1])<=1);
 }

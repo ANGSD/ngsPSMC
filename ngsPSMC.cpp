@@ -222,6 +222,8 @@ int main(int argc,char **argv){
   sa.sa_handler = handler;
   sigaction(SIGPIPE, &sa, 0);
   sigaction(SIGINT, &sa, 0);  
+  clock_t t=clock();
+  time_t t2=time(NULL);
 
   if(argc==1){
     fprintf(stderr, "\t-> ---./ngsPSMC\n");
@@ -247,5 +249,8 @@ int main(int argc,char **argv){
     }
     main_psmc(argc,argv);
   }
+
+  fprintf(stderr, "\t[ALL done] cpu-time used =  %.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC);
+  fprintf(stderr, "\t[ALL done] walltime used =  %.2f sec\n", (float)(time(NULL) - t2));  
   return 0;
 }

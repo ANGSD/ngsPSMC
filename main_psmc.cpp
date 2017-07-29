@@ -1,4 +1,4 @@
-#include <vector>
+#include <vector>		// 
 #include <ctime>
 #include  <cmath>
 #include <ctype.h>
@@ -75,8 +75,8 @@ int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars)
 
 
 
-void setpars( char *fname,psmc_par *pp) {
-  fprintf(stderr,"[%s]:%s\n",__FUNCTION__,fname);
+void setpars( char *fname,psmc_par *pp,int which) {
+  //  fprintf(stderr,"[%s]:%s which:%d\n",__FUNCTION__,fname,which);
   FILE *fp = NULL;
   fp=fopen(fname,"r");
   if(!fp){
@@ -96,8 +96,14 @@ void setpars( char *fname,psmc_par *pp) {
     if(strncmp(buf+i,"\n//\n",4)==0)
       slashslash[n++] = buf+i;
   }
-
-  char *last= slashslash[n-2];
+  fprintf(stderr,"\t-> Number of rounds:%d\n",n-1);
+  if(which>=n-1){
+    fprintf(stderr,"\t-> which higher than number of rounds, setting which to last element");
+    which=-1;
+  }
+    
+  char *last = which!=-1?slashslash[which]:slashslash[n-2];
+  //  fprintf(stderr,"slashslash[%d]:%s\n",which,last);exit(0);
   char *line = NULL;
   strtok(last,"\n");
 
@@ -106,6 +112,7 @@ void setpars( char *fname,psmc_par *pp) {
   sscanf(line,"IT\t%d",&IT);
   int RD=-1;
   line=strtok(NULL,"\n"); sscanf(line,"RD\t%d",&RD);
+  fprintf(stderr,"\t-> Using round: %d\n",RD);
   double LK=-1;
   line=strtok(NULL,"\n"); sscanf(line,"LK\t%lf",&LK);
   double QD[2]={-1,-1};
@@ -120,7 +127,7 @@ void setpars( char *fname,psmc_par *pp) {
   double n_recomb=-1;
   line=strtok(NULL,"\n"); sscanf(line,"MM\tC_pi: %lf, n_recomb: %lf",&C_pi,&n_recomb);
   std::vector<char *> RS;
-  fprintf(stderr,"IT:%d RD:%d lk:%f qd[0]:%f qd[1]:%f ri:%f tr[0]:%f tr[1]:%f mt:%f c_pi:%f n_rebomc:%f\n",IT,RD,LK,QD[0],QD[1],RI,TR[0],TR[1],MT,C_pi,n_recomb);
+  fprintf(stderr,"\t-> IT:%d RD:%d lk:%f qd[0]:%f qd[1]:%f ri:%f tr[0]:%f tr[1]:%f mt:%f c_pi:%f n_rebomc:%f\n",IT,RD,LK,QD[0],QD[1],RI,TR[0],TR[1],MT,C_pi,n_recomb);
   while(((line=strtok(NULL,"\n")))){
     if(line[0]=='R'&&line[1]=='S')
       RS.push_back(line);
@@ -185,6 +192,8 @@ args * getArgs(int argc,char **argv){
   p->block = 100;//default 100bp
   p->par =(psmc_par*) calloc(1,sizeof(psmc_par));
   p->tkfile = NULL;
+  p->which = -1;
+  char *inffilename=NULL;
   if(argc==0)
     return p;
 
@@ -196,6 +205,8 @@ args * getArgs(int argc,char **argv){
       p->maxIter = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-winSize"))
       p->block = atoi(*(++argv));
+    else  if(!strcasecmp(*argv,"-which"))
+      p->which = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-p"))
       p->par->pattern =  strdup(*(++argv));
     else  if(!strcasecmp(*argv,"-tkfile"))
@@ -205,7 +216,8 @@ args * getArgs(int argc,char **argv){
     else  if(!strcasecmp(*argv,"-seed"))
       p->seed = atol(*(++argv));
     else  if(!strcasecmp(*argv,"-infile"))
-      setpars(*++argv,p->par);
+      inffilename = strdup(*++argv);
+
     
     else  if(!strcasecmp(*argv,"-r")){
       p->chooseChr = get_region(*(++argv),p->start,p->stop);
@@ -218,6 +230,7 @@ args * getArgs(int argc,char **argv){
     }
     argv++;
   }
+  setpars(inffilename,p->par,p->which);
   if(p->seed==0)
     p->seed = time(NULL);
   srand48(p->seed);
@@ -248,7 +261,7 @@ int main_psmc(int argc, char **argv){
 
   //we loop over the single chromosomes
   args *pars = getArgs(argc,argv);
-  for(int i=0;i<pars->par->n+1;i++)
+  for(int i=0;0&&i<pars->par->n+1;i++)
     fprintf(stderr,"%d) tk:%f lambda:%f\n",i,pars->par->times[i],pars->par->params[i]);
   if(!pars)
     return 0;

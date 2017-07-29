@@ -24,32 +24,71 @@ void printmatrix(FILE *fp,double **mat,int x,int y){
 
 }
 
-double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **PP){
+/*
+  k: is the state k
+  pix: is the perchromsome value of the forward probs
+  numwin: is not being used currently
+  nP: is the 'new' Pi's (the ones computed by compuateGlobalProbablies)
+  PP: is the old PPi's whic correspond to expectation. 
+
+  returnvalue is in logspace
+ */
+
+
+double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **PP,int tk_l){
   /*
-    for (unsigned l = 1; l < numWind + 1; l++) //This block is needed if eimission probabilities depend on estimated parameters, e.g. on time disctretisation 
+  //This block is needed if eimission probabilities depend on estimated parameters, e.g. on time disctretisation 
+    for (unsigned l = 1; l < numWind + 1; l++) 
     qi += log(emis[K][l])*fw[K][l]*bw[K][l];
     qi /= pix;
   */
   
   double qi[7];
-  qi[0] = nP[1][i]+PP[1][i];
-  qi[1] = nP[2][i]+PP[2][i];
-  qi[2] = nP[3][i]+PP[3][i];
-  qi[3] = nP[4][i]+PP[4][i];
-  qi[4] = nP[5][i]+PP[5][i];
-  qi[5] = nP[6][i]+PP[6][i];
-  qi[6] = nP[7][i]+PP[7][i];
+  qi[0] = nP[1][k]*exp(PP[1][k]);
+  qi[1] = nP[2][k]*exp(PP[2][k]);
+  qi[2] = nP[3][k]*exp(PP[3][k]);
+  qi[3] = nP[4][k]*exp(PP[4][k]);
+  qi[4] = nP[5][k]*exp(PP[5][k]);
+  qi[5] = nP[6][k]*exp(PP[6][k]);
+  qi[6] = nP[7][k]*exp(PP[7][k]);
 
-  int ret = addProtectN(qi,7);
+  for(int i=0;(k==tk_l-1)&&i<7;i++){//DRAGON
+    if(isinf(qi[i])){
+      qi[i]=0.0;
+    }
+  }
+  for(int i=0;(k<tk_l-1)&&i<7;i++)
+    assert(!isinf(qi[i]));
+
+  //  fprintf(stderr,"\t-> QI: ");
+  double ret = 0;
+  for(int i=0;i<7;i++) {
+    //fprintf(stderr," qi[%d]:%f ",i,qi[i]);
+    ret += qi[i];
+  }
+  ret = ret/pix;
+  // fprintf(stderr,"\n");
+
+
+
+  // fprintf(stderr,"return value for q[%d]:%f\n",k,ret);
   assert(!isnan(ret));
   return ret;
 }
-
+/*
+  tk: intervals, fixed
+  tk_l: length of tk
+  P: matrix where results will be plugged in
+  epsize: the effective populationsize (lambda)
+  rho: rho, or theta to rho value.
+ */
 
 void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,double rho){
+#if 0
   fprintf(stderr,"[%s] rho:%f\n",__FUNCTION__,rho);
   fprintf(stderr,"[%s] tks[0]:%f tks[1]:%f\n",__FUNCTION__,tk[0],tk[1]);
   fprintf(stderr,"[%s] epsize[0]:%f epsize[1]:%f\n",__FUNCTION__,epsize[0],epsize[1]);
+#endif
   ComputeP1(tk,tk_l,P[1],epsize,rho);
   ComputeP5(tk,tk_l,P[5],epsize);
   ComputeP6(tk,tk_l,P[6],epsize,rho);
@@ -144,14 +183,14 @@ void fastPSMC::calculate_FW_BW_PP_Probs(){
 	fw[i][v+1]= addProtect4(lprod(fw[i][v],P[1][i]) , lprod(R2[i-1],P[2][i]) , lprod(R1[i],P[3][i]) , lprod(fw[i][v],P[4][i]))+emis[i][v+1];
     }
 
-    fprintf(stderr,"tk_l:%d\n",tk_l);
+    //    fprintf(stderr,"tk_l:%d\n",tk_l);
     double tmp[tk_l];
     for(int i=0;i<tk_l;i++)
       tmp[i] = fw[i][windows.size()];
 
     pix = addProtectN(tmp,tk_l);
     assert(!isnan(pix));
-    fprintf(stderr,"forward(pic) llh:%f\n",pix);
+    //fprintf(stderr,"forward(pic) llh:%f\n",pix);
 
 
     //now do backward algorithm
@@ -185,7 +224,7 @@ void fastPSMC::calculate_FW_BW_PP_Probs(){
       tmp[i] = bw[i][1]+stationary[i]+emis[i][1];
     double tmptmp= addProtectN(tmp,tk_l);
     assert(!isnan(tmptmp));
-    fprintf(stderr,"backward llh:%f\n",tmptmp);
+    //    fprintf(stderr,"backward llh:%f\n",tmptmp);
 
 
     //calculate post prob per window per state
@@ -223,7 +262,7 @@ void fastPSMC::allocate(int tk_l_arg){
     pp[i] = new double[numWindows+1];
 
   }
-  fprintf(stderr,"\t-> emission allocated with [%d][%d]\n",tk_l,numWindows+1);
+  //  fprintf(stderr,"\t-> emission allocated with [%d][%d]\n",tk_l,numWindows+1);
   P = new double *[8];
   PP= new double *[8];
   for(int i=0;i<8;i++){
@@ -341,7 +380,7 @@ void fastPSMC::calculate_stationary(double *tk,int tk_l,double *lambda,double *r
   double tmp=0;
   for(int i=0;i<tk_l;i++)
     tmp += exp(results[i]);
-  fprintf(stderr,"\t-> sum of stationary:%f\n",tmp);
+  //  fprintf(stderr,"\t-> sum of stationary:%f\n",tmp);
   //  exit(0);
 
 #endif
@@ -392,4 +431,25 @@ void fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double rho){
   }
 
   
+}
+
+double fastPSMC::fwllh(){
+ double tmp[tk_l];
+ for(int i=0;i<tk_l;i++)
+   tmp[i] = fw[i][windows.size()];
+ pix = addProtectN(tmp,tk_l);
+ assert(!isnan(pix));
+ fprintf(stderr,"\t-> forward(pic) llh:%f\n",pix);
+ return pix;
+}
+
+
+double fastPSMC::bwllh(){
+  double tmp[tk_l];
+  for(int i=0;i<tk_l;i++)
+    tmp[i] = bw[i][1]+stationary[i]+emis[i][1];
+  double tmptmp= addProtectN(tmp,tk_l);
+  assert(!isnan(tmptmp));
+  fprintf(stderr,"\t <- backward llh:%f\n",tmptmp);
+  return tmptmp;
 }

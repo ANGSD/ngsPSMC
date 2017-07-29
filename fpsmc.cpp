@@ -12,6 +12,7 @@ int nThreads =1;
 
 int nChr =0;
 
+const double rho = 0.1;
 
 typedef struct{
   double *tk;
@@ -38,16 +39,21 @@ typedef struct{
 }oPars;
 
 /*
-  objective function. Function to be optimized
+  objective function. Function to be optimized, for each chromo
 */
 
 double qFunction(const double *params ,const void *d){
   oPars *data = (oPars*) d;
+
   void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,double rho);
+
   ComputeGlobalProbabilities(data->tk,data->tk_l,data->nP,data->epsize,data->rho);
   double Q = 0;
-  for (unsigned i = 0; i < data->tk_l; i++)
-    Q += qkFunction(i, data->pix,data->numWind,data->nP,data->PP);
+  for (unsigned i = 0; i < data->tk_l; i++){
+    double tmpQ = qkFunction(i, data->pix,data->numWind,data->nP,data->PP,data->tk_l);
+    Q += tmpQ;
+    //    fprintf(stderr,"Q[%d]:%f\n",i,tmpQ);
+  }
   return Q;
 }
 
@@ -65,11 +71,11 @@ void runoptim(double *tk,int tk_l,double *epsize,double rho,double **PP,double p
   int nbd[tk_l];
   double lbd[tk_l];
   double ubd[tk_l];
-  for(int i=0;i<tk_l;i++){
-    nbd[i]=1;
-    lbd[i]=0.000001;
-    ubd[i]=PSMC_T_INF;
-  }
+  // for(int i=0;i<tk_l;i++){
+  //   nbd[i]=1;
+  //   lbd[i]=0.000001;
+  //   ubd[i]=PSMC_T_INF;
+  // }
 
   oPars data;
   data.nP = nP;
@@ -78,7 +84,40 @@ void runoptim(double *tk,int tk_l,double *epsize,double rho,double **PP,double p
   data.tk_l = tk_l;
   data.pix = pix;
   data.numWind=numWin;
-  data.rho= rho;
+  data.rho= rho;		// 
+  data.epsize=epsize;
+  
+  double max_llh = findmax_bfgs(tk_l,pars,(void *)&data,qFunction,NULL,lbd,ubd,nbd,1);
+}
+
+
+void runoptim2(double *tk,int tk_l,double *epsize,double rho,double **PP,double pix,int numWin,fastPSMC*objs,int nobs){
+  double **nP = new double *[8];
+  for(int i=0;i<8;i++)
+    nP[i] = new double[tk_l];
+
+  //get start
+  double pars[tk_l];
+  for(int i=0;i<tk_l;i++)
+    pars[i] = drand48();
+  //set bounds
+  int nbd[tk_l];
+  double lbd[tk_l];
+  double ubd[tk_l];
+  // for(int i=0;i<tk_l;i++){
+  //   nbd[i]=1;
+  //   lbd[i]=0.000001;
+  //   ubd[i]=PSMC_T_INF;
+  // }
+
+  oPars data;
+  data.nP = nP;
+  data.PP = PP;
+  data.tk = tk;
+  data.tk_l = tk_l;
+  data.pix = pix;
+  data.numWind=numWin;
+  data.rho= rho;		// 
   data.epsize=epsize;
   
   double max_llh = findmax_bfgs(tk_l,pars,(void *)&data,qFunction,NULL,lbd,ubd,nbd,1);
@@ -152,7 +191,6 @@ void main_analysis(double *tk,int tk_l,double *epsize,double rho){
 
 }
 
-
 int psmc_wrapper(args *pars,int block) {
 #if 1 //print pars
   psmc_par *p=pars->par;
@@ -168,7 +206,7 @@ int psmc_wrapper(args *pars,int block) {
   //(nelems,array,max_t,alpha,array with values from file, can be NULL)
   setTk(tk_l,tk,15,0.01,p->times);//<- last position will be infinity
   //  fprintf(stderr,"[%s] tk=(%f,%f)\n",__FUNCTION__,tk[0],tk[1]);//exit(0);
-#if 1
+#if 0
   for(int i=0;i<tk_l;i++)
     fprintf(stderr,"(tk,epsize)[%d]:(%f,%f)\n",i,tk[i],epsize[i]);
 #endif
@@ -178,10 +216,12 @@ int psmc_wrapper(args *pars,int block) {
   fprintf(stderr,"\t-> nobs/nchr: %d\n",nobs);
   objs = new fastPSMC*[nobs];
   for (myMap::const_iterator it = pars->perc->mm.begin() ;it!=pars->perc->mm.end();it++) {
+    myMap::const_iterator it2;
     if(pars->chooseChr!=NULL)
-      iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop);
+      it2 = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop);
     else
-      iter_init(pars->perc,it->first,pars->start,pars->stop);
+      it2 = iter_init(pars->perc,it->first,pars->start,pars->stop);
+    fprintf(stderr,"\t-> Parsing chr:%s \n",it2->first);
     fastPSMC *obj=objs[nChr++]=new fastPSMC;
     //    fprintf(stderr,"gls1:%f %f %f %f\n",pars->perc->gls[0],pars->perc->gls[1],pars->perc->gls[2],pars->perc->gls[3]);
     obj->setWindows(pars->perc->gls,pars->perc->pos,pars->perc->last,pars->block);
@@ -191,15 +231,43 @@ int psmc_wrapper(args *pars,int block) {
     if(pars->chooseChr!=NULL)
       break;
   }
-  fprintf(stderr,"\t-> We have now allocated hmm's for: %d chromosomes\n",nChr);
-  fprintf(stderr,"[%s] tk=(%f,%f)\n",__FUNCTION__,tk[0],tk[1]);//exit(0);
-  fprintf(stderr,"[%s] epsize=(%f,%f)\n",__FUNCTION__,epsize[0],epsize[1]);//exit(0);
-  objs[0]->make_hmm(tk,tk_l,epsize,0.1);
-  printarrayf("tk",tk,tk_l);
 
+  fprintf(stderr,"\t-> We have now allocated hmm's for: %d chromosomes\n",nChr);
+  for(int i=0;i<nobs;i++){
+    fprintf(stderr,"\t-> make_hmm for chr:%d\n",i);
+    objs[i]->make_hmm(tk,tk_l,epsize,rho);
+  }
+  double fwllh,bwllh;fwllh=bwllh=0;
+  for(int i=0;i<nobs;i++){
+    //    fprintf(stderr,"\t-> hmm.fwllh for chr:%d\n",i);
+    fwllh += objs[i]->fwllh();
+    bwllh += objs[i]->bwllh();
+  }
+  fprintf(stderr,"\t[total llh] fwllh:%f\n\t[total llh] bwllh:%f\n",fwllh,bwllh);
+  
+  double qs =0;
+  for(int i=0;i<nobs;i++){
+    fprintf(stderr,"%d/%d\n",i,nobs);
+    oPars op;
+    op.nP = objs[i]->P;
+    op.PP = objs[i]->PP;
+    op.tk = tk;
+    op.tk_l = tk_l;
+    op.pix = objs[i]->pix;
+    op.numWind = objs[i]->windows.size();
+    op.rho = rho ;
+    op.epsize = epsize;
+    double tmp = qFunction(NULL,&op);
+    fprintf(stderr,"\t -> valQ[%d]: %f\n",i,tmp);
+  }
+  
+  
+#if 0
+  printarrayf("tk",tk,tk_l);
   printmatrixf("fw",objs[0]->fw,tk_l,objs[0]->windows.size()+1);
   printmatrixf("bw",objs[0]->bw,tk_l,objs[0]->windows.size()+1);
   printmatrixf("emis",objs[0]->emis,tk_l,objs[0]->windows.size()+1);
+#endif
   //printmatrixf("pp",objs[0]->pp,tk_l,objs[0]->windows.size()+1);
   // 
   /*
@@ -207,7 +275,8 @@ int psmc_wrapper(args *pars,int block) {
     
     printarrayf("epsize",epsize,tk_l);
     printmatrixf("P",obj.P,7,tk_l);
-    printmatrixf("emis",obj.emis,tk_l,obj.windows.size()+1);
+    printmatrixf("emis",obj.emis,tk_l,obj.
+windows.size()+1);
 
     printarrayf("r1",obj.R1,tk_l);
     printarrayf("r2",obj.R2,tk_l);
