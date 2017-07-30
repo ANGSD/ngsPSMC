@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-
+#include "compute.h"
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
@@ -97,7 +97,7 @@ void ComputeP22(unsigned numWind,int tk_l,double **P,double *PP2,double **fw,dou
       R1[i] = addProtect2(R1[i+1],fw[i+1][l]);
     double tmp = log(0);
     for (unsigned i = 0; i < tk_l ; i++){
-      R2[i] = addProtect3(lprod(tmp,P[2][i]) , lprod(fw[l][i],P[6][i]) , lprod(R1[i],P[7][i]));
+      R2[i] = addProtect3(lprod(tmp,P[2][i]) , lprod(fw[i][l],P[6][i]) , lprod(R1[i],P[7][i]));
       tmp = R2[i];
     }
 
@@ -147,7 +147,7 @@ void ComputeP55(unsigned numWind,int tk_l,double **P,double *PP5,double **fw,dou
   for (unsigned l = 1; l < numWind; l++){
     double tmp = log(0);
     for (unsigned i = 0; i < tk_l ; i++){
-      R2[i] = addProtect3(tmp+P[2][i],fw[l][i]+P[6][i],R1[i]+P[7][i]);
+      R2[i] = addProtect3(lprod(tmp,P[2][i]),lprod(fw[i][l],P[6][i]),lprod(R1[i],P[7][i]));
       tmp = R2[i];
     }
     bR1[tk_l - 1] = log(0);

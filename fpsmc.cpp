@@ -178,6 +178,16 @@ void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double rho){
       at+=thisround;
     }
   }
+ 
+  
+#if 1
+  printarrayf("tk",tk,tk_l);
+  printmatrixf("fw",objs[0]->fw,tk_l,objs[0]->windows.size()+1);
+  printmatrixf("bw",objs[0]->bw,tk_l,objs[0]->windows.size()+1);
+  printmatrixf("emis",objs[0]->emis,tk_l,objs[0]->windows.size()+1);
+  printmatrixf("P",objs[0]->P,7,tk_l);
+#endif
+
   double fwllh,bwllh,qval;
   fwllh=bwllh=qval=0;
   for(int i=0;i<nChr;i++){
@@ -239,7 +249,7 @@ void main_analysis_optim(double *tk,int tk_l,double *epsize,double rho){
 void main_analysis(double *tk,int tk_l,double *epsize,double rho){
   //first make_hmm for all chrs;
   main_analysis_make_hmm(tk,tk_l,epsize,rho);
-  runoptim2(tk,tk_l,epsize,rho);
+  //  runoptim2(tk,tk_l,epsize,rho);
   for(int i=0;i<20;i++){
     
 
@@ -331,6 +341,7 @@ int psmc_wrapper(args *pars,int block) {
   printmatrixf("fw",objs[0]->fw,tk_l,objs[0]->windows.size()+1);
   printmatrixf("bw",objs[0]->bw,tk_l,objs[0]->windows.size()+1);
   printmatrixf("emis",objs[0]->emis,tk_l,objs[0]->windows.size()+1);
+  printmatrixf("P",obj.P,7,tk_l);
 #endif
   //printmatrixf("pp",objs[0]->pp,tk_l,objs[0]->windows.size()+1);
   // 
@@ -338,7 +349,7 @@ int psmc_wrapper(args *pars,int block) {
     printarrayf("stationary",obj.stationary,tk_l);
     
     printarrayf("epsize",epsize,tk_l);
-    printmatrixf("P",obj.P,7,tk_l);
+
     printmatrixf("emis",obj.emis,tk_l,obj.
 windows.size()+1);
 

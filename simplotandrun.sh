@@ -50,3 +50,9 @@ double ary[1000000];//<- stack
 double *ary = new double[10];;<- heap
 double *ary = malloc(sizeof(double)*10)
 
+
+
+
+valgrind  ./ngsPSMC mshot.fa.gz -infile dim3 -r 1 2>&1
+
+./ngsPSMC test4/angsd.fa.gz -infile test4/angsd.psmc -which 19 -r 1

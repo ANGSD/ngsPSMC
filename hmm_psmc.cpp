@@ -4,7 +4,7 @@
 #include "psmcreader.h"
 #include "main_psmc.h"
 #include "hmm_psmc.h"
-#include "compute.cpp"
+#include "compute.h"
 
 int fastPSMC::tot_index=0;
 
@@ -44,37 +44,43 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
     qi += log(emis[K][l])*fw[K][l]*bw[K][l];
     qi /= pix;
   */
-  fprintf(stderr,"npik:%f pp1k:%f\n",nP[1][k],PP[1][k]);
+
   double qi[7];
-  qi[0] = nP[1][k]*exp(PP[1][k]);
-  qi[1] = nP[2][k]*exp(PP[2][k]);
-  qi[2] = nP[3][k]*exp(PP[3][k]);
-  qi[3] = nP[4][k]*exp(PP[4][k]);
-  qi[4] = nP[5][k]*exp(PP[5][k]);
-  qi[5] = nP[6][k]*exp(PP[6][k]);
-  qi[6] = nP[7][k]*exp(PP[7][k]);
+  qi[0] = nP[1][k]*exp(lprod(PP[1][k],-pix));
+  
+  qi[1] = nP[2][k]*exp(lprod(PP[2][k],-pix));
+  qi[2] = nP[3][k]*exp(lprod(PP[3][k],-pix));
+  qi[3] = nP[4][k]*exp(lprod(PP[4][k],-pix));
+  qi[4] = nP[5][k]*exp(lprod(PP[5][k],-pix));
+  qi[5] = nP[6][k]*exp(lprod(PP[6][k],-pix));
+  qi[6] = nP[7][k]*exp(lprod(PP[7][k],-pix));
 
   for(int i=0;(k==tk_l-1)&&i<7;i++){//DRAGON
+    fprintf(stderr,"qi[%d]:%f\n",i,qi[i]);
+    if(isinf(qi[i])){
+      
+    }
     if(isinf(qi[i])){
       qi[i]=0.0;
     }
   }
+  fprintf(stderr,"parst1:%f lprod:%f\n",nP[1][k],lprod(PP[1][k],-pix));
+  //  exit(0);
   for(int i=0;(k<tk_l-1)&&i<7;i++)
     assert(!isinf(qi[i]));
 
-  //  fprintf(stderr,"\t-> QI: ");
+  fprintf(stderr,"\t-> QI: ");
   double ret = 0;
   for(int i=0;i<7;i++) {
-    //  fprintf(stderr," qi[%d]:%f ",i,qi[i]);
+    fprintf(stderr," qi[%d]:%f ",i,qi[i]);
     ret += qi[i];
   }
-  ret = ret/pix;
-  //fprintf(stderr,"\n");
+  fprintf(stderr,"\n");
 
 
 
   // fprintf(stderr,"return value for q[%d]:%f\n",k,ret);
-  assert(!isnan(ret));
+  //assert(!isnan(ret));
   return ret;
 }
 /*
@@ -272,13 +278,13 @@ void fastPSMC::allocate(int tk_l_arg){
   R2 = new double[tk_l];
   fw = new double *[tk_l];
   bw = new double *[tk_l];
-  pp = new double *[tk_l];
+  //pp = new double *[tk_l];
   emis = new double *[tk_l];
   for(int i=0;i<tk_l;i++){
     emis[i] = new double[numWindows+1];
     fw[i] = new double[numWindows+1];
     bw[i] = new double[numWindows+1];
-    pp[i] = new double[numWindows+1];
+    //    pp[i] = new double[numWindows+1];
 
   }
   //  fprintf(stderr,"\t-> emission allocated with [%d][%d]\n",tk_l,numWindows+1);
@@ -288,6 +294,8 @@ void fastPSMC::allocate(int tk_l_arg){
   for(int i=0;i<8;i++){
     P[i] = new double[tk_l];
     PP[i]= new double[tk_l];
+    for(int j=0;j<tk_l;j++)
+      PP[i][j] = -666;
     nP[i]= new double[tk_l];
   }
   if(DOTRANS){
@@ -428,7 +436,7 @@ void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,dou
     }
   }
 
-  exit(0);
+  //  exit(0);
 }
 
 

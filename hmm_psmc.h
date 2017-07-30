@@ -31,7 +31,7 @@ public:
   double *stationary,*R1,*R2;//tk_l long
   double **fw;//tk_l x nWindows+1
   double **bw;//tk_l x nWindows+1
-  double **pp;//tk_l x nWindows+1
+  //  double **pp;//tk_l x nWindows+1
   double **emis;//tk_l x nWindows+1
   double *gls;//deep copy of the gls for a chr
   std::vector<wins> windows;
