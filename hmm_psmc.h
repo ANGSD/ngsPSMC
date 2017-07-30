@@ -14,16 +14,20 @@ struct wins{
   int from;//inclusive
   int to;//inclusive
 };
+
 //void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double **emis);
 
 class fastPSMC {
 public:
+  int index;
+  static int tot_index;
   double pix;
   int tk_l;
   double max_t;
   double theta;
   double **P;
   double **PP;
+  double **nP;
   double *stationary,*R1,*R2;//tk_l long
   double **fw;//tk_l x nWindows+1
   double **bw;//tk_l x nWindows+1
@@ -32,15 +36,21 @@ public:
   double *gls;//deep copy of the gls for a chr
   std::vector<wins> windows;
   double **trans;
+  double fwllh;
+  double bwllh;
+  double qval;
   fastPSMC(){
     trans = NULL;
     pix = -666;
     max_t = 15;
     //rho = 0.207;
     theta = 0.0001;
+    index=tot_index++;
   }
-  double fwllh();
-  double bwllh();
+  /*
+    double fwllh();
+    double bwllh();
+  */
   void setWindows(double *gls_a,int *pos,int last,int block);
   void printWindows(FILE *fp){
     //print indices for endpoint of windows
@@ -54,9 +64,10 @@ public:
 #endif
   }
   void allocate(int tk_l);
-  void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,double **bw,double *stationary);
+  //  void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,double **bw,double *stationary);
   void calculate_stationary(double *tk,int tk_l,double *lambda,double *results,double **P);
-  void calculate_FW_BW_PP_Probs();
+  void calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,double rho);
+  //  void calculate_FW_BW_PP_Probs();
   void make_hmm(double *tk,int tk_l,double *epsize,double rho);
   
 private:

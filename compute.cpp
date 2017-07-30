@@ -7,6 +7,10 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
+double lprod(double a,double b);
+double lprod(double a,double b,double c);
+double lprod(double a,double b,double c,double d);
+
 double addProtect3(double a,double b, double c){
   if(isinf(a)&&isinf(b)&&isinf(c))
     return log(0.0);
@@ -39,10 +43,12 @@ double addProtect4(double a,double b, double c,double d){
 double addProtectN(double a[],int len){
   //function does: log(sum(exp(a))) while protecting for underflow
   double maxVal = a[0];
-
-  for(int i=1;i<len;i++)
+  
+  for(int i=1;i<len;i++){
+    //    fprintf(stderr,"AAAAAAAAA i:%d maxval:%f\n",i,maxVal);
     if(maxVal<a[i])
       maxVal=a[i];
+  }
 
   double sumVal = 0;
   for(int i=1;i<len;i++)
@@ -65,11 +71,17 @@ double addProtect2(double a,double b){
 void ComputeP11(unsigned numWin,int tk_l,double *P1,double *PP1,double **fw,double **bw,double *stationary,double *workspace){
   
   for (unsigned i = 0; i < tk_l; i++){
-    workspace[i] = log(0);
-    for (unsigned l = 1; l < numWin; l++)
-      workspace[i] = fw[i][l]+P1[i]+bw[l+1][i]-stationary[i];//NOTE: In appendix of K.H. paper it seems to be an extra emission probability for site l+1, it is already inside bw[]
-    PP1[i] = addProtectN(workspace,numWin);
+    workspace[0] = log(0);
+    for (unsigned l = 1; l < numWin; l++){
+      //      fprintf(stderr,"l:%d\n",l);
+      //fprintf(stderr,"fw[][]:%f\n",fw[i][l]);
+      //fprintf(stderr,"fw[][]:%f\n",bw[i][l]);
+      workspace[l] = lprod(fw[i][l],P1[i],bw[i][l+1]);//NOTE: In appendix of K.H. paper it seems to be an extra emission probability for site l+1, it is already inside bw[]
+    }
+    //    fprintf(stderr,"calling addproejct w0:%f w1: w2:\n",workspace[0]);//,workspace[1],workspace[2]);exit(0);
+    PP1[i] = addProtectN(workspace,numWin)-stationary[i];
   }
+  //  exit(0);
 }
 
 void ComputeP22(unsigned numWind,int tk_l,double **P,double *PP2,double **fw,double **bw,double *stationary){
@@ -78,18 +90,24 @@ void ComputeP22(unsigned numWind,int tk_l,double **P,double *PP2,double **fw,dou
   double tmp[tk_l];
   for (unsigned i = 0; i < tk_l; i++)
     PP2[i] = log(0);
+
   for (unsigned l = 1; l < numWind; l++) {
     R1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
       R1[i] = addProtect2(R1[i+1],fw[i+1][l]);
     double tmp = log(0);
     for (unsigned i = 0; i < tk_l ; i++){
-      R2[i] = addProtect3(tmp+P[2][i],fw[l][i]+P[6][i],R1[i]+P[7][i]);
+      R2[i] = addProtect3(lprod(tmp,P[2][i]) , lprod(fw[l][i],P[6][i]) , lprod(R1[i],P[7][i]));
       tmp = R2[i];
     }
+
     for (unsigned i = 1; i < tk_l; i++)
-      PP2[i] = R2[i-1]+P[2][i]+bw[i][l+1]-stationary[i];//CHECK
+      PP2[i] =addProtect2(PP2[i] , lprod(R2[i-1],P[2][i],bw[i][l+1]));//CHECK
+
   }
+  for (unsigned i = 1; i < tk_l; i++)
+    PP2[i] -= stationary[i];
+      
 }
 
 void ComputeP33(unsigned numWind,int tk_l,double *P3,double *PP3,double **fw,double **bw,double *stationary){

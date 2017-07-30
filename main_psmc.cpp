@@ -32,6 +32,19 @@ double lprod(double a,double b){
 }
 
 
+double lprod(double a,double b,double c){
+  if(isinf(a)||isinf(b)||isinf(c)){
+    //    fprintf(stderr,"Something is inf\n");
+    return log(0.0);
+  }else{
+    // fprintf(stderr,"Something is not inf\n");
+    return a+b+c;
+
+  }
+
+}
+
+
 #define DEFAULT_PATTERN "4+5*3+4"
 // parse a pattern like "4+5*3+4"
 // the returned array holds which parameters are linked together
