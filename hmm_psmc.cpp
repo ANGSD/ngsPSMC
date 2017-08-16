@@ -1,3 +1,4 @@
+#include <ctime>
 #include <vector>
 #include <cassert>
 #include <cmath>
@@ -56,7 +57,7 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
   qi[6] = nP[7][k]*exp(lprod(PP[7][k],-pix));
 
   for(int i=0;(k==tk_l-1)&&i<7;i++){//DRAGON
-    fprintf(stderr,"qi[%d]:%f\n",i,qi[i]);
+    //    fprintf(stderr,"qi[%d]:%f\n",i,qi[i]);
     if(isinf(qi[i])){
       
     }
@@ -64,18 +65,18 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
       qi[i]=0.0;
     }
   }
-  fprintf(stderr,"parst1:%f lprod:%f\n",nP[1][k],lprod(PP[1][k],-pix));
+  //  fprintf(stderr,"parst1:%f lprod:%f\n",nP[1][k],lprod(PP[1][k],-pix));
   //  exit(0);
   for(int i=0;(k<tk_l-1)&&i<7;i++)
     assert(!isinf(qi[i]));
 
-  fprintf(stderr,"\t-> QI: ");
+  //  fprintf(stderr,"\t-> QI: ");
   double ret = 0;
   for(int i=0;i<7;i++) {
-    fprintf(stderr," qi[%d]:%f ",i,qi[i]);
+    //fprintf(stderr," qi[%d]:%f ",i,qi[i]);
     ret += qi[i];
   }
-  fprintf(stderr,"\n");
+  //  fprintf(stderr,"\n");
 
 
 
@@ -92,6 +93,9 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
  */
 
 void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,double rho){
+    clock_t t=clock();
+  time_t t2=time(NULL);
+
 #if 0
   fprintf(stderr,"[%s] rho:%f\n",__FUNCTION__,rho);
   fprintf(stderr,"[%s] tks[0]:%f tks[1]:%f\n",__FUNCTION__,tk[0],tk[1]);
@@ -105,7 +109,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
   ComputeP4(tk,tk_l,P[4],epsize,rho);
   ComputeP7(tk,tk_l,P[7],P[3],epsize,rho);
   ComputeP0(tk_l,P[0],P[5]);
-  printmatrixf((char*)"P.txt",P,8,tk_l);
+  //  printmatrixf((char*)"P.txt",P,8,tk_l);
   //  exit(0);
   for(int p=0;1&&p<8;p++){
     for(int i=0;i<tk_l;i++){
@@ -114,10 +118,16 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
     }
 
   }
+    fprintf(stderr, "\t[TIME] cpu-time used =  %.2f sec for computeglobalprobabilites\n", (float)(clock() - t) / CLOCKS_PER_SEC);
+  fprintf(stderr, "\t[Time] walltime used =  %.2f sec for computeglobalprobablibies\n", (float)(time(NULL) - t2));  
+
 }
 
 double qFunction_inner(double *tk,int tk_l,double *epsize,double rho,double pix,int numWind,double **nP,double **PP){
+  clock_t t=clock();
+  time_t t2=time(NULL);
 
+  
   ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
   double Q = 0;
   for (unsigned i = 0; i < tk_l; i++){
@@ -125,6 +135,8 @@ double qFunction_inner(double *tk,int tk_l,double *epsize,double rho,double pix,
     Q += tmpQ;
     //    fprintf(stderr,"Q[%d]:%f\n",i,tmpQ);
   }
+   fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
+ fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2)); 
   return Q;
   
 }
@@ -184,6 +196,9 @@ void setEPSize(double *ary,int l,double *from_infile){
 
 
 void fastPSMC::calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,double rho){
+  clock_t t=clock();
+  time_t t2=time(NULL);
+  
     //we first set the initial fwprobs to stationary distribution
   for(int i=0;i<tk_l;i++){
       fw[i][0] = stationary[i];
@@ -262,11 +277,17 @@ void fastPSMC::calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,doubl
     //fprintf(stderr,"[%s] stop\n",__FUNCTION__ );
 
 ;
+ fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
+ fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2));  
 }
 
 
 
 void fastPSMC::allocate(int tk_l_arg){
+  clock_t t=clock();
+  time_t t2=time(NULL);
+
+  
   int numWindows = windows.size();
   //  fprintf(stderr,"\t-> [%s]: will allocate tk with length: %d\n",__FUNCTION__,tk_l_arg);
   tk_l = tk_l_arg;
@@ -307,6 +328,9 @@ void fastPSMC::allocate(int tk_l_arg){
     }
 
   }
+  fprintf(stderr, "\t[TIME] cpu-time used =  %.2f sec for allocating internal structures\n", (float)(clock() - t) / CLOCKS_PER_SEC);
+  fprintf(stderr, "\t[Time] walltime used =  %.2f sec for  allocating internal structures\n", (float)(time(NULL) - t2));  
+
 }
 /*
   Function will set the indices for the windows
@@ -359,6 +383,10 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
   stationary(i) = exp(-sum_{j=0}^{i-1}{tau_j/lambda_j}*P2[i])
  */
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis){
+  clock_t t=clock();
+  time_t t2=time(NULL);
+
+
   //  fprintf(stderr,"\t-> [Calculating emissions with tk_l:%d and windows.size():%lu:%s ] theta:%f gls:(%f,%f,%f,%f) start\n",tk_l,windows.size(),__TIME__,theta,gls[0],gls[1],gls[2],gls[3]);
   //initialize the first:
   for(int j=0;j<tk_l;j++)
@@ -387,6 +415,9 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
     }
   }
   //fprintf(stderr,"\t-> [Calculating emissions with tk_l:%d and windows.size():%lu:%s ] stop\n",tk_l,windows.size(),__TIME__);
+  fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
+  fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2));  
+
 }
 
 
@@ -417,6 +448,8 @@ void fastPSMC::calculate_stationary(double *tk,int tk_l,double *lambda,double *r
 }
 
 void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,double **bw,double *stationary){
+  clock_t t=clock();
+  time_t t2=time(NULL);
 
   static double *workspace = new double [numWind];
   ComputeP11(numWind,tk_l,P[1],PP[1],fw,bw,stationary,workspace);
@@ -427,7 +460,7 @@ void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,dou
   ComputeP55(numWind,tk_l,P,PP[5],fw,bw,stationary);
   ComputeP66(numWind,tk_l,P,PP[6],fw,bw,stationary);
   ComputeP77(numWind,tk_l,P,PP[7],fw,bw,stationary);
-  printmatrixf("PP.txt",PP,8,tk_l);
+  //  printmatrixf("PP.txt",PP,8,tk_l);
   //  exit(0);
   for(int p=1;p<8;p++){
     for(int i=0;i<tk_l;i++){
@@ -435,7 +468,8 @@ void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,dou
       assert(exp(PP[p][i])>=0&&exp(PP[p][i])<=1);
     }
   }
-
+ fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
+ fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2)); 
   //  exit(0);
 }
 
@@ -466,7 +500,7 @@ void fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double rho){
       }
     //    printmatrixf("transitions.txt",trans,tk_l,tk_l);
   }
-
+  exit(0);
   
 }
 /*

@@ -273,7 +273,14 @@ int main_psmc(int argc, char **argv){
   fprintf(stderr,"\t-> we are in file: %s function: %s line:%d\n",__FILE__,__FUNCTION__,__LINE__);
 
   //we loop over the single chromosomes
+  clock_t t=clock();
+  time_t t2=time(NULL);
+
   args *pars = getArgs(argc,argv);
+  
+  fprintf(stderr, "\t[TIME] cpu-time used =  %.2f sec for reading arguments\n", (float)(clock() - t) / CLOCKS_PER_SEC);
+  fprintf(stderr, "\t[Time] walltime used =  %.2f sec for reading arguments\n", (float)(time(NULL) - t2));  
+
   for(int i=0;0&&i<pars->par->n+1;i++)
     fprintf(stderr,"%d) tk:%f lambda:%f\n",i,pars->par->times[i],pars->par->params[i]);
   if(!pars)

@@ -1,5 +1,5 @@
 #include <sys/stat.h>
-
+#include <ctime>
 #include <htslib/bgzf.h>
 #include <htslib/faidx.h>
 #include <zlib.h>
@@ -172,6 +172,9 @@ perpsmc * perpsmc_init(char *fname){
 
  //chr start stop is given from commandine
  myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop){
+   clock_t t=clock();
+   time_t t2=time(NULL);
+
    assert(chr!=NULL);
 
    myMap::iterator it = pp->mm.find(chr);
@@ -225,5 +228,8 @@ perpsmc * perpsmc_init(char *fname){
      pp->first=0;
      pp->last=it->second.nSites;
    }
+   fprintf(stderr, "\t[TIME] cpu-time used =  %.2f sec for reading data\n", (float)(clock() - t) / CLOCKS_PER_SEC);
+  fprintf(stderr, "\t[Time] walltime used =  %.2f sec for reading data\n", (float)(time(NULL) - t2));  
+
    return it;
  }
