@@ -51,7 +51,7 @@ double addProtectN(double a[],int len){
   }
 
   double sumVal = 0;
-  for(int i=1;i<len;i++)
+  for(int i=0;i<len;i++)
     sumVal += exp(a[i]-maxVal);
 
   return log(sumVal) + maxVal;
@@ -68,15 +68,16 @@ double addProtect2(double a,double b){
 }
 
 
-void ComputeP11(unsigned numWin,int tk_l,double *P1,double *PP1,double **fw,double **bw,double *stationary,double *workspace){
-  
+void ComputeP11(unsigned numWin,int tk_l,double *P1,double *PP1,double **fw,double **bw,double *stationary,double *workspace,double **emis){
+  fprintf(stderr,"\t->BBBBBBBBBBBB numwin:%u\n",numWin);
   for (unsigned i = 0; i < tk_l; i++){
     workspace[0] = log(0);
     for (unsigned l = 1; l < numWin; l++){
       //      fprintf(stderr,"l:%d\n",l);
       //fprintf(stderr,"fw[][]:%f\n",fw[i][l]);
       //fprintf(stderr,"fw[][]:%f\n",bw[i][l]);
-      workspace[l] = lprod(fw[i][l],P1[i],bw[i][l+1]);//NOTE: In appendix of K.H. paper it seems to be an extra emission probability for site l+1, it is already inside bw[]
+      workspace[l] = lprod(fw[i][l],P1[i],bw[i][l+1],emis[i][l+1]);//NOTE: In appendix of K.H. paper it seems to be an extra emission probability for site l+1, it is already inside bw[]
+      //      fprintf(stderr,"p11:%u ")
     }
     //    fprintf(stderr,"calling addproejct w0:%f w1: w2:\n",workspace[0]);//,workspace[1],workspace[2]);exit(0);
     PP1[i] = addProtectN(workspace,numWin)-stationary[i];

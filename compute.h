@@ -2,7 +2,7 @@ double addProtect3(double a,double b, double c);
 double addProtect4(double a,double b, double c,double d);
 double addProtectN(double a[],int len);
 double addProtect2(double a,double b);
-void ComputeP11(unsigned numWin,int tk_l,double *P1,double *PP1,double **fw,double **bw,double *stationary,double *workspace);
+void ComputeP11(unsigned numWin,int tk_l,double *P1,double *PP1,double **fw,double **bw,double *stationary,double *workspace,double **emis);
 void ComputeP22(unsigned numWind,int tk_l,double **P,double *PP2,double **fw,double **bw,double *stationary);
 void ComputeP33(unsigned numWind,int tk_l,double *P3,double *PP3,double **fw,double **bw,double *stationary);
 void ComputeP44(unsigned numWind,int tk_l,double *P4,double *PP4,double **fw,double **bw,double *stationary,double *workspace);

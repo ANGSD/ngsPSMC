@@ -8,9 +8,9 @@
 #include "bfgs.h"
 #include <errno.h>
 
-int nThreads =88;
+int nThreads =1;
 
-int nChr =0;
+int nChr = 0;
 
 const double rho = 0.1;
 
@@ -47,7 +47,10 @@ oPars *ops = NULL;
 */
 
 double qFunction_inner(double *tk,int tk_l,double *epsize,double rho,double pix,int numWind,double **nP,double **PP);
+
+
 double qFunction(const double *params ,const void *d){
+  fprintf(stderr,"asdfasdfadsfasdfdsfdsfasdfdsafadsf\n");
   oPars *data = (oPars*) d;
 
   return qFunction_inner(data->tk,data->tk_l,data->epsize,data->rho,data->pix,data->numWind,data->nP,data->PP);
@@ -149,16 +152,22 @@ void *run_a_hmm(void *ptr){
 
 
 void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double rho){
+
+  fprintf(stderr,"\t-> [%s:%s:%d] nthreads:%d\n",__FILE__,__FUNCTION__,__LINE__,nThreads);
   shmm.tk=tk;
   shmm.tk_l=tk_l;
   shmm.rho=rho;
   shmm.epsize=epsize;
 
   pthread_t thread[nThreads];
-  if(nThreads==1)
-    for(int i=0;i<nChr;i++)
+  if(nThreads==1){
+
+    for(int i=0;i<nChr;i++){
+      fprintf(stderr,"i:%d\n",i);
       objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.rho);
-  else {
+    }
+
+  }else {
     int at=0;
     while(at<nChr){
       int thisround = std::min(nChr-at,nThreads);
@@ -178,9 +187,10 @@ void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double rho){
       at+=thisround;
     }
   }
- 
-  
+  exit(0);
+    fprintf(stderr,"tktktktktt\n");  
 #if 1
+
   printarrayf("tk",tk,tk_l);
   printmatrixf("fw",objs[0]->fw,tk_l,objs[0]->windows.size()+1);
   printmatrixf("bw",objs[0]->bw,tk_l,objs[0]->windows.size()+1);
@@ -202,6 +212,7 @@ void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double rho){
 
 
 void main_analysis_optim(double *tk,int tk_l,double *epsize,double rho){
+
   shmm.tk=tk;
   shmm.tk_l=tk_l;
   shmm.rho=rho;
@@ -247,8 +258,11 @@ void main_analysis_optim(double *tk,int tk_l,double *epsize,double rho){
 
 
 void main_analysis(double *tk,int tk_l,double *epsize,double rho){
+
   //first make_hmm for all chrs;
-  main_analysis_make_hmm(tk,tk_l,epsize,rho);
+
+ main_analysis_make_hmm(tk,tk_l,epsize,rho);
+ 
   //  runoptim2(tk,tk_l,epsize,rho);
   for(int i=0;i<20;i++){
     
@@ -260,6 +274,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double rho){
 }
 
 int psmc_wrapper(args *pars,int block) {
+  fprintf(stderr,"\t-> we are in file: %s function: %s line:%d\n",__FILE__,__FUNCTION__,__LINE__);
   psmc_par *p=pars->par;
 #if 0 //print pars
   fprintf(stderr,"par->n:%d\tpar->n_free:%d\tpar_map:%p\tpar->pattern:%s\tpar->times:%p\tpar->params:%p\n",p->n,p->n_free,p->par_map,p->pattern,p->times,p->params);
@@ -299,7 +314,7 @@ int psmc_wrapper(args *pars,int block) {
     if(pars->chooseChr!=NULL)
       break;
   }
-  if(0){
+  if(0) {
     fprintf(stderr,"\t-> We have now allocated hmm's for: %d chromosomes\n",nChr);
     for(int i=0;i<nobs;i++){
       fprintf(stderr,"\t-> make_hmm for chr:%d\n",i);
@@ -330,6 +345,7 @@ int psmc_wrapper(args *pars,int block) {
       fprintf(stderr,"\t -> valQ[%d]: %f\n",i,tmp);
     }
   }else{
+
     main_analysis(tk,tk_l,epsize,rho);
 
   }

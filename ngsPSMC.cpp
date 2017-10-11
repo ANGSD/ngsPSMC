@@ -215,6 +215,7 @@ int makeold(int argc,char **argv){
 }
 
 int main(int argc,char **argv){
+
   //start of signal handling
   struct sigaction sa;
   sigemptyset (&sa.sa_mask);
@@ -247,6 +248,7 @@ int main(int argc,char **argv){
 	fprintf(stderr," %s",argv[i]);
       fprintf(stderr," >psmc.ml.txt\'\n");   
     }
+
     main_psmc(argc,argv);
   }
 

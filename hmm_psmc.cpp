@@ -39,23 +39,36 @@ void printmatrix(FILE *fp,double **mat,int x,int y){
 
 
 double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **PP,int tk_l){
+  fprintf(stderr,"k:%u pix:%f numWind:%u tk_l:%d\n",k,pix,numWind,tk_l);
   /*
   //This block is needed if eimission probabilities depend on estimated parameters, e.g. on time disctretisation 
     for (unsigned l = 1; l < numWind + 1; l++) 
     qi += log(emis[K][l])*fw[K][l]*bw[K][l];
     qi /= pix;
   */
-
+  printmatrixf("nP.txt",nP,8,tk_l);
   double qi[7];
+  double expec[8];
+  expec[0]=-666;
+  for(int i=1;i<8;i++){
+    expec[i] = exp(lprod(PP[i][k],-pix));
+    fprintf(stderr,"expec[%d]:%f\n",i,expec[i]);
+  }
   qi[0] = nP[1][k]*exp(lprod(PP[1][k],-pix));
-  
+  fprintf(stderr,"qk[0]:%f np[1][k]:%f PP[1][k]:%f pix:%f\n",qi[0],nP[1][k],PP[1][k],pix);
   qi[1] = nP[2][k]*exp(lprod(PP[2][k],-pix));
+  fprintf(stderr,"qk[1]:%f\n",qi[1]);
   qi[2] = nP[3][k]*exp(lprod(PP[3][k],-pix));
+  fprintf(stderr,"qk[2]:%f\n",qi[2]);
   qi[3] = nP[4][k]*exp(lprod(PP[4][k],-pix));
+  fprintf(stderr,"qk[3]:%f\n",qi[3]);
   qi[4] = nP[5][k]*exp(lprod(PP[5][k],-pix));
+  fprintf(stderr,"qk[4]:%f\n",qi[4]);
   qi[5] = nP[6][k]*exp(lprod(PP[6][k],-pix));
+  fprintf(stderr,"qk[5]:%f\n",qi[5]);
   qi[6] = nP[7][k]*exp(lprod(PP[7][k],-pix));
-
+  fprintf(stderr,"qk[6]:%f\n",qi[6]);
+  
   for(int i=0;(k==tk_l-1)&&i<7;i++){//DRAGON
     //    fprintf(stderr,"qi[%d]:%f\n",i,qi[i]);
     if(isinf(qi[i])){
@@ -109,8 +122,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
   ComputeP4(tk,tk_l,P[4],epsize,rho);
   ComputeP7(tk,tk_l,P[7],P[3],epsize,rho);
   ComputeP0(tk_l,P[0],P[5]);
-  //  printmatrixf((char*)"P.txt",P,8,tk_l);
-  //  exit(0);
+  
   for(int p=0;1&&p<8;p++){
     for(int i=0;i<tk_l;i++){
       //      fprintf(stderr,"P[%d][%d]: %f\n",p,i,P[p][i]);
@@ -118,25 +130,26 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
     }
 
   }
-    fprintf(stderr, "\t[TIME] cpu-time used =  %.2f sec for computeglobalprobabilites\n", (float)(clock() - t) / CLOCKS_PER_SEC);
+  fprintf(stderr, "\t[TIME] cpu-time used =  %.2f sec for computeglobalprobabilites\n", (float)(clock() - t) / CLOCKS_PER_SEC);
   fprintf(stderr, "\t[Time] walltime used =  %.2f sec for computeglobalprobablibies\n", (float)(time(NULL) - t2));  
-
 }
 
 double qFunction_inner(double *tk,int tk_l,double *epsize,double rho,double pix,int numWind,double **nP,double **PP){
+  fprintf(stderr,"YOYOYOYOYOYOYOYOYOYOYOYOY\n");
   clock_t t=clock();
   time_t t2=time(NULL);
 
   
   ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
+  printmatrixf((char*)"P_check.txt",nP,8,tk_l);
   double Q = 0;
   for (unsigned i = 0; i < tk_l; i++){
     double tmpQ = qkFunction(i, pix,numWind,nP,PP,tk_l);
     Q += tmpQ;
-    //    fprintf(stderr,"Q[%d]:%f\n",i,tmpQ);
+    fprintf(stderr,"Q[%d]:%f\n",i,tmpQ);
   }
    fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
- fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2)); 
+   fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2)); 
   return Q;
   
 }
@@ -222,10 +235,12 @@ void fastPSMC::calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,doubl
 
     //    fprintf(stderr,"tk_l:%d\n",tk_l);
     double tmp[tk_l];
-    for(int i=0;i<tk_l;i++)
+    for(int i=0;i<tk_l;i++){
       tmp[i] = fw[i][windows.size()];
-
+      fprintf(stderr,"AAAAAAAAA: %f\n",tmp[i]);
+    }
     pix = addProtectN(tmp,tk_l);
+    // fprintf(stderr,"pix:%f\n",pix);exit(0);
     assert(!isnan(pix));
     fwllh = pix;
     //fprintf(stderr,"forward(pic) llh:%f\n",pix);
@@ -315,10 +330,10 @@ void fastPSMC::allocate(int tk_l_arg){
   for(int i=0;i<8;i++){
     P[i] = new double[tk_l];
     PP[i]= new double[tk_l];
-    for(int j=0;j<tk_l;j++)
-      PP[i][j] = -666;
     nP[i]= new double[tk_l];
   }
+  for(int i=0;i<tk_l;i++)
+    PP[0][i] = -666;
   if(DOTRANS){
     trans = new double *[tk_l];
     for(int i=0;i<tk_l;i++){
@@ -429,8 +444,9 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
   
   stationary distribution will be put in results array, also of length tk
   
-  stationary(i) = exp(-sum_{j=0}^{i-1}{tau_j/lambda_j}*P2[i])
- */
+  stationary(i) = exp(-sum_{j=0}^{i-1}{tau_j/lambda_j}*P2[void])
+*/
+
 void fastPSMC::calculate_stationary(double *tk,int tk_l,double *lambda,double *results,double **P){
   results[0] = P[2][0];//fix this
   for(int i=1;i<tk_l;i++){
@@ -447,21 +463,28 @@ void fastPSMC::calculate_stationary(double *tk,int tk_l,double *lambda,double *r
 
 }
 
-void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,double **bw,double *stationary){
+void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,double **bw,double *stationary,double **emis){
   clock_t t=clock();
   time_t t2=time(NULL);
 
   static double *workspace = new double [numWind];
-  ComputeP11(numWind,tk_l,P[1],PP[1],fw,bw,stationary,workspace);
+  ComputeP11(numWind,tk_l,P[1],PP[1],fw,bw,stationary,workspace,emis);
+  for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[1][%d]\t%f\n",i,PP[1][i]);
   //  fprintf(stderr,"Akilling it:\n");exit(0);
   ComputeP22(numWind,tk_l,P,PP[2],fw,bw,stationary);
+  for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[2][%d]\t%f\n",i,PP[2][i]);
   ComputeP33(numWind,tk_l,P[3],PP[3],fw,bw,stationary);
+  for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[3][%d]\t%f\n",i,PP[3][i]);
   ComputeP44(numWind,tk_l,P[4],PP[4],fw,bw,stationary,workspace);
+  for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[4][%d]\t%f\n",i,PP[4][i]);
   ComputeP55(numWind,tk_l,P,PP[5],fw,bw,stationary);
+  for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[5][%d]\t%f\n",i,PP[5][i]);
   ComputeP66(numWind,tk_l,P,PP[6],fw,bw,stationary);
+  for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[6][%d]\t%f\n",i,PP[6][i]);
   ComputeP77(numWind,tk_l,P,PP[7],fw,bw,stationary);
-  //  printmatrixf("PP.txt",PP,8,tk_l);
-  //  exit(0);
+  for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[7][%d]\t%f\n",i,PP[7][i]);
+  printmatrixf("PP.txt",PP,8,tk_l);
+  //exit(0);
   for(int p=1;p<8;p++){
     for(int i=0;i<tk_l;i++){
       //      fprintf(stderr,"P[%d][%d]: %f\n",p,i,PP[p][i]);
@@ -476,18 +499,22 @@ void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,dou
 
 void fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double rho){
 
-  //  fprintf(stderr,"\t-> [%s] tk=(%f,%f) gls:(%f, %f,%f, %f) \n",__FUNCTION__,tk[0],tk[1],gls[0],gls[1],gls[2],gls[3] );
+  fprintf(stderr,"\t-> [%s] tk=(%f,%f) gls:(%f, %f,%f, %f) \n",__FUNCTION__,tk[0],tk[1],gls[0],gls[1],gls[2],gls[3] );
   //prepare global probs
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
+  printmatrixf((char*)"P.txt",P,8,tk_l);
   //calculate emissions
   calculate_emissions(tk,tk_l,gls,windows,theta,emis);
-  //  printmatrixf("emis",emis,tk_l,windows.size()+1);
+  printmatrixf("emis",emis,tk_l,windows.size()+1); 
   //  fprintf(stderr,"asdfasfdsadfasdfa\n");
   calculate_stationary(tk,tk_l,epsize,stationary,P);
-  // printarrayf("stationary",stationary,tk_l);
+  printarrayf("stationary",stationary,tk_l);
   //    printarray(stderr,stationary,tk_l);
   calculate_FW_BW_PP_Probs(tk,tk_l,epsize,rho);
-  ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary);
+  printmatrixf("fw",fw,tk_l,windows.size()+1); 
+  printmatrixf("bw",bw,tk_l,windows.size()+1); 
+  ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis);
+  printmatrixf((char*)"PP.txt",PP,8,tk_l);
   qval=qFunction_inner(tk,tk_l,epsize,rho,pix,windows.size(),P,PP);//no need to recompute P. But we fix this later;
   fprintf(stderr,"\t-> hmm[%d]\tqval: %f fwllh: %f bwllh: %f\n",index,qval,fwllh,bwllh);
   //  fprintf(stderr,"\t-> [%s] stop\n",__FUNCTION__ );
