@@ -1,3 +1,5 @@
+
+
 #include <ctime>
 #include <vector>
 #include <cassert>
@@ -14,7 +16,7 @@ void printarrayf(char *fname,double *m,int x);
 
 void printarray(FILE *fp,double *ary,int l){
   for(int i=0;i<l;i++)
-    fprintf(fp,"%f\t",i,ary[i]);
+    fprintf(fp,"%f\t",ary[i]);
 
 }
 void printmatrix(FILE *fp,double **mat,int x,int y){
@@ -46,14 +48,26 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
     qi += log(emis[K][l])*fw[K][l]*bw[K][l];
     qi /= pix;
   */
-  printmatrixf("nP.txt",nP,8,tk_l);
+  printmatrixf((char*)"nP.txt",nP,8,tk_l);
   double qi[7];
-  double expec[8];
-  expec[0]=-666;
+  double expec[7];
+  double npfac[7];
+
+  double esum=0;
   for(int i=1;i<8;i++){
-    expec[i] = exp(lprod(PP[i][k],-pix));
-    fprintf(stderr,"expec[%d]:%f\n",i,expec[i]);
+    expec[i-1] = exp(lprod(PP[i][k],-pix));
+    npfac[i-1] = nP[i][k];
+    esum +=expec[i-1];
+    fprintf(stderr,"qk[%d]\tnpfac:%f\texpec:%f esum:%f\n",i-1,npfac[i-1],expec[i-1],esum);
+    if(std::isinf(npfac[i-1]))
+      qi[i-1] = 0;
+    else
+      qi[i-1] = npfac[i-1]*expec[i-1];
   }
+  
+  fprintf(stderr,"ESUM:%f\n",esum);
+
+#if 0
   qi[0] = nP[1][k]*exp(lprod(PP[1][k],-pix));
   fprintf(stderr,"qk[0]:%f np[1][k]:%f PP[1][k]:%f pix:%f\n",qi[0],nP[1][k],PP[1][k],pix);
   qi[1] = nP[2][k]*exp(lprod(PP[2][k],-pix));
@@ -68,33 +82,18 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
   fprintf(stderr,"qk[5]:%f\n",qi[5]);
   qi[6] = nP[7][k]*exp(lprod(PP[7][k],-pix));
   fprintf(stderr,"qk[6]:%f\n",qi[6]);
-  
   for(int i=0;(k==tk_l-1)&&i<7;i++){//DRAGON
-    //    fprintf(stderr,"qi[%d]:%f\n",i,qi[i]);
-    if(isinf(qi[i])){
-      
-    }
-    if(isinf(qi[i])){
+    //nan occurs if expected value is zero, and nP is -Inf
+    if(isinf(qi[i])||isnan(qi[i])){
       qi[i]=0.0;
     }
   }
-  //  fprintf(stderr,"parst1:%f lprod:%f\n",nP[1][k],lprod(PP[1][k],-pix));
-  //  exit(0);
-  for(int i=0;(k<tk_l-1)&&i<7;i++)
-    assert(!isinf(qi[i]));
+#endif
 
-  //  fprintf(stderr,"\t-> QI: ");
   double ret = 0;
-  for(int i=0;i<7;i++) {
-    //fprintf(stderr," qi[%d]:%f ",i,qi[i]);
+  for(int i=0;i<7;i++) 
     ret += qi[i];
-  }
-  //  fprintf(stderr,"\n");
 
-
-
-  // fprintf(stderr,"return value for q[%d]:%f\n",k,ret);
-  //assert(!isnan(ret));
   return ret;
 }
 /*
@@ -468,22 +467,22 @@ void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,dou
   time_t t2=time(NULL);
 
   static double *workspace = new double [numWind];
-  ComputeP11(numWind,tk_l,P[1],PP[1],fw,bw,stationary,workspace,emis);
+  ComputeP11(numWind,tk_l,P[1],PP[1],fw,bw,workspace,emis);
   for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[1][%d]\t%f\n",i,PP[1][i]);
   //  fprintf(stderr,"Akilling it:\n");exit(0);
-  ComputeP22(numWind,tk_l,P,PP[2],fw,bw,stationary);
+  ComputeP22(numWind,tk_l,P,PP[2],fw,bw,emis);
   for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[2][%d]\t%f\n",i,PP[2][i]);
-  ComputeP33(numWind,tk_l,P[3],PP[3],fw,bw,stationary);
+  ComputeP33(numWind,tk_l,P[3],PP[3],fw,bw,emis);
   for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[3][%d]\t%f\n",i,PP[3][i]);
-  ComputeP44(numWind,tk_l,P[4],PP[4],fw,bw,stationary,workspace);
+  ComputeP44(numWind,tk_l,P[4],PP[4],fw,bw,workspace,emis);
   for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[4][%d]\t%f\n",i,PP[4][i]);
-  ComputeP55(numWind,tk_l,P,PP[5],fw,bw,stationary);
+  ComputeP55(numWind,tk_l,P,PP[5],fw,bw,stationary,emis);
   for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[5][%d]\t%f\n",i,PP[5][i]);
-  ComputeP66(numWind,tk_l,P,PP[6],fw,bw,stationary);
+  ComputeP66(numWind,tk_l,P,PP[6],fw,bw,stationary,emis);
   for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[6][%d]\t%f\n",i,PP[6][i]);
-  ComputeP77(numWind,tk_l,P,PP[7],fw,bw,stationary);
+  ComputeP77(numWind,tk_l,P,PP[7],fw,bw,stationary,emis);
   for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[7][%d]\t%f\n",i,PP[7][i]);
-  printmatrixf("PP.txt",PP,8,tk_l);
+  printmatrixf((char*)"PP.txt",PP,8,tk_l);
   //exit(0);
   for(int p=1;p<8;p++){
     for(int i=0;i<tk_l;i++){
@@ -505,14 +504,14 @@ void fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double rho){
   printmatrixf((char*)"P.txt",P,8,tk_l);
   //calculate emissions
   calculate_emissions(tk,tk_l,gls,windows,theta,emis);
-  printmatrixf("emis",emis,tk_l,windows.size()+1); 
+  printmatrixf((char*)"emis",emis,tk_l,windows.size()+1); 
   //  fprintf(stderr,"asdfasfdsadfasdfa\n");
   calculate_stationary(tk,tk_l,epsize,stationary,P);
-  printarrayf("stationary",stationary,tk_l);
+  printarrayf((char*)"stationary",stationary,tk_l);
   //    printarray(stderr,stationary,tk_l);
   calculate_FW_BW_PP_Probs(tk,tk_l,epsize,rho);
-  printmatrixf("fw",fw,tk_l,windows.size()+1); 
-  printmatrixf("bw",bw,tk_l,windows.size()+1); 
+  printmatrixf((char*)"fw",fw,tk_l,windows.size()+1); 
+  printmatrixf((char*)"bw",bw,tk_l,windows.size()+1); 
   ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis);
   printmatrixf((char*)"PP.txt",PP,8,tk_l);
   qval=qFunction_inner(tk,tk_l,epsize,rho,pix,windows.size(),P,PP);//no need to recompute P. But we fix this later;

@@ -1,4 +1,4 @@
-#pragma once
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,7 +68,7 @@ double addProtect2(double a,double b){
 }
 
 
-void ComputeP11(unsigned numWin,int tk_l,double *P1,double *PP1,double **fw,double **bw,double *stationary,double *workspace,double **emis){
+void ComputeP11(unsigned numWin,int tk_l,double *P1,double *PP1,double **fw,double **bw,double *workspace,double **emis){
   fprintf(stderr,"\t->BBBBBBBBBBBB numwin:%u\n",numWin);
   for (unsigned i = 0; i < tk_l; i++){
     workspace[0] = log(0);
@@ -80,12 +80,12 @@ void ComputeP11(unsigned numWin,int tk_l,double *P1,double *PP1,double **fw,doub
       //      fprintf(stderr,"p11:%u ")
     }
     //    fprintf(stderr,"calling addproejct w0:%f w1: w2:\n",workspace[0]);//,workspace[1],workspace[2]);exit(0);
-    PP1[i] = addProtectN(workspace,numWin)-stationary[i];
+    PP1[i] = addProtectN(workspace,numWin);
   }
   //  exit(0);
 }
 
-void ComputeP22(unsigned numWind,int tk_l,double **P,double *PP2,double **fw,double **bw,double *stationary){
+void ComputeP22(unsigned numWind,int tk_l,double **P,double *PP2,double **fw,double **bw,double **emis){
   double R1[tk_l];
   double R2[tk_l];
   double tmp[tk_l];
@@ -98,20 +98,17 @@ void ComputeP22(unsigned numWind,int tk_l,double **P,double *PP2,double **fw,dou
       R1[i] = addProtect2(R1[i+1],fw[i+1][l]);
     double tmp = log(0);
     for (unsigned i = 0; i < tk_l ; i++){
-      R2[i] = addProtect3(lprod(tmp,P[2][i]) , lprod(fw[i][l],P[6][i]) , lprod(R1[i],P[7][i]));
+      R2[i] = addProtect3(lprod(tmp,P[5][i]) , lprod(fw[i][l],P[6][i]) , lprod(R1[i],P[7][i]));
       tmp = R2[i];
     }
 
     for (unsigned i = 1; i < tk_l; i++)
-      PP2[i] =addProtect2(PP2[i] , lprod(R2[i-1],P[2][i],bw[i][l+1]));//CHECK
-
+      PP2[i] =addProtect2(PP2[i] , lprod(R2[i-1],P[2][i],bw[i][l+1],emis[i][l+1]));//CHECK
   }
-  for (unsigned i = 1; i < tk_l; i++)
-    PP2[i] -= stationary[i];
       
 }
 
-void ComputeP33(unsigned numWind,int tk_l,double *P3,double *PP3,double **fw,double **bw,double *stationary){
+void ComputeP33(unsigned numWind,int tk_l,double *P3,double *PP3,double **fw,double **bw,double **emis){
   double R1[tk_l];
   for (unsigned i = 0; i < tk_l; i++)
     PP3[i] = log(0);
@@ -120,20 +117,20 @@ void ComputeP33(unsigned numWind,int tk_l,double *P3,double *PP3,double **fw,dou
     for (int i = tk_l - 2; i >= 0 ; i--)
       R1[i] = addProtect2( R1[i+1] , fw[i+1][l]);
     for (unsigned i = 0; i < tk_l - 1; i++)
-      PP3[i] = addProtect2(PP3[i],R1[i]+P3[i]+bw[i][l]-stationary[i]);
+      PP3[i] = addProtect2(PP3[i],lprod(R1[i],P3[i],bw[i][l],emis[i][l+1]));
   }
 }
 
-void ComputeP44(unsigned numWind,int tk_l,double *P4,double *PP4,double **fw,double **bw,double *stationary,double *workspace){
+void ComputeP44(unsigned numWind,int tk_l,double *P4,double *PP4,double **fw,double **bw,double *workspace,double **emis){
   for (unsigned i = 0; i < tk_l; i++){
     workspace[i] = log(0);
     for (unsigned l = 1; l < numWind; l++)
-      workspace[i] = fw[i][l]+P4[i]+bw[i][l+1]-stationary[i];
+      workspace[i] = lprod(fw[i][l],P4[i],bw[i][l+1],emis[i][l+1]);
     PP4[i] = addProtectN(workspace,numWind);
   }
 }
 
-void ComputeP55(unsigned numWind,int tk_l,double **P,double *PP5,double **fw,double **bw,double *stationary){
+void ComputeP55(unsigned numWind,int tk_l,double **P,double *PP5,double **fw,double **bw,double *stationary,double **emis){
   double R1[tk_l];
   double R2[tk_l];
   double bR1[tk_l];
@@ -153,28 +150,29 @@ void ComputeP55(unsigned numWind,int tk_l,double **P,double *PP5,double **fw,dou
     }
     bR1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
-      bR1[i] = addProtect2(bR1[i+1] , bw[i+1][l+1]);
+      bR1[i] = addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i][l+1]));
+    
     for (unsigned i = 0; i < tk_l - 1; i++)
-      PP5[i] = addProtect2(PP5[i],R2[i]+P[5][i]+bR1[i]-P[0][i]);//<- CHECK ptgi
+      PP5[i] = addProtect2(PP5[i],lprod(R2[i],P[5][i],bR1[i]));//<- CHECK ptgi
     //dragon missing tk_l-1 entry
   }
 }
 
-void ComputeP66(unsigned numWind,int tk_l,double **P,double *PP6,double **fw,double **bw,double *stationary){
+void ComputeP66(unsigned numWind,int tk_l,double **P,double *PP6,double **fw,double **bw,double *stationary,double **emis){
   double bR1[tk_l];
   for (unsigned i = 0; i < tk_l; i++)
     PP6[i] = log(0);
   for (unsigned l = 1; l < numWind; l++){
     bR1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
-      bR1[i] = addProtect2(bR1[i+1] , bw[i+1][l+1]);
+      bR1[i] = addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i][l+1]));
     for (unsigned i = 0; i < tk_l - 1; i++)
-      PP6[i] =addProtect2(PP6[i], fw[i][l]+P[6][i]+bR1[i]-P[0][i]);//<- CHECK btgi
+      PP6[i] =addProtect2(PP6[i], lprod(fw[i][l],P[6][i],bR1[i]));//<- CHECK btgi
     //dragon missing tk_l-1 entry
   }
 }
 
-void ComputeP77(unsigned numWind,int tk_l,double **P,double *PP7,double **fw,double **bw,double *stationary){
+void ComputeP77(unsigned numWind,int tk_l,double **P,double *PP7,double **fw,double **bw,double *stationary,double **emis){
   double R1[tk_l];
   double bR1[tk_l];
   for (unsigned i = 0; i < tk_l; i++)
@@ -186,10 +184,10 @@ void ComputeP77(unsigned numWind,int tk_l,double **P,double *PP7,double **fw,dou
     
     bR1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
-      bR1[i] = addProtect2(bR1[i+1] , bw[i+1][l+1]);
+      bR1[i] = addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i][l+1]));
 
     for (unsigned i = 0; i < tk_l - 1; i++)
-      PP7[i] = addProtect2(PP7[i],R1[i]+P[7][i]+bR1[i]-P[0][i]);//<-CHECK ptgi
+      PP7[i] = addProtect2(PP7[i],lprod(R1[i],P[7][i],bR1[i]));//<-CHECK ptgi
   }
   //DRAGON missing PP7[tk_l-1]
 }
