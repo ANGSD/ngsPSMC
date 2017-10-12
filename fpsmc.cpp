@@ -276,10 +276,11 @@ void main_analysis(double *tk,int tk_l,double *epsize,double rho){
 int psmc_wrapper(args *pars,int block) {
   fprintf(stderr,"\t-> we are in file: %s function: %s line:%d\n",__FILE__,__FUNCTION__,__LINE__);
   psmc_par *p=pars->par;
-#if 0 //print pars
+#if 1 //print pars
   fprintf(stderr,"par->n:%d\tpar->n_free:%d\tpar_map:%p\tpar->pattern:%s\tpar->times:%p\tpar->params:%p\n",p->n,p->n_free,p->par_map,p->pattern,p->times,p->params);
   for(int i=0;i<pars->par->n+1;i++)
-    fprintf(stderr,"%i)\t%f\t%f\n",i,pars->par->times[i],pars->par->params[i]);
+    fprintf(stderr,"%i)\t%e\t%e\n",i,pars->par->times[i],pars->par->params[i]);
+  //  exit(0);
 #endif
   int tk_l = pars->par->n+1;
   double *tk = new double [tk_l];
@@ -288,9 +289,9 @@ int psmc_wrapper(args *pars,int block) {
   //(nelems,array,max_t,alpha,array with values from file, can be NULL)
   setTk(tk_l,tk,15,0.01,p->times);//<- last position will be infinity
   //  fprintf(stderr,"[%s] tk=(%f,%f)\n",__FUNCTION__,tk[0],tk[1]);//exit(0);
-#if 0
+#if 1
   for(int i=0;i<tk_l;i++)
-    fprintf(stderr,"(tk,epsize)[%d]:(%f,%f)\n",i,tk[i],epsize[i]);
+    fprintf(stderr,"(tk,epsize)[%d]:(%e,%e)\n",i,tk[i],epsize[i]);
 #endif
   
   //initialize all hmm (one for each chr), for now just a single
@@ -314,6 +315,7 @@ int psmc_wrapper(args *pars,int block) {
     if(pars->chooseChr!=NULL)
       break;
   }
+#if 0
   if(0) {
     fprintf(stderr,"\t-> We have now allocated hmm's for: %d chromosomes\n",nChr);
     for(int i=0;i<nobs;i++){
@@ -345,10 +347,9 @@ int psmc_wrapper(args *pars,int block) {
       fprintf(stderr,"\t -> valQ[%d]: %f\n",i,tmp);
     }
   }else{
-
+#endif
     main_analysis(tk,tk_l,epsize,rho);
 
-  }
   
   
 #if 0

@@ -23,8 +23,8 @@ void printmatrix(FILE *fp,double **mat,int x,int y){
   fprintf(fp,"#printmatrix with x:%d y:%d\n",x,y);
   for(int i=0;i<y;i++){
     for(int j=0;j<x-1;j++)
-      fprintf(fp,"%f\t",mat[j][i]);
-    fprintf(fp,"%f\n",mat[x-1][i]);
+      fprintf(fp,"%e\t",mat[j][i]);
+    fprintf(fp,"%e\n",mat[x-1][i]);
   }
 
 }
@@ -54,15 +54,18 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
   double npfac[7];
 
   double esum=0;
+  //i follows PP index.
   for(int i=1;i<8;i++){
     expec[i-1] = exp(lprod(PP[i][k],-pix));
     npfac[i-1] = nP[i][k];
-    esum +=expec[i-1];
-    fprintf(stderr,"qk[%d]\tnpfac:%f\texpec:%f esum:%f\n",i-1,npfac[i-1],expec[i-1],esum);
+    if(i!=2&&i!=5)
+      esum +=expec[i-1];
+
     if(std::isinf(npfac[i-1]))
       qi[i-1] = 0;
     else
       qi[i-1] = npfac[i-1]*expec[i-1];
+    fprintf(stderr,"qk[%d]:%f\tnpfac:%f\texpec:%f esum:%f\n",i-1,qi[i-1],npfac[i-1],expec[i-1],esum);
   }
   
   fprintf(stderr,"ESUM:%f\n",esum);
@@ -92,6 +95,7 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
 
   double ret = 0;
   for(int i=0;i<7;i++) 
+    //    if(i!=2&&i!=)
     ret += qi[i];
 
   return ret;
@@ -197,13 +201,16 @@ void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
 
 
 void setEPSize(double *ary,int l,double *from_infile){
+  fprintf(stderr,"l:%d\n",l);
   if(!from_infile)
     for (int i = 0; i <l; i++)
       ary[l]=1;
   else{
     memcpy(ary,from_infile,l*sizeof(double));
   }
-	
+  for(int i=0;i<l;i++)
+    fprintf(stderr,"%d) %f\n",i,from_infile[i]);
+  //  exit(0);
 }
 
 
@@ -246,18 +253,19 @@ void fastPSMC::calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,doubl
 
 
     //now do backward algorithm
-    for(int i=0;i<tk_l;i++){
+    //initialize by stationary
+    for(int i=0;i<tk_l;i++)
       bw[i][windows.size()] = lprod(stationary[i],emis[i][windows.size()]);
-      
-    }
+     
 
     //we plug in values at v-1, therefore we break at v==1
-    int iter =0;
     for(int v=windows.size();v>0;v--){
       ComputeRs(v,bw);//<-prepare R1,R2
+#if 0
       double p1= lprod(bw[0][v],P[1][0]);
       double p2= lprod( R1[0],P[3][0]) ;
       double p3= lprod(bw[0][v],P[4][0]);
+#endif
       //      fprintf(stderr,"p1:%f\tp2:%f\tp3:%f emis:%f\n",p1,p2,p3,emis[0][v]);
       bw[0][v-1] = addProtect3(lprod(bw[0][v],P[1][0]) , lprod( R1[0],P[3][0]) , lprod(bw[0][v],P[4][0]))+emis[0][v-1];
       bw[0][v] -= lprod(stationary[0],emis[0][v]);
@@ -267,9 +275,6 @@ void fastPSMC::calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,doubl
 	bw[i][v] -= lprod(stationary[i],emis[i][v]);
 	//	fprintf(stderr,"bw[[%d][%d]:%f stationary[i]:%d emis[i][v]:%f\n",i,v,bw[0][v],emis[i][v]);
       }
-      iter++;
-      if(0&&iter==2)
-	break;
     }
     
     for(int i=0;i<tk_l;i++)
@@ -340,7 +345,7 @@ void fastPSMC::allocate(int tk_l_arg){
       for(int j=0;j<tk_l;j++)
 	trans[i][j] = -888;//placeholder, to spot if something shouldnt be happening;
     }
-
+    //    printmatrixf("TRANS",trans,tk_l,tk_l);
   }
   fprintf(stderr, "\t[TIME] cpu-time used =  %.2f sec for allocating internal structures\n", (float)(clock() - t) / CLOCKS_PER_SEC);
   fprintf(stderr, "\t[Time] walltime used =  %.2f sec for  allocating internal structures\n", (float)(time(NULL) - t2));  
@@ -360,8 +365,8 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
   int beginPos = 0;
   int endPos = beginPos+block-1;
   
-  while(1){
-    //fprintf(stderr,"Beginpos:%d EndPos:%d\n",beginPos,endPos);
+  while(1) {
+    //    fprintf(stderr,"Beginpos:%d EndPos:%d\n",beginPos,endPos);
     wins w;
     if(endPos>pos[last-1])
       break;
@@ -372,7 +377,7 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
       endIndex++;
     endIndex--;
 #if 0
-    fprintf(stdout,"\t-> endpos:%d\n",pos[endIndex]);
+    //fprintf(stdout,"\t-> endpos:%d\n",pos[endIndex]);
     fprintf(stdout,"\t-> winsize:%d bp:%d,ep:%d bi:%d ei:%d ei-bi:%d\n",block,beginPos,endPos,beginIndex,endIndex,endIndex-beginIndex);
 #endif
     w.from = beginIndex;
@@ -382,7 +387,7 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
     endPos+=block;
     //    exit(0);
   }
-
+  //  exit(0);
 }
 
 
@@ -415,8 +420,10 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
       double inner = exp(-2.0*tk[j]*theta); // this part relates to issue #1
       //      fprintf(stderr,"\t\t%d from:%d to:%d inner:%f\n",j,windows[v].from,windows[v].to,inner);
       for(int i=windows[v].from;i<=windows[v].to;i++){//for all elements in window
-	//	fprintf(stderr,"\t\t\tgls(%d,%d)=",2*i,2*i+1);
-	//	fprintf(stderr,"(%f,%f)\n",gls[2*i],gls[2*i+1]);
+#if 0
+	fprintf(stderr,"\t\t\tgls(%d,%d)=",2*i,2*i+1);
+	fprintf(stderr,"(%f,%f)\n",gls[2*i],gls[2*i+1]);
+#endif
 	emis[j][v+1] += log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6)*(1-inner));//<- check
 	if(isinf(emis[j][v+1])){
 	  fprintf(stderr,"\t-> Huge bug in code contact developer. Emissions evaluates to zero\n");
@@ -428,6 +435,7 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
       }
     }
   }
+  //  exit(0);
   //fprintf(stderr,"\t-> [Calculating emissions with tk_l:%d and windows.size():%lu:%s ] stop\n",tk_l,windows.size(),__TIME__);
   fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
   fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2));  
@@ -468,22 +476,15 @@ void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,dou
 
   static double *workspace = new double [numWind];
   ComputeP11(numWind,tk_l,P[1],PP[1],fw,bw,workspace,emis);
-  for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[1][%d]\t%f\n",i,PP[1][i]);
-  //  fprintf(stderr,"Akilling it:\n");exit(0);
   ComputeP22(numWind,tk_l,P,PP[2],fw,bw,emis);
-  for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[2][%d]\t%f\n",i,PP[2][i]);
   ComputeP33(numWind,tk_l,P[3],PP[3],fw,bw,emis);
-  for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[3][%d]\t%f\n",i,PP[3][i]);
   ComputeP44(numWind,tk_l,P[4],PP[4],fw,bw,workspace,emis);
-  for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[4][%d]\t%f\n",i,PP[4][i]);
   ComputeP55(numWind,tk_l,P,PP[5],fw,bw,stationary,emis);
-  for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[5][%d]\t%f\n",i,PP[5][i]);
   ComputeP66(numWind,tk_l,P,PP[6],fw,bw,stationary,emis);
-  for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[6][%d]\t%f\n",i,PP[6][i]);
   ComputeP77(numWind,tk_l,P,PP[7],fw,bw,stationary,emis);
-  for(int i=0;i<tk_l;i++) fprintf(stderr,"PP[7][%d]\t%f\n",i,PP[7][i]);
+
   printmatrixf((char*)"PP.txt",PP,8,tk_l);
-  //exit(0);
+  
   for(int p=1;p<8;p++){
     for(int i=0;i<tk_l;i++){
       //      fprintf(stderr,"P[%d][%d]: %f\n",p,i,PP[p][i]);
@@ -521,10 +522,10 @@ void fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double rho){
   if(DOTRANS){
     for(int i=0;i<tk_l;i++)
       for(int j=0;j<tk_l;j++){
-	//	fprintf(stderr,"i:%d j:%d\n",i,j);
+	fprintf(stderr,"i:%d j:%d\n",i,j);
 	trans[i][j] = calc_trans(i,j,P);
       }
-    //    printmatrixf("transitions.txt",trans,tk_l,tk_l);
+    printmatrixf("transitions.txt",trans,tk_l,tk_l);
   }
   exit(0);
   

@@ -3,7 +3,7 @@
  */
 double lprod(double a,double b);
 double lprod(double a,double b,double c,double d);
-#define DOTRANS 0
+#define DOTRANS 1
 
 double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **PP,int);
 void setTk(int n, double *t, double max_t, double alpha, double *inp_ti);

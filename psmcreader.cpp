@@ -179,10 +179,10 @@ perpsmc * perpsmc_init(char *fname){
 
    myMap::iterator it = pp->mm.find(chr);
    if(it==pp->mm.end()){
-     fprintf(stderr,"\t-> [%s] Problem finding chr: %s\n",__FUNCTION__,chr);
+     fprintf(stderr,"\t-> [%s] Problem finding chr: \'%s\'\n",__FUNCTION__,chr);
      return it;
    }
-   //   fprintf(stderr,"%s->%lu\n",it->first,it->second.nSites);
+   fprintf(stderr,"%s->%lu\n",it->first,it->second.nSites);
    if(pp->pf==NULL){
      my_bgzf_seek(pp->bgzf_gls,it->second.saf,SEEK_SET);
      my_bgzf_seek(pp->bgzf_pos,it->second.pos,SEEK_SET);
@@ -215,7 +215,7 @@ perpsmc * perpsmc_init(char *fname){
      char *tmp = faidx_fetch_seq(pp->pf->fai, it->first, 0, 0x7fffffff, &asdf);
      for(int i=0;i<it->second.nSites;i++){
        pp->pos[i] = i*100;
-//important relates to problems with divide by zero in compuation of  backward probablity
+       //important relates to problems with divide by zero in compuation of  backward probablity
        pp->gls[2*i]=pp->gls[2*i+1]=-500;
        //K=het
        if(tmp[i]=='K')
@@ -229,7 +229,7 @@ perpsmc * perpsmc_init(char *fname){
      pp->last=it->second.nSites;
    }
    fprintf(stderr, "\t[TIME] cpu-time used =  %.2f sec for reading data\n", (float)(clock() - t) / CLOCKS_PER_SEC);
-  fprintf(stderr, "\t[Time] walltime used =  %.2f sec for reading data\n", (float)(time(NULL) - t2));  
+   fprintf(stderr, "\t[Time] walltime used =  %.2f sec for reading data\n", (float)(time(NULL) - t2));  
 
    return it;
  }

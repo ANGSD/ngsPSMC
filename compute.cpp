@@ -1,4 +1,3 @@
-
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,20 +68,17 @@ double addProtect2(double a,double b){
 
 
 void ComputeP11(unsigned numWin,int tk_l,double *P1,double *PP1,double **fw,double **bw,double *workspace,double **emis){
-  fprintf(stderr,"\t->BBBBBBBBBBBB numwin:%u\n",numWin);
   for (unsigned i = 0; i < tk_l; i++){
     workspace[0] = log(0);
     for (unsigned l = 1; l < numWin; l++){
       //      fprintf(stderr,"l:%d\n",l);
       //fprintf(stderr,"fw[][]:%f\n",fw[i][l]);
       //fprintf(stderr,"fw[][]:%f\n",bw[i][l]);
-      workspace[l] = lprod(fw[i][l],P1[i],bw[i][l+1],emis[i][l+1]);//NOTE: In appendix of K.H. paper it seems to be an extra emission probability for site l+1, it is already inside bw[]
-      //      fprintf(stderr,"p11:%u ")
+      workspace[l] = lprod(fw[i][l],P1[i],bw[i][l+1],emis[i][l+1]);
+      //NOTE: In appendix of K.H. paper it seems to be an extra emission probability for site l+1, it is already inside bw[]
     }
-    //    fprintf(stderr,"calling addproejct w0:%f w1: w2:\n",workspace[0]);//,workspace[1],workspace[2]);exit(0);
     PP1[i] = addProtectN(workspace,numWin);
   }
-  //  exit(0);
 }
 
 void ComputeP22(unsigned numWind,int tk_l,double **P,double *PP2,double **fw,double **bw,double **emis){
@@ -117,7 +113,7 @@ void ComputeP33(unsigned numWind,int tk_l,double *P3,double *PP3,double **fw,dou
     for (int i = tk_l - 2; i >= 0 ; i--)
       R1[i] = addProtect2( R1[i+1] , fw[i+1][l]);
     for (unsigned i = 0; i < tk_l - 1; i++)
-      PP3[i] = addProtect2(PP3[i],lprod(R1[i],P3[i],bw[i][l],emis[i][l+1]));
+      PP3[i] = addProtect2(PP3[i],lprod(R1[i],P3[i],bw[i][l+1],emis[i][l+1]));
   }
 }
 
@@ -150,11 +146,10 @@ void ComputeP55(unsigned numWind,int tk_l,double **P,double *PP5,double **fw,dou
     }
     bR1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
-      bR1[i] = addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i][l+1]));
+      bR1[i] = addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1]));
     
     for (unsigned i = 0; i < tk_l - 1; i++)
       PP5[i] = addProtect2(PP5[i],lprod(R2[i],P[5][i],bR1[i]));//<- CHECK ptgi
-    //dragon missing tk_l-1 entry
   }
 }
 
@@ -165,10 +160,9 @@ void ComputeP66(unsigned numWind,int tk_l,double **P,double *PP6,double **fw,dou
   for (unsigned l = 1; l < numWind; l++){
     bR1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
-      bR1[i] = addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i][l+1]));
+      bR1[i] = addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1],stationary[i+1]));
     for (unsigned i = 0; i < tk_l - 1; i++)
-      PP6[i] =addProtect2(PP6[i], lprod(fw[i][l],P[6][i],bR1[i]));//<- CHECK btgi
-    //dragon missing tk_l-1 entry
+      PP6[i] =addProtect2(PP6[i], lprod(fw[i][l],P[6][i],bR1[i],-P[0][i]));//<- CHECK btgi
   }
 }
 
@@ -184,10 +178,10 @@ void ComputeP77(unsigned numWind,int tk_l,double **P,double *PP7,double **fw,dou
     
     bR1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
-      bR1[i] = addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i][l+1]));
+      bR1[i] = addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1],stationary[i+1]));
 
     for (unsigned i = 0; i < tk_l - 1; i++)
-      PP7[i] = addProtect2(PP7[i],lprod(R1[i],P[7][i],bR1[i]));//<-CHECK ptgi
+      PP7[i] = addProtect2(PP7[i],lprod(R1[i],P[7][i],bR1[i],-P[0][i]));//<-CHECK ptgi
   }
   //DRAGON missing PP7[tk_l-1]
 }
@@ -286,13 +280,15 @@ void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
     double part4 = 2*exp(part4exp);
     
     double fact2= part1+part2-part3-part4;
-    #if 0
+    P4[i] = log(fact1)+log(fact2);
+#if 0
     fprintf(stderr,"\t-> fact1: %f fact2: %f fact1*fact2: %f\n",fact1,fact2,fact1*fact2);
     fprintf(stderr,"\t-> part1: %f part2: %f part3: %f part4: %f\n",part1,part2,part3,part4);
     fprintf(stderr,"\t-> part1+part2: %f -part3-part4: %f \n",part1+part2,-part3-part4);
     fprintf(stderr,"\t-> part1+part2-part3-part4: %f \n",part1+part2-part3-part4);
-    #endif
-    P4[i] = log(fact1)+log(fact2);
+    fprintf(stderr,"\t-> P4[%d]: %f \n",i,P4[i]);
+#endif
+
     //    fprintf(stderr,"P[4][%d]: %f\n",i,P4[i]);
 
     //exit(0);
@@ -302,7 +298,7 @@ void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
   double top = 2.0*rho*epsize[tk_l-1];
   double bottom = (1.0 + 2.0*rho*epsize[tk_l-1]);
   double expot = exp(-2.0*rho*tk[tk_l-1]);
-  //  fprintf(stderr,"top:%f bot:%f exp:%f rho:%f epSize[tk_l-1]:%f\n",top,bottom,expot,rho,epsize[tk_l-1]);
+  fprintf(stderr,"TOPTOP top:%f bot:%f exp:%f rho:%f epSize[tk_l-1]:%e\n",top,bottom,expot,rho,epsize[tk_l-1]);
   P4[tk_l-1] = log(2.0*rho*epsize[tk_l-1]/(1.0 + 2.0*rho*epsize[tk_l-1])*exp(-2.0*rho*tk[tk_l-1]));
   assert(exp(P4[tk_l-1])>=0&&exp(P4[tk_l-1])<=1);
 }
@@ -333,6 +329,7 @@ double ComputeXXX(int i,int j,double **P){
 //  fprintf(stderr,"ComputeXXX(%d,%d):%f\n",i,j,exp(returnVal));
   return returnVal;
 }
+
 
 
 double calc_trans(int k, int j,double **P){

@@ -158,13 +158,15 @@ void setpars( char *fname,psmc_par *pp,int which) {
   assert(RS.size()-1==pp->n);
   pp->params = new double[RS.size()];
   pp->times = new double[RS.size()];
-
+  fprintf(stderr,"RS:%lu\n",RS.size());
   for(int i=0;i<RS.size();i++){
     int val;
     sscanf(RS[i],"RS\t%d\t%lf\t%lf\t",&val,&pp->times[i],&pp->params[i]);
+    fprintf(stderr,"PP->params[%d]:%e\n",i,pp->params[i]);
     assert(val==i);
   }
   fprintf(stderr,"\t-> Done reading parameters from file: \'%s\'\n",fname);
+  //  exit(0);
 }
 
 void readtkfile(args *p){
