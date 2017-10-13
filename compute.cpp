@@ -299,7 +299,7 @@ void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
     double fact2= part1+part2-part3-part4;
     P4[i] = log(fact1)+log(fact2);
     
-#if 1
+#if 0
     fprintf(stderr,"\t-> fact1: %f fact2: %f fact1*fact2: %f\n",fact1,fact2,fact1*fact2);
     fprintf(stderr,"\t-> part1: %f part2: %f part3: %f part4: %f\n",part1,part2,part3,part4);
     fprintf(stderr,"\t-> part1+part2: %f -part3-part4: %f \n",part1+part2,-part3-part4);

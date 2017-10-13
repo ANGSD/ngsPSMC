@@ -122,7 +122,7 @@ void printmatrix(FILE *fp,double **mat,int x,int y);
 
 
 void printmatrixf(char *fname,double **m,int x,int y){
-  return ;
+  //  return ;
   FILE *fp = NULL;
   if(!(fp=fopen(fname,"wb"))){
     fprintf(stderr,"\t-> Problem writing file: \'%s\'\n",fname);
@@ -133,7 +133,7 @@ void printmatrixf(char *fname,double **m,int x,int y){
 }
 
 void printarrayf(char *fname,double *m,int x){
-  return;
+  //  return;
   FILE *fp = NULL;
   if(!(fp=fopen(fname,"wb"))){
     fprintf(stderr,"\t-> Problem writing file: \'%s\'\n",fname);
@@ -189,7 +189,7 @@ void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double rho){
     }
   }
 
-#if 1
+#if 0
   printarrayf((char*)"tk",tk,tk_l);
   printmatrixf((char*)"fw",objs[0]->fw,tk_l,objs[0]->windows.size()+1);
   printmatrixf((char*)"bw",objs[0]->bw,tk_l,objs[0]->windows.size()+1);
@@ -276,9 +276,9 @@ int psmc_wrapper(args *pars,int block) {
   fprintf(stderr,"\t-> we are in file: %s function: %s line:%d\n",__FILE__,__FUNCTION__,__LINE__);
   psmc_par *p=pars->par;
 #if 1 //print pars
-  fprintf(stderr,"par->n:%d\tpar->n_free:%d\tpar_map:%p\tpar->pattern:%s\tpar->times:%p\tpar->params:%p\n",p->n,p->n_free,p->par_map,p->pattern,p->times,p->params);
-  for(int i=0;i<pars->par->n+1;i++)
-    fprintf(stderr,"%i)\t%e\t%e\n",i,pars->par->times[i],pars->par->params[i]);
+  fprintf(stderr,"\t-> par->n:%d\tpar->n_free:%d\tpar_map:%p\tpar->pattern:%s\tpar->times:%p\tpar->params:%p\n",p->n,p->n_free,p->par_map,p->pattern,p->times,p->params);
+  for(int i=0;0&&i<pars->par->n+1;i++)
+    fprintf(stderr,"[psmc_wrapper]:%i)\t%e\t%e\n",i,pars->par->times[i],pars->par->params[i]);
   //  exit(0);
 #endif
   int tk_l = pars->par->n+1;

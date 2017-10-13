@@ -36,6 +36,7 @@ public:
   double *gls;//deep copy of the gls for a chr
   std::vector<wins> windows;
   double **trans;
+  double *workspace;
   double fwllh;
   double bwllh;
   double qval;

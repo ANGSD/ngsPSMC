@@ -95,7 +95,7 @@ perpsmc * perpsmc_init(char *fname){
     ret->pf = perFasta_init(fname);
     for(int i=0;i<faidx_nseq(ret->pf->fai);i++){
       char *chr = strdup(faidx_iseq(ret->pf->fai,i));
-      fprintf(stderr,"%d) chr: %s\n",i,chr);
+      fprintf(stderr,"\t->[%s] %d) chr: %s\n",__FUNCTION__,i,chr);
       datum d;
       d.nSites = faidx_seq_len(ret->pf->fai,chr);
       d.pos=d.saf=0;
@@ -106,7 +106,6 @@ perpsmc * perpsmc_init(char *fname){
 	fprintf(stderr,"Problem with chr: %s, key already exists, psmc file needs to be sorted. (sort your -rf that you used for input)\n",chr);
 	exit(0);
       }
-
     }
     return ret;
   }
@@ -181,6 +180,7 @@ perpsmc * perpsmc_init(char *fname){
    myMap::iterator it = pp->mm.find(chr);
    if(it==pp->mm.end()){
      fprintf(stderr,"\t-> [%s] Problem finding chr: \'%s\'\n",__FUNCTION__,chr);
+     exit(0);
      return it;
    }
    //   fprintf(stderr,"%s->%lu\n",it->first,it->second.nSites);

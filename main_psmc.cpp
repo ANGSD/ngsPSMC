@@ -52,7 +52,7 @@ double lprod(double a,double b,double c){
 
 int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars)
 {
-  fprintf(stderr,"parsing pattern :\"%s\"\n",pattern);
+  fprintf(stderr,"\t-> parsing pattern :\"%s\"\n",pattern);
 	char *q, *p, *tmp;
 	int top = 0, *stack = (int*)malloc(sizeof(int) * 0x100);
 	int *pars_map, k, l, i;
@@ -158,7 +158,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
   assert(RS.size()-1==pp->n);
   pp->params = new double[RS.size()];
   pp->times = new double[RS.size()];
-  fprintf(stderr,"RS:%lu\n",RS.size());
+  //  fprintf(stderr,"RS:%lu\n",RS.size());
   for(int i=0;i<RS.size();i++){
     int val;
     sscanf(RS[i],"RS\t%d\t%lf\t%lf\t",&val,&pp->times[i],&pp->params[i]);
@@ -245,6 +245,7 @@ args * getArgs(int argc,char **argv){
     else{
       p->perc = perpsmc_init(*argv);
       p->fname = *argv;
+
     }
     argv++;
   }
