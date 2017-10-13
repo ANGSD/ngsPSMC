@@ -172,9 +172,10 @@ perpsmc * perpsmc_init(char *fname){
 
  //chr start stop is given from commandine
  myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop){
+   #ifdef __SHOW_TIME__
    clock_t t=clock();
    time_t t2=time(NULL);
-
+#endif
    assert(chr!=NULL);
 
    myMap::iterator it = pp->mm.find(chr);
@@ -182,7 +183,7 @@ perpsmc * perpsmc_init(char *fname){
      fprintf(stderr,"\t-> [%s] Problem finding chr: \'%s\'\n",__FUNCTION__,chr);
      return it;
    }
-   fprintf(stderr,"%s->%lu\n",it->first,it->second.nSites);
+   //   fprintf(stderr,"%s->%lu\n",it->first,it->second.nSites);
    if(pp->pf==NULL){
      my_bgzf_seek(pp->bgzf_gls,it->second.saf,SEEK_SET);
      my_bgzf_seek(pp->bgzf_pos,it->second.pos,SEEK_SET);
@@ -228,8 +229,9 @@ perpsmc * perpsmc_init(char *fname){
      pp->first=0;
      pp->last=it->second.nSites;
    }
+#ifdef __SHOW_TIME__
    fprintf(stderr, "\t[TIME] cpu-time used =  %.2f sec for reading data\n", (float)(clock() - t) / CLOCKS_PER_SEC);
    fprintf(stderr, "\t[Time] walltime used =  %.2f sec for reading data\n", (float)(time(NULL) - t2));  
-
+#endif
    return it;
  }

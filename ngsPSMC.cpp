@@ -23,7 +23,7 @@
 
 int SIG_COND =1;
 double ttol = 1e-16; 
-
+int nThreads =1;
 int really_kill =3;
 int VERBOSE = 1;
 void handler(int s) {

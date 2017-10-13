@@ -3,7 +3,7 @@
  */
 double lprod(double a,double b);
 double lprod(double a,double b,double c,double d);
-#define DOTRANS 1
+#define DOTRANS 0
 
 double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **PP,int);
 void setTk(int n, double *t, double max_t, double alpha, double *inp_ti);
@@ -68,7 +68,7 @@ public:
   void calculate_stationary(double *tk,int tk_l,double *lambda,double *results,double **P);
   void calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,double rho);
   //  void calculate_FW_BW_PP_Probs();
-  void make_hmm(double *tk,int tk_l,double *epsize,double rho);
+  double make_hmm(double *tk,int tk_l,double *epsize,double rho);
   
 private:
   void ComputeR2(int v,double **mat){

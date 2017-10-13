@@ -31,6 +31,7 @@ typedef struct {
   double *lambda;
   perFasta *pf;
   int which;
+  int nThreads;
 }args;
 args * getArgs(int argc,char **argv);
 void destroy_args(args *p);

@@ -8,7 +8,7 @@
 #include "bfgs.h"
 #include <errno.h>
 
-int nThreads =1;
+extern int nThreads;
 
 int nChr = 0;
 
@@ -122,6 +122,7 @@ void printmatrix(FILE *fp,double **mat,int x,int y);
 
 
 void printmatrixf(char *fname,double **m,int x,int y){
+  return ;
   FILE *fp = NULL;
   if(!(fp=fopen(fname,"wb"))){
     fprintf(stderr,"\t-> Problem writing file: \'%s\'\n",fname);
@@ -132,7 +133,7 @@ void printmatrixf(char *fname,double **m,int x,int y){
 }
 
 void printarrayf(char *fname,double *m,int x){
-
+  return;
   FILE *fp = NULL;
   if(!(fp=fopen(fname,"wb"))){
     fprintf(stderr,"\t-> Problem writing file: \'%s\'\n",fname);
@@ -160,13 +161,13 @@ void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double rho){
   shmm.epsize=epsize;
 
   pthread_t thread[nThreads];
-  if(nThreads==1){
-
+  double qval =0;
+  if(nThreads==1) {
     for(int i=0;i<nChr;i++){
-      fprintf(stderr,"i:%d\n",i);
-      objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.rho);
+      //      fprintf(stderr,"i:%d\n",i);
+      qval += objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.rho);
     }
-
+    
   }else {
     int at=0;
     while(at<nChr){
@@ -187,27 +188,26 @@ void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double rho){
       at+=thisround;
     }
   }
-  exit(0);
-    fprintf(stderr,"tktktktktt\n");  
-#if 1
 
-  printarrayf("tk",tk,tk_l);
-  printmatrixf("fw",objs[0]->fw,tk_l,objs[0]->windows.size()+1);
-  printmatrixf("bw",objs[0]->bw,tk_l,objs[0]->windows.size()+1);
-  printmatrixf("emis",objs[0]->emis,tk_l,objs[0]->windows.size()+1);
-  printmatrixf("P",objs[0]->P,7,tk_l);
+#if 1
+  printarrayf((char*)"tk",tk,tk_l);
+  printmatrixf((char*)"fw",objs[0]->fw,tk_l,objs[0]->windows.size()+1);
+  printmatrixf((char*)"bw",objs[0]->bw,tk_l,objs[0]->windows.size()+1);
+  printmatrixf((char*)"emis",objs[0]->emis,tk_l,objs[0]->windows.size()+1);
+  printmatrixf((char*)"P",objs[0]->P,7,tk_l);
 #endif
 
-  double fwllh,bwllh,qval;
-  fwllh=bwllh=qval=0;
+#if 1
+  double fwllh,bwllh,qval2;
+  fwllh=bwllh=qval2=0;
   for(int i=0;i<nChr;i++){
     //    fprintf(stderr,"\t-> hmm.fwllh for chr:%d\n",i);
     fwllh += objs[i]->fwllh;
     bwllh += objs[i]->bwllh;
-    qval += objs[i]->qval;
+    qval2 += objs[i]->qval;
   }
-  fprintf(stderr,"\t[total llh]  fwllh:%f\n\t[total llh]  bwllh:%f\n\t[total qval] qval:%f\n",fwllh,bwllh,qval);
-
+  fprintf(stderr,"\t[total llh]  fwllh:%f\n\t[total llh]  bwllh:%f\n\t[total qval] qval:%f\n",fwllh,bwllh,qval2);
+#endif
 }
 
 
@@ -260,8 +260,7 @@ void main_analysis_optim(double *tk,int tk_l,double *epsize,double rho){
 void main_analysis(double *tk,int tk_l,double *epsize,double rho){
 
   //first make_hmm for all chrs;
-
- main_analysis_make_hmm(tk,tk_l,epsize,rho);
+  main_analysis_make_hmm(tk,tk_l,epsize,rho);
  
   //  runoptim2(tk,tk_l,epsize,rho);
   for(int i=0;i<20;i++){
@@ -289,7 +288,7 @@ int psmc_wrapper(args *pars,int block) {
   //(nelems,array,max_t,alpha,array with values from file, can be NULL)
   setTk(tk_l,tk,15,0.01,p->times);//<- last position will be infinity
   //  fprintf(stderr,"[%s] tk=(%f,%f)\n",__FUNCTION__,tk[0],tk[1]);//exit(0);
-#if 1
+#if 0
   for(int i=0;i<tk_l;i++)
     fprintf(stderr,"(tk,epsize)[%d]:(%e,%e)\n",i,tk[i],epsize[i]);
 #endif

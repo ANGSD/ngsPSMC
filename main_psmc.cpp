@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include "main_psmc.h"
 #include "fpsmc.h"
-
+extern int nThreads;
 
 double lprod(double a,double b,double c,double d){
   if(isinf(a)||isinf(b)||isinf(c)||isinf(d)){
@@ -162,7 +162,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
   for(int i=0;i<RS.size();i++){
     int val;
     sscanf(RS[i],"RS\t%d\t%lf\t%lf\t",&val,&pp->times[i],&pp->params[i]);
-    fprintf(stderr,"PP->params[%d]:%e\n",i,pp->params[i]);
+    //    fprintf(stderr,"PP->params[%d]:%e\n",i,pp->params[i]);
     assert(val==i);
   }
   fprintf(stderr,"\t-> Done reading parameters from file: \'%s\'\n",fname);
@@ -208,6 +208,7 @@ args * getArgs(int argc,char **argv){
   p->par =(psmc_par*) calloc(1,sizeof(psmc_par));
   p->tkfile = NULL;
   p->which = -1;
+  p->nThreads =1;
   char *inffilename=NULL;
   if(argc==0)
     return p;
@@ -222,6 +223,8 @@ args * getArgs(int argc,char **argv){
       p->block = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-which"))
       p->which = atoi(*(++argv));
+    else  if(!strcasecmp(*argv,"-nThreads"))
+      p->nThreads = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-p"))
       p->par->pattern =  strdup(*(++argv));
     else  if(!strcasecmp(*argv,"-tkfile"))
@@ -249,7 +252,7 @@ args * getArgs(int argc,char **argv){
   if(p->seed==0)
     p->seed = time(NULL);
   srand48(p->seed);
-  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d fname:%s seed:%ld winsize:%d\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->block);
+  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d fname:%s seed:%ld winsize:%d which:%d nThreads:%d\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->block,p->which,p->nThreads);
   //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
   if(p->par->pattern==NULL)
     p->par->pattern = strdup(DEFAULT_PATTERN);
@@ -259,7 +262,7 @@ args * getArgs(int argc,char **argv){
   
   if(p->tkfile)
     readtkfile(p);
-  
+  nThreads = p->nThreads;
   return p;
 }
 
@@ -275,14 +278,15 @@ int main_psmc(int argc, char **argv){
   fprintf(stderr,"\t-> we are in file: %s function: %s line:%d\n",__FILE__,__FUNCTION__,__LINE__);
 
   //we loop over the single chromosomes
+#ifdef __SHOW_TIME__
   clock_t t=clock();
   time_t t2=time(NULL);
-
+#endif
   args *pars = getArgs(argc,argv);
-  
+#ifdef __SHOW_TIME__
   fprintf(stderr, "\t[TIME] cpu-time used =  %.2f sec for reading arguments\n", (float)(clock() - t) / CLOCKS_PER_SEC);
   fprintf(stderr, "\t[Time] walltime used =  %.2f sec for reading arguments\n", (float)(time(NULL) - t2));  
-
+#endif
   for(int i=0;0&&i<pars->par->n+1;i++)
     fprintf(stderr,"%d) tk:%f lambda:%f\n",i,pars->par->times[i],pars->par->params[i]);
   if(!pars)

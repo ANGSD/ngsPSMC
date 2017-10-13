@@ -44,7 +44,6 @@ double addProtectN(double a[],int len){
   double maxVal = a[0];
   
   for(int i=1;i<len;i++){
-    //    fprintf(stderr,"AAAAAAAAA i:%d maxval:%f\n",i,maxVal);
     if(maxVal<a[i])
       maxVal=a[i];
   }
@@ -57,6 +56,8 @@ double addProtectN(double a[],int len){
 }
 double addProtect2(double a,double b){
   //function does: log(exp(a)+exp(b)) while protecting for underflow
+  if(!isfinite(a)&&!isfinite(b) )
+    return a;
   double maxVal;// = std::max(a,b));
   if(a>b)
     maxVal=a;
@@ -110,18 +111,34 @@ void ComputeP33(unsigned numWind,int tk_l,double *P3,double *PP3,double **fw,dou
     PP3[i] = log(0);
   for (unsigned l = 1; l < numWind; l++){
     R1[tk_l - 1] = log(0);
-    for (int i = tk_l - 2; i >= 0 ; i--)
+    for (int i = tk_l - 2; i >= 0 ; i--){
       R1[i] = addProtect2( R1[i+1] , fw[i+1][l]);
-    for (unsigned i = 0; i < tk_l - 1; i++)
+      //   fprintf(stderr,"R1[%d]:%f\n",i,R1[i]);
+    }
+    for (unsigned i = 0; i < tk_l - 1; i++){
+      //      fprintf(stderr,"%d) PP[3]:%f lprod:%f\n",i,PP3[i],lprod(R1[i],P3[i],bw[i][l+1],emis[i][l+1]));
       PP3[i] = addProtect2(PP3[i],lprod(R1[i],P3[i],bw[i][l+1],emis[i][l+1]));
+      //      fprintf(stderr,"%d) PP[3]:%f lprod:%f\n",i,PP3[i],lprod(R1[i],P3[i],bw[i][l+1],emis[i][l+1]));
+    }
   }
+  for(int i=0;1&&i<tk_l;i++){//CHECK THIS LASTER 12oct 2017
+    assert(!isnan(PP3[i]));
+  }
+
 }
 
+
 void ComputeP44(unsigned numWind,int tk_l,double *P4,double *PP4,double **fw,double **bw,double *workspace,double **emis){
+  //  fprintf(stderr,"numwwind:%u\n",numWind);
   for (unsigned i = 0; i < tk_l; i++){
-    workspace[i] = log(0);
-    for (unsigned l = 1; l < numWind; l++)
-      workspace[i] = lprod(fw[i][l],P4[i],bw[i][l+1],emis[i][l+1]);
+    workspace[0] = log(0);
+    //    int ntot=0;
+    for (unsigned l = 1; l < numWind; l++){
+      workspace[l] = lprod(fw[i][l],P4[i],bw[i][l+1],emis[i][l+1]);
+      //fprintf(stderr,"fw:%f P4:%f bw:%f emis:%f\n",fw[i][l],P4[i],bw[i][l+1],emis[i][l+1] );
+      //ntot++;
+    }
+    //    fprintf(stderr,"nont:%d\n",ntot);
     PP4[i] = addProtectN(workspace,numWind);
   }
 }
@@ -146,10 +163,10 @@ void ComputeP55(unsigned numWind,int tk_l,double **P,double *PP5,double **fw,dou
     }
     bR1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
-      bR1[i] = addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1]));
+      bR1[i] =  addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1],stationary[i+1]));
     
     for (unsigned i = 0; i < tk_l - 1; i++)
-      PP5[i] = addProtect2(PP5[i],lprod(R2[i],P[5][i],bR1[i]));//<- CHECK ptgi
+      PP5[i] = addProtect2(PP5[i],lprod(R2[i],P[5][i],bR1[i],-P[0][i]));//<- CHECK ptgi
   }
 }
 
@@ -281,14 +298,16 @@ void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
     
     double fact2= part1+part2-part3-part4;
     P4[i] = log(fact1)+log(fact2);
-#if 0
+    
+#if 1
     fprintf(stderr,"\t-> fact1: %f fact2: %f fact1*fact2: %f\n",fact1,fact2,fact1*fact2);
     fprintf(stderr,"\t-> part1: %f part2: %f part3: %f part4: %f\n",part1,part2,part3,part4);
     fprintf(stderr,"\t-> part1+part2: %f -part3-part4: %f \n",part1+part2,-part3-part4);
     fprintf(stderr,"\t-> part1+part2-part3-part4: %f \n",part1+part2-part3-part4);
     fprintf(stderr,"\t-> P4[%d]: %f \n",i,P4[i]);
 #endif
-
+    if(isnan(P4[i]))
+      exit(0);
     //    fprintf(stderr,"P[4][%d]: %f\n",i,P4[i]);
 
     //exit(0);
@@ -298,9 +317,10 @@ void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
   double top = 2.0*rho*epsize[tk_l-1];
   double bottom = (1.0 + 2.0*rho*epsize[tk_l-1]);
   double expot = exp(-2.0*rho*tk[tk_l-1]);
-  fprintf(stderr,"TOPTOP top:%f bot:%f exp:%f rho:%f epSize[tk_l-1]:%e\n",top,bottom,expot,rho,epsize[tk_l-1]);
+  //  fprintf(stderr,"TOPTOP top:%f bot:%f exp:%f rho:%f epSize[tk_l-1]:%e\n",top,bottom,expot,rho,epsize[tk_l-1]);
   P4[tk_l-1] = log(2.0*rho*epsize[tk_l-1]/(1.0 + 2.0*rho*epsize[tk_l-1])*exp(-2.0*rho*tk[tk_l-1]));
   assert(exp(P4[tk_l-1])>=0&&exp(P4[tk_l-1])<=1);
+
 }
 
   
@@ -348,7 +368,6 @@ double calc_trans(int k, int j,double **P){
   }else if(j==k){
     double sum =0;
     for(int i=0;i<k;i++){
-      //      fprintf(stderr,"\t-> AAAAAAAAAAAA expComputeXXX:%f\n",exp(ComputeXXX(i,k,P)))
       sum += exp(ComputeXXX(i,k,P));//underflow stuff
     }
     //    fprintf(stderr,"sum:%f P1[1][k]:%f P[4][k]:%f\n",sum,exp(P[1][k]),exp(P[4][k]));
