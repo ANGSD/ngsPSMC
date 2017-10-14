@@ -444,7 +444,7 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
   
   stationary(i) = exp(-sum_{j=0}^{i-1}{tau_j/lambda_j}*P2[i])
  */
-void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis){
+void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize){
 #ifdef __SHOW_TIME__
   clock_t t=clock();
   time_t t2=time(NULL);
@@ -456,12 +456,15 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
     emis[j][0] = log(0);
  
   //  double tmp[windows.size()];
-  for(int v=0;v<windows.size();v++){//for each window
+  double nontmpdir[tk_l];
+  ComputeP1(tk,tk_l,nontmpdir,epsize,theta);
+
+ for(int v=0;v<windows.size();v++){//for each window
     //    fprintf(stderr,"v:%d from:%d to:%d\n",v,windows[v].from,windows[v].to);
     for(int j=0;j<tk_l;j++){//for each interval/state
       //fprintf(stderr,"\tj:%d\n",j);
       emis[j][v+1] = 0;
-      double inner = exp(-2.0*tk[j]*theta); // this part relates to issue #1
+      double inner = exp(nontmpdir[j]);///exp(-2.0*tk[j]*theta); // this part relates to issue #1
       //      fprintf(stderr,"\t\t%d from:%d to:%d inner:%f\n",j,windows[v].from,windows[v].to,inner);
       for(int i=windows[v].from;i<=windows[v].to;i++){//for all elements in window
 #if 0
@@ -551,12 +554,12 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double rho){
   //prepare global probs
 
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
-  calculate_emissions(tk,tk_l,gls,windows,theta,emis);
+  calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize);
   calculate_stationary(tk,tk_l,epsize,stationary,P);
   calculate_FW_BW_PP_Probs(tk,tk_l,epsize,rho);
   ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis,workspace);
 
-#if 0
+#if 1
   if(index==0)
     printmatrixf((char*)"P_0.txt",P,8,tk_l);
   else if(index==1)

@@ -278,7 +278,7 @@ int psmc_wrapper(args *pars,int block) {
 #if 1 //print pars
   fprintf(stderr,"\t-> par->n:%d\tpar->n_free:%d\tpar_map:%p\tpar->pattern:%s\tpar->times:%p\tpar->params:%p\n",p->n,p->n_free,p->par_map,p->pattern,p->times,p->params);
   for(int i=0;0&&i<pars->par->n+1;i++)
-    fprintf(stderr,"[psmc_wrapper]:%i)\t%e\t%e\n",i,pars->par->times[i],pars->par->params[i]);
+    fprintf(stderr,"[psmc_wrapper]:%i)\t%f\t%f\n",i,pars->par->times[i],pars->par->params[i]);
   //  exit(0);
 #endif
   int tk_l = pars->par->n+1;

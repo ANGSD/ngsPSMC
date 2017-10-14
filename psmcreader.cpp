@@ -220,9 +220,9 @@ perpsmc * perpsmc_init(char *fname){
        pp->gls[2*i]=pp->gls[2*i+1]=-500;
        //K=het
        if(tmp[i]=='K')
-	 pp->gls[2*i+1] = 0;
+	 pp->gls[2*i+1] = 0;//het
        else
-	 pp->gls[2*i] = 0;
+	 pp->gls[2*i] = 0;//hom
        //       fprintf(stderr,"%c\n",tmp[i]);
      }
      free(tmp);

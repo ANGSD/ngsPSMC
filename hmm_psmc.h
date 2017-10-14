@@ -82,7 +82,7 @@ private:
       //      fprintf(stderr,"p1:%f\tp2:%f\tp3:%f\n",p1,p2,p3);
       R2[i] = addProtect3(p1,p2,p3);
       if(std::isnan(R2[i])){
-	fprintf(stderr,"R2[%d] evaluates to NaN p5:%f tmp:%f\n",i,P[5][i],tmp);
+	fprintf(stderr,"[hmm_psmc.h:computeR2] R2[%d] evaluates to NaN p5:%f tmp:%f\n",i,P[5][i],tmp);
 	exit(0);
       }
       tmp = R2[i];
