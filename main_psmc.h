@@ -10,6 +10,7 @@ typedef struct{
   char *pattern;
   double *times;
   double *params;
+  double TR[2];
 }psmc_par;
 
 

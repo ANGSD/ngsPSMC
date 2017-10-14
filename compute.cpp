@@ -129,7 +129,7 @@ void ComputeP33(unsigned numWind,int tk_l,double *P3,double *PP3,double **fw,dou
 
 
 void ComputeP44(unsigned numWind,int tk_l,double *P4,double *PP4,double **fw,double **bw,double *workspace,double **emis){
-  //  fprintf(stderr,"numwwind:%u\n",numWind);
+
   for (unsigned i = 0; i < tk_l; i++){
     workspace[0] = log(0);
     //    int ntot=0;
@@ -141,6 +141,7 @@ void ComputeP44(unsigned numWind,int tk_l,double *P4,double *PP4,double **fw,dou
     //    fprintf(stderr,"nont:%d\n",ntot);
     PP4[i] = addProtectN(workspace,numWind);
   }
+
 }
 
 void ComputeP55(unsigned numWind,int tk_l,double **P,double *PP5,double **fw,double **bw,double *stationary,double **emis){
@@ -279,39 +280,46 @@ void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
   //  fprintf(stderr,"\t->[%s] epsizes=(%f,%f) \n",__FUNCTION__,epsize[0],epsize[1]);
   for (unsigned i = 0; i < tk_l-1; i++){
 
-    double fact1 = 1.0/(1.0 - exp(-(tk[i+1]-tk[i])/epsize[i]) );
+    double fact1 = (exp(-(2.0*rho*tk[i])))/(1.0 - exp(-(tk[i+1]-tk[i])/epsize[i]) );
 
-    double part1 = 2.0/(1-4.0*epsize[i]*epsize[i]*rho*rho);
+    double part1 = 2.0/(1-2.0*epsize[i]*rho)/(1+2.0*epsize[i]*rho);
+    //    fprintf(stderr,"part1:%f epszie:%f\n",part1,epsize[i]);
     //    fprintf(stderr,"\tparst1fact1:%f\n",part1);
-    double part1exp = -(tk[i+1]-tk[i])/epsize[i]-2*rho*tk[i+1];
-    part1 *= exp(part1exp);
+    double part1exp1 = -(tk[i+1]-tk[i])/epsize[i];
+    double part1exp2 = -(tk[i+1]-tk[i])*2.0*rho;
+    part1 *= exp(part1exp1+part1exp2);
 
-    double part2 = (2.0*rho*epsize[i])/(1+2*epsize[i]*rho)*exp(-2*rho*tk[i]);
+    double part2 = (2.0*rho*epsize[i])/(1+2*epsize[i]*rho);
 
     double part3 = (2*epsize[i]*rho)/(1-2*epsize[i]*rho);
-    double part3exp = -2*(tk[i+1]-tk[i])/epsize[i]-2*rho*tk[i];
+    double part3exp = -2*(tk[i+1]-tk[i])/epsize[i];
     part3 *= exp(part3exp);
     
 
-    double part4exp = -(tk[i+1]-tk[i])/epsize[i]-2*rho*tk[i];
+    double part4exp = -(tk[i+1]-tk[i])/epsize[i];
     double part4 = 2*exp(part4exp);
     
     double fact2= part1+part2-part3-part4;
-    P4[i] = log(fact1)+log(fact2);
+    if(1&&(fact2<0&fabs(fact2)<1e-12)){
+      fprintf(stderr,"\t-> This fix shouldnt happen that often: compute.cpp computep4 epsize[%u]:%f\n",i,epsize[i]);
+      fact2=fabs(fact2);
+    }
+    P4[i] = log(fact1)+log(fact2);//log(fact1)+log(fact2);
     
 #if 0
-    fprintf(stderr,"\t-> fact1: %f fact2: %f fact1*fact2: %f\n",fact1,fact2,fact1*fact2);
+    fprintf(stderr,"\t-> fact1: %e fact2: %e fact1*fact2: %f\n",fact1,fact2,fact1*fact2);
     fprintf(stderr,"\t-> part1: %f part2: %f part3: %f part4: %f\n",part1,part2,part3,part4);
     fprintf(stderr,"\t-> part1+part2: %f -part3-part4: %f \n",part1+part2,-part3-part4);
-    fprintf(stderr,"\t-> part1+part2-part3-part4: %f \n",part1+part2-part3-part4);
+    fprintf(stderr,"\t-> fact2: part1+part2-part3-part4: %f \n",part1+part2-part3-part4);
     fprintf(stderr,"\t-> P4[%d]: %f \n",i,P4[i]);
 #endif
-    if(isnan(P4[i]))
+    if(isnan(P4[i])){
+      fprintf(stderr,"P[4][%d]: %f never happens cmputep4\n",i,P4[i]);
       exit(0);
-    //    fprintf(stderr,"P[4][%d]: %f\n",i,P4[i]);
-
-    //exit(0);
-    //    assert(P4[i]>=0&&P4[i]<=1);
+      //exit(0);
+      //    assert(P4[i]>=0&&P4[i]<=1);
+    }
+   
   }
 
   double top = 2.0*rho*epsize[tk_l-1];

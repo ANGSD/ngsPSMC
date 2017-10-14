@@ -24,7 +24,6 @@ public:
   double pix;
   int tk_l;
   double max_t;
-  double theta;
   double **P;
   double **PP;
   double **nP;
@@ -45,7 +44,6 @@ public:
     pix = -666;
     max_t = 15;
     //rho = 0.207;
-    theta = 0.0001;
     index=tot_index++;
   }
   /*
@@ -69,7 +67,7 @@ public:
   void calculate_stationary(double *tk,int tk_l,double *lambda,double *results,double **P);
   void calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,double rho);
   //  void calculate_FW_BW_PP_Probs();
-  double make_hmm(double *tk,int tk_l,double *epsize,double rho);
+  double make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho);
   
 private:
   void ComputeR2(int v,double **mat){

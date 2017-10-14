@@ -269,6 +269,8 @@ void setpars( char *fname,psmc_par *pp,int which) {
   assert(RS.size()-1==pp->n);
   pp->params = new double[RS.size()];
   pp->times = new double[RS.size()];
+  pp->TR[0] = TR[0];
+  pp->TR[1] = TR[1];
   //  fprintf(stderr,"RS:%lu\n",RS.size());
   for(int i=0;i<RS.size();i++){
     int val;

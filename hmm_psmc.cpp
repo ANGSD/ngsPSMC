@@ -130,7 +130,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
     clock_t t=clock();
     time_t t2=time(NULL);
 #endif
-#if 0
+#if 1
   fprintf(stderr,"[%s] rho:%e\n",__FUNCTION__,rho);
   fprintf(stderr,"[%s] tks[0]:%f tks[1]:%f\n",__FUNCTION__,tk[0],tk[1]);
   fprintf(stderr,"[%s] epsize[0]:%f epsize[1]:%f\n",__FUNCTION__,epsize[0],epsize[1]);
@@ -139,15 +139,21 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
   ComputeP5(tk,tk_l,P[5],epsize);
   ComputeP6(tk,tk_l,P[6],epsize,rho);
   ComputeP2(tk_l,P[2],P[5]);
+
   ComputeP3(tk,tk_l,P[3],epsize,rho);
+
   ComputeP4(tk,tk_l,P[4],epsize,rho);
+
   ComputeP7(tk,tk_l,P[7],P[3],epsize,rho);
   ComputeP0(tk_l,P[0],P[5]);
-  
+
   for(int p=0;1&&p<8;p++){
     for(int i=0;i<tk_l;i++){
       //      fprintf(stderr,"P[%d][%d]: %f\n",p,i,P[p][i]);
-      assert(exp(P[p][i])>=0&&exp(P[p][i])<=1);
+      if(!(P[p][i]<=0)){
+	fprintf(stderr,"\t->[%s] p:%d i:%d val:%f\n",__FUNCTION__,p,i,P[p][i]);
+	exit(0);
+      }
     }
 
   }
@@ -548,7 +554,7 @@ void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,dou
 }
 
 
-double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double rho){
+double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho){
 
   fprintf(stderr,"\t-> [%s][%d] tk=(%f,%f) gls:(%f, %f,%f, %f) \n",__FUNCTION__,index,tk[0],tk[1],gls[0],gls[1],gls[2],gls[3] );
   //prepare global probs
