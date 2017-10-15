@@ -130,7 +130,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
     clock_t t=clock();
     time_t t2=time(NULL);
 #endif
-#if 1
+#if 0
   fprintf(stderr,"[%s] rho:%e\n",__FUNCTION__,rho);
   fprintf(stderr,"[%s] tks[0]:%f tks[1]:%f\n",__FUNCTION__,tk[0],tk[1]);
   fprintf(stderr,"[%s] epsize[0]:%f epsize[1]:%f\n",__FUNCTION__,epsize[0],epsize[1]);
@@ -199,6 +199,7 @@ void ComputeSW(int maxTime,double W[],double sW[]){
     sW[i] = tmp;
   }
 }
+
 void UpdateEPSize(int maxTime, double W[],double sW[],double epSize[],double T[]){
   for (unsigned i = 1; i < maxTime; i++){
     double tmp;
@@ -565,7 +566,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   calculate_FW_BW_PP_Probs(tk,tk_l,epsize,rho);
   ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis,workspace);
 
-#if 1
+#if 0
   if(index==0)
     printmatrixf((char*)"P_0.txt",P,8,tk_l);
   else if(index==1)

@@ -65,7 +65,7 @@ double qFunction_wrapper(const double *pars,const void *){
       fprintf(stderr,".parsze[i]:%f\n",pars[0]);
     */
     for(int j=0;j<ops[i].tk_l;j++){
-      ops[i].epsize[j] = pars[j];
+      ops[i].epsize[j] = pars[j];¯
     }
   }
   for(int j=0;j<ops[0].tk_l;j++)
@@ -253,8 +253,17 @@ void main_analysis_optim(double *tk,int tk_l,double *epsize,double theta,double 
 void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho){
 
   //first make_hmm for all chrs;
+  // theta=0.0001;
+  rho=0.1;
   main_analysis_make_hmm(tk,tk_l,epsize,theta,rho);
- 
+  double tmptk[tk_l];
+  double tmpepsize[tk_l];
+  double tmptheta;
+  double tmprho;
+  void setpars2(char*fname,int which,double *tmptk,double *tmpepsize,double &tmptheta,double &tmprho);
+  setpars2((char*)"test8/ms.lh3.fa.gz.psmc",1,tmptk,tmpepsize,tmptheta,tmprho);
+
+  
   //  runoptim2(tk,tk_l,epsize,rho);
   for(int i=0;i<20;i++){
     
@@ -270,7 +279,7 @@ int psmc_wrapper(args *pars,int block) {
   psmc_par *p=pars->par;
 #if 1 //print pars
   fprintf(stderr,"\t-> par->n:%d\tpar->n_free:%d\tpar_map:%p\tpar->pattern:%s\tpar->times:%p\tpar->params:%p\n",p->n,p->n_free,p->par_map,p->pattern,p->times,p->params);
-  for(int i=0;0&&i<pars->par->n+1;i++)
+  for(int i=0;1&&i<pars->par->n+1;i++)
     fprintf(stderr,"[psmc_wrapper]:%i)\t%f\t%f\n",i,pars->par->times[i],pars->par->params[i]);
   //  exit(0);
 #endif

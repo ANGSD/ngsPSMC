@@ -31,7 +31,7 @@ typedef struct {
   double *tk;
   double *lambda;
   perFasta *pf;
-  int which;
+  int RD;
   int nThreads;
 }args;
 args * getArgs(int argc,char **argv);

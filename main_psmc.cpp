@@ -85,101 +85,6 @@ int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars)
 	free(tmp); free(stack);
 	return pars_map;
 }
-
-void extractpars(int which,double *times, double *params) {
-  //  fprintf(stderr,"[%s]:%s which:%d\n",__FUNCTION__,fname,which);
-  char *fname = (char*)"test8/ms.lh3.fa.gz.psmc";
-  FILE *fp = NULL;
-  fp=fopen(fname,"r");
-  if(!fp){
-    fprintf(stderr,"\t-> Problem opening file:%s\n",fname);
-    exit(0);
-  }
-  char *buf = new char[fsize(fname)+10];
-  memset(buf,0,fsize(fname)+10);
-  fread(buf,sizeof(char),fsize(fname),fp);
-  fclose(fp);
-  char *slashslash[100];
-  
-  //stupid loop below....
-  int n=0;
-
-  //catch first case seperately
-
-  for(int i=0;1&i<strlen(buf)-1;i++){//offset with one so we dont get the last empty output from PSCMC
-    if(strncmp(buf+i,"\nRD\t",4)==0){
-      slashslash[n++] = buf+i;
-      buf[i-1] ='0';
-      buf[i-2] ='\t';
-      buf[i-3] ='T';
-      buf[i-4] ='I';
-      buf[i-5] ='\n';
-      buf[i-6] = buf[i-7]= '/';
-      buf[i-8] ='\n';
-      //      slashslash[n++] = buf+i-8;
-      //fprintf(stderr,"buf:\'%s\'",slashslash[n-1]);
-      break;
-    }
-  }
-  //  exit(0);
-
-  for(int i=0;i<strlen(buf)-1;i++){//offset with one so we dont get the last empty output from PSCMC
-    if(strncmp(buf+i,"\n//\n",4)==0)
-      slashslash[n++] = buf+i;
-  }
-  fprintf(stderr,"\t-> Number of rounds:%d\n",n-1);
-  if(which>=n-1){
-    fprintf(stderr,"\t-> which higher than number of rounds, setting which to last element");
-    which=-1;
-  }
-    
-  char *last = which!=-1?slashslash[which]:slashslash[n-2];
-  //  fprintf(stderr,"slashslash[%d]:%s\n",which,last);exit(0);
-  char *line = NULL;
-  strtok(last,"\n");
-
-  line=strtok(NULL,"\n");
-  int IT=-1;
-  sscanf(line,"IT\t%d",&IT);
-  int RD=-1;
-  line=strtok(NULL,"\n"); sscanf(line,"RD\t%d",&RD);
-  fprintf(stderr,"\t-> Using round: %d\n",RD);
-  double LK=-1;
-  line=strtok(NULL,"\n"); sscanf(line,"LK\t%lf",&LK);
-  double QD[2]={-1,-1};
-  line=strtok(NULL,"\n"); sscanf(line,"QD\t%lf -> %lf",&QD[0],&QD[1]);
-  double RI=-1;
-  line=strtok(NULL,"\n"); sscanf(line,"RI\t%lf",&RI);
-  double TR[2]={-1,-1};
-  line=strtok(NULL,"\n"); sscanf(line,"TR\t%lf\t%lf",&TR[0],&TR[1]);
-  double MT={-1};
-  line=strtok(NULL,"\n"); sscanf(line,"MT\t%lf",&MT);
-  double C_pi=-1;
-  double n_recomb=-1;
-  line=strtok(NULL,"\n"); sscanf(line,"MM\tC_pi: %lf, n_recomb: %lf",&C_pi,&n_recomb);
-  std::vector<char *> RS;
-  fprintf(stderr,"\t-> IT:%d RD:%d lk:%f qd[0]:%f qd[1]:%f ri:%f tr[0]:%f tr[1]:%f mt:%f c_pi:%f n_rebomc:%f\n",IT,RD,LK,QD[0],QD[1],RI,TR[0],TR[1],MT,C_pi,n_recomb);
-  while(((line=strtok(NULL,"\n")))){
-    if(line[0]=='R'&&line[1]=='S')
-      RS.push_back(line);
-    else{
-      break;
-    }
-  }
-  //  fprintf(stderr,"number of lines with RS:%lu\n",RS.size());exit(0);
-  //  fprintf(stderr,"RS:%lu\n",RS.size());
-  for(int i=0;i<RS.size();i++){
-    int val;
-    sscanf(RS[i],"RS\t%d\t%lf\t%lf\t",&val,&times[i],&params[i]);
-    //    fprintf(stderr,"PP->params[%d]:%e\n",i,pp->params[i]);
-    assert(val==i);
-  }
-  fprintf(stderr,"\t-> Done reading parameters from file: \'%s\'\n",fname);
-  //  exit(0);
-}
-
-
-
 void setpars( char *fname,psmc_par *pp,int which) {
   //  fprintf(stderr,"[%s]:%s which:%d\n",__FUNCTION__,fname,which);
   FILE *fp = NULL;
@@ -201,7 +106,8 @@ void setpars( char *fname,psmc_par *pp,int which) {
 
   for(int i=0;1&i<strlen(buf)-1;i++){//offset with one so we dont get the last empty output from PSCMC
     if(strncmp(buf+i,"\nRD\t",4)==0){
-      slashslash[n++] = buf+i;
+      assert(i>8);//check that we can plug in dummy values.
+      slashslash[n] = buf+i;
       buf[i-1] ='0';
       buf[i-2] ='\t';
       buf[i-3] ='T';
@@ -210,7 +116,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
       buf[i-6] = buf[i-7]= '/';
       buf[i-8] ='\n';
       //      slashslash[n++] = buf+i-8;
-      //fprintf(stderr,"buf:\'%s\'",slashslash[n-1]);
+      // fprintf(stderr,"buf:\'%s\'",slashslash[n]);
       break;
     }
   }
@@ -220,12 +126,12 @@ void setpars( char *fname,psmc_par *pp,int which) {
     if(strncmp(buf+i,"\n//\n",4)==0)
       slashslash[n++] = buf+i;
   }
-  fprintf(stderr,"\t-> Number of rounds:%d\n",n-1);
+  fprintf(stderr,"\t-> Number of rounds:%d\n",n-2);
   if(which>=n-1){
     fprintf(stderr,"\t-> which higher than number of rounds, setting which to last element");
     which=-1;
   }
-    
+  fprintf(stderr,"whcich:%d slah:%s\n",which,slashslash[which]);
   char *last = which!=-1?slashslash[which]:slashslash[n-2];
   //  fprintf(stderr,"slashslash[%d]:%s\n",which,last);exit(0);
   char *line = NULL;
@@ -283,7 +189,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
 }
 
 
-void get( char *fname,psmc_par *pp,int which,double *plugin) {
+void setpars2( char *fname,int which,double *tmptk,double *tmpepsize,double &tmptheta,double &tmprho) {
   //  fprintf(stderr,"[%s]:%s which:%d\n",__FUNCTION__,fname,which);
   FILE *fp = NULL;
   fp=fopen(fname,"r");
@@ -299,21 +205,37 @@ void get( char *fname,psmc_par *pp,int which,double *plugin) {
   
   //stupid loop below....
   int n=0;
-  for(int i=0;i<strlen(buf)-1;i++){//offset with one so we dont get the last empty output from PSCMC
-    if(strncmp(buf+i,"\n//\n",4)==0)
-      slashslash[n++] = buf+i;
+
+  //catch first case seperately
+
+  for(int i=0;1&i<strlen(buf)-1;i++){//offset with one so we dont get the last empty output from PSCMC
+    if(strncmp(buf+i,"\nRD\t",4)==0){
+      assert(i>8);//check that we can plug in dummy values.
+      slashslash[n] = buf+i;
+      buf[i-1] ='0';
+      buf[i-2] ='\t';
+      buf[i-3] ='T';
+      buf[i-4] ='I';
+      buf[i-5] ='\n';
+      buf[i-6] = buf[i-7]= '/';
+      buf[i-8] ='\n';
+      //      slashslash[n++] = buf+i-8;
+      // fprintf(stderr,"buf:\'%s\'",slashslash[n]);
+      break;
+    }
   }
+  //  exit(0);
 
   for(int i=0;i<strlen(buf)-1;i++){//offset with one so we dont get the last empty output from PSCMC
     if(strncmp(buf+i,"\n//\n",4)==0)
       slashslash[n++] = buf+i;
   }
-  fprintf(stderr,"\t-> Number of rounds:%d\n",n-1);
+  fprintf(stderr,"\t-> Number of rounds:%d\n",n-2);
   if(which>=n-1){
     fprintf(stderr,"\t-> which higher than number of rounds, setting which to last element");
     which=-1;
   }
-    
+  fprintf(stderr,"whcich:%d slah:%s\n",which,slashslash[which]);
   char *last = which!=-1?slashslash[which]:slashslash[n-2];
   //  fprintf(stderr,"slashslash[%d]:%s\n",which,last);exit(0);
   char *line = NULL;
@@ -351,22 +273,20 @@ void get( char *fname,psmc_par *pp,int which,double *plugin) {
   char *nline = strdup(line);
   char *tok = strtok(nline,"\n\t ");
   tok = strtok(NULL,"\n\t ");
-  pp->pattern=strdup(tok);
-
-  pp->par_map= psmc_parse_pattern(pp->pattern,&pp->n_free,&pp->n);
-  assert(RS.size()-1==pp->n);
-  pp->params = new double[RS.size()];
-  pp->times = new double[RS.size()];
+  
+  tmptheta = TR[0];
+  tmprho = TR[1];
   //  fprintf(stderr,"RS:%lu\n",RS.size());
   for(int i=0;i<RS.size();i++){
     int val;
-    sscanf(RS[i],"RS\t%d\t%lf\t%lf\t",&val,&pp->times[i],&pp->params[i]);
+    sscanf(RS[i],"RS\t%d\t%lf\t%lf\t",&val,&tmptk[i],&tmpepsize[i]);
     //    fprintf(stderr,"PP->params[%d]:%e\n",i,pp->params[i]);
     assert(val==i);
   }
   fprintf(stderr,"\t-> Done reading parameters from file: \'%s\'\n",fname);
   //  exit(0);
 }
+
 
 
 void readtkfile(args *p){
@@ -407,7 +327,7 @@ args * getArgs(int argc,char **argv){
   p->block = 100;//default 100bp
   p->par =(psmc_par*) calloc(1,sizeof(psmc_par));
   p->tkfile = NULL;
-  p->which = -1;
+  p->RD = -1;
   p->nThreads =1;
   char *inffilename=NULL;
   if(argc==0)
@@ -421,8 +341,8 @@ args * getArgs(int argc,char **argv){
       p->maxIter = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-winSize"))
       p->block = atoi(*(++argv));
-    else  if(!strcasecmp(*argv,"-which"))
-      p->which = atoi(*(++argv));
+    else  if(!strcasecmp(*argv,"-RD"))
+      p->RD = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-nThreads"))
       p->nThreads = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-p"))
@@ -449,11 +369,11 @@ args * getArgs(int argc,char **argv){
     }
     argv++;
   }
-  setpars(inffilename,p->par,p->which);
+  setpars(inffilename,p->par,p->RD);
   if(p->seed==0)
     p->seed = time(NULL);
   srand48(p->seed);
-  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d fname:%s seed:%ld winsize:%d which:%d nThreads:%d\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->block,p->which,p->nThreads);
+  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d fname:%s seed:%ld winsize:%d RD:%d nThreads:%d\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->block,p->RD,p->nThreads);
   //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
   if(p->par->pattern==NULL)
     p->par->pattern = strdup(DEFAULT_PATTERN);
