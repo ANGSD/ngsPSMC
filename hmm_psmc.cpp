@@ -125,7 +125,7 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
   rho: rho, or theta to rho value.
  */
 
-void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,double rho){
+void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *epsize,double rho){
 #ifdef __SHOW_TIME__
     clock_t t=clock();
     time_t t2=time(NULL);
@@ -163,12 +163,17 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,double *epsize,do
 #endif
 }
 
-double qFunction_inner(double *tk,int tk_l,double *epsize,double rho,double pix,int numWind,double **nP,double **PP){
+double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **PP){
 #ifdef __SHOW_TIME__
   clock_t t=clock();
   time_t t2=time(NULL);
 #endif
-  
+#if 1
+  for(int i=0;i<tk_l;i++)
+    fprintf(stderr,"[%s] %d) %f\n",__FUNCTION__,i,epsize[i]);
+#endif
+
+
   ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
   //  printmatrixf((char*)"P_check.txt",nP,8,tk_l);
   double Q = 0;
@@ -178,7 +183,7 @@ double qFunction_inner(double *tk,int tk_l,double *epsize,double rho,double pix,
     Q += tmpQ;
     //    fprintf(stderr,"\t-> Q[%d]:%f\n",i,tmpQ);
   }
-  fprintf(stderr,"\t-> ESUM:%f\n",esum);
+  fprintf(stderr,"\t-> ESUM:%f Q:%f\n",esum,Q);
 #ifdef __SHOW_TIME__
    fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
    fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2)); 

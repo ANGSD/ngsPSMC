@@ -209,7 +209,7 @@ void ComputeP77(unsigned numWind,int tk_l,double **P,double *PP7,double **fw,dou
   prob of not recombining given states
 */
 
-void ComputeP1(double *tk,int tk_l,double *P,double *epsize,double rho){
+void ComputeP1(double *tk,int tk_l,double *P,const double *epsize,double rho){
   //  fprintf(stderr,"[%s] tks=(%f,%f) epssize=(%f,%f)\n",__FUNCTION__,tk[0],tk[1],epsize[0],epsize[1]);
   for (unsigned i = 0; i < tk_l-1; i++){
     P[i] = 1.0/(1.0+epsize[i]*2.0*rho);
@@ -228,14 +228,14 @@ void ComputeP1(double *tk,int tk_l,double *P,double *epsize,double rho){
 
  */
 
-void ComputeP5(double *tk,int tk_l,double *P,double *epsize){
+void ComputeP5(double *tk,int tk_l,double *P,const double *epsize){
   for (unsigned i = 0; i < tk_l-1; i++)
     P[i] = log(exp( -(tk[i+1] - tk[i])/epsize[i] ));
   P[tk_l-1] = log(0.0);
 }
 
 
-void ComputeP6(double *tk,int tk_l,double *P,double *epsize,double rho){
+void ComputeP6(double *tk,int tk_l,double *P,const double *epsize,double rho){
     for (unsigned i = 0; i < tk_l-1; i++){
       P[i] = 1/(1-exp(-(tk[i+1]-tk[i])/epsize[i]));
       P[i] *= exp(-(tk[i+1]-tk[i])/epsize[i]);
@@ -260,7 +260,7 @@ void ComputeP2(int tk_l,double *P2,double *P5){
 
 
 
-void ComputeP3(double *tk,int tk_l,double *P3,double *epsize,double rho){
+void ComputeP3(double *tk,int tk_l,double *P3,const double *epsize,double rho){
   for (unsigned i = 0; i < tk_l - 1; i++){
     P3[i] = exp(-tk[i]*2.0*rho);
     P3[i] += epsize[i]*2.0*rho/(1.0 - epsize[i]*2.0*rho)*exp(-(tk[i+1]-tk[i])/epsize[i]-tk[i]*2.0*rho);
@@ -275,7 +275,7 @@ void ComputeP3(double *tk,int tk_l,double *P3,double *epsize,double rho){
 
  */
 
-void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
+void ComputeP4(double *tk,int tk_l,double *P4,const double *epsize,double rho){
   //  fprintf(stderr,"\t->[%s] rho: %f\n",__FUNCTION__,rho);
   //  fprintf(stderr,"\t->[%s] epsizes=(%f,%f) \n",__FUNCTION__,epsize[0],epsize[1]);
   for (unsigned i = 0; i < tk_l-1; i++){
@@ -332,7 +332,7 @@ void ComputeP4(double *tk,int tk_l,double *P4,double *epsize,double rho){
 }
 
   
-void ComputeP7(double *tk,int tk_l,double *P7,double *P3,double *epsize,double rho){
+void ComputeP7(double *tk,int tk_l,double *P7,double *P3,const double *epsize,double rho){
   for (unsigned i = 0; i < tk_l - 1; i++)
     P7[i] = log(exp(-2.0*rho*tk[i])-exp(-2.0*rho*tk[i+1]) -exp(P3[i]));
   

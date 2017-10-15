@@ -131,7 +131,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
     fprintf(stderr,"\t-> which higher than number of rounds, setting which to last element");
     which=-1;
   }
-  fprintf(stderr,"whcich:%d slah:%s\n",which,slashslash[which]);
+  //  fprintf(stderr,"whcich:%d slah:%s\n",which,slashslash[which]);
   char *last = which!=-1?slashslash[which]:slashslash[n-2];
   //  fprintf(stderr,"slashslash[%d]:%s\n",which,last);exit(0);
   char *line = NULL;
@@ -213,6 +213,7 @@ void setpars2( char *fname,int which,double *tmptk,double *tmpepsize,double &tmp
       assert(i>8);//check that we can plug in dummy values.
       slashslash[n] = buf+i;
       buf[i-1] ='0';
+
       buf[i-2] ='\t';
       buf[i-3] ='T';
       buf[i-4] ='I';
@@ -235,7 +236,7 @@ void setpars2( char *fname,int which,double *tmptk,double *tmpepsize,double &tmp
     fprintf(stderr,"\t-> which higher than number of rounds, setting which to last element");
     which=-1;
   }
-  fprintf(stderr,"whcich:%d slah:%s\n",which,slashslash[which]);
+  //  fprintf(stderr,"whcich:%d slah:%s\n",which,slashslash[which]);
   char *last = which!=-1?slashslash[which]:slashslash[n-2];
   //  fprintf(stderr,"slashslash[%d]:%s\n",which,last);exit(0);
   char *line = NULL;
