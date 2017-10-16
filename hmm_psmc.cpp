@@ -12,6 +12,33 @@ int fastPSMC::tot_index=0;
 //#define __SHOW_TIME__
 
 
+/*
+  Calculate stationary distrubution
+  tk array of length tk_l
+  lambda array effective population sizes
+  both has length tk_l
+  
+  stationary distribution will be put in results array, also of length tk
+  
+  stationary(i) = exp(-sum_{j=0}^{i-1}{tau_j/lambda_j}*P2[void])
+*/
+
+void calculate_stationary(int tk_l,double *results,double **P){
+  results[0] = P[2][0];//fix this
+  for(int i=1;i<tk_l;i++){
+    results[i]  = P[2][i]+P[0][i-1];
+  }
+#if 0 //check it sums to one
+  double tmp=0;
+  for(int i=0;i<tk_l;i++)
+    tmp += exp(results[i]);
+  fprintf(stderr,"\t-> sum of stationary:%f\n",tmp);
+  //  exit(0);
+#endif
+
+}
+
+
 void printmatrixf(char *fname,double **m,int x,int y);
 void printarrayf(char *fname,double *m,int x);
 
@@ -195,7 +222,9 @@ double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,doubl
 
 
 
-double qFunction_inner2(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **PP,double **trans){
+ 
+
+double qFunction_inner2(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **baumwelch,double **trans){
 #ifdef __SHOW_TIME__
   clock_t t=clock();
   time_t t2=time(NULL);
@@ -205,23 +234,56 @@ double qFunction_inner2(double *tk,int tk_l,const double *epsize,double rho,doub
     fprintf(stderr,"[%s] %d) %f\n",__FUNCTION__,i,epsize[i]);
 #endif
   
-  
   ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
+  double newstationary[tk_l];
+  calculate_stationary(tk_l,newstationary,nP);
+  for(int i=0;0 && i<tk_l;i++)
+    fprintf(stderr,"inenr2: %f %f\n",epsize[i],newstationary[i]);
   //  printmatrixf((char*)"P_check.txt",nP,8,tk_l);
+  
+  double calc_trans(int,int,double**);
+  for(int i=0;i<tk_l;i++)
+    for(int j=0;j<tk_l;j++){
+      //	fprintf(stderr,"i:%d j:%d\n",i,j);
+      trans[i][j] = calc_trans(i,j,nP);
+    }
+  //  printmatrixf((char*)"transitions.txt",trans,tk_l,tk_l);
+  
+  
   double Q = 0;
-  double esum =0;
   for (unsigned i = 0; i < tk_l; i++){
-    double tmpQ = qkFunction(i, pix,numWind,nP,PP,tk_l,esum);
-    Q += tmpQ;
-    //    fprintf(stderr,"\t-> Q[%d]:%f\n",i,tmpQ);
+    if(baumwelch[tk_l][i]!=0.0){
+      double tmpQ=newstationary[i]*baumwelch[tk_l][i];
+      Q += tmpQ;
+      if(1&&std::isnan(tmpQ)){
+	fprintf(stderr,"\t->[qFunction_inner2] Q[%d]:%e newstat:%e baumwel:%e\n",i,tmpQ,newstationary[i],baumwelch[tk_l][i]);
+      exit(0);
+      }
+    }
   }
-  if(fabs(numWind-1-esum)>0.5)
-    fprintf(stderr,"\t-> POTENTIAL PROBLEM ESUM:%f Q:%f numWind:%d\n",esum,Q,numWind);
+  
+  for (unsigned i = 0; i < tk_l; i++){
+    for (unsigned j = 0; j < tk_l; j++){
+      if(baumwelch[i][j]!=0.0){
+	double tmpQ = trans[i][j]*baumwelch[i][j];
+	Q += tmpQ;
+	if(1&&std::isnan(tmpQ)){
+	  fprintf(stderr,"\t->[qFunction_inner2]i:%d j:%d tmpQ:%e trans::%e baumwel:%e\n",i,j,tmpQ,trans[i][j],baumwelch[i][j]);
+	  exit(0);
+	}
+      }
+
+    }
+  }
 #ifdef __SHOW_TIME__
    fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
    fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2)); 
 #endif
-  return Q;
+   if(std::isnan(Q)){
+     fprintf(stderr,"Q is nan will exit\n");
+     exit(0);
+   }
+   return Q;
   
 }
 
@@ -435,6 +497,7 @@ void fastPSMC::allocate(int tk_l_arg){
       for(int j=0;j<tk_l;j++)
 	trans[i][j] = -888;//placeholder, to spot if something shouldnt be happening;
     }
+    //    fprintf(stderr,"allcoating\n");
     //    printmatrixf("TRANS",trans,tk_l,tk_l);
   }
 #ifdef __SHOW_TIME__
@@ -512,7 +575,8 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
     for(int j=0;j<tk_l;j++){//for each interval/state
       //fprintf(stderr,"\tj:%d\n",j);
       emis[j][v+1] = 0;
-      double inner = exp(nontmpdir[j]);///exp(-2.0*tk[j]*theta); // this part relates to issue #1
+      //    double inner = exp(nontmpdir[j]);///exp(-2.0*tk[j]*theta); // this part relates to issue #1
+      double inner = exp(-2.0*tk[j]*theta); // this part relates to issue #1
       //      fprintf(stderr,"\t\t%d from:%d to:%d inner:%f\n",j,windows[v].from,windows[v].to,inner);
       for(int i=windows[v].from;i<=windows[v].to;i++){//for all elements in window
 #if 0
@@ -539,34 +603,6 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
   fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
   fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2));  
 #endif
-}
-
-
-/*
-  Calculate stationary distrubution
-  tk array of length tk_l
-  lambda array effective population sizes
-  both has length tk_l
-  
-  stationary distribution will be put in results array, also of length tk
-  
-  stationary(i) = exp(-sum_{j=0}^{i-1}{tau_j/lambda_j}*P2[void])
-*/
-
-void fastPSMC::calculate_stationary(double *tk,int tk_l,double *lambda,double *results,double **P){
-  results[0] = P[2][0];//fix this
-  for(int i=1;i<tk_l;i++){
-    results[i]  = P[2][i]+P[0][i-1];
-  }
-#if 1 //check it sums to one
-  double tmp=0;
-  for(int i=0;i<tk_l;i++)
-    tmp += exp(results[i]);
-  //  fprintf(stderr,"\t-> sum of stationary:%f\n",tmp);
-  //  exit(0);
-
-#endif
-
 }
 
 void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,double **bw,double *stationary,double **emis,double *workspace){
@@ -601,16 +637,18 @@ void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,dou
 
 
 void ComputeBaumWelch(unsigned numWind,int tk_l,double **fw,double **bw,double **emis,double **trans,double **baumwelch,double pix){
+
 #ifdef __SHOW_TIME__
   clock_t t=clock();
   time_t t2=time(NULL);
 #endif
+
   for(int i=0;i<tk_l;i++){
     for(int j=0;j<tk_l;j++){
       double tmp = 0;
       for(int w=1;w<numWind;w++){
+	//fprintf(stderr,"i:%d w:%d\n",i,w);
 	tmp += exp(fw[i][w]+trans[i][j]+emis[j][w+1]+bw[j][w+1]);
-
       }
       baumwelch[i][j] = exp(log(tmp)-pix);
     }
@@ -618,14 +656,16 @@ void ComputeBaumWelch(unsigned numWind,int tk_l,double **fw,double **bw,double *
   for(int i=0; i < tk_l; i++)
     baumwelch[tk_l][i] = exp(fw[i][1]+bw[i][1]-pix);
   
+
+    
 #ifdef __SHOW_TIME__
- fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
- fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2)); 
+  fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
+  fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2)); 
 #endif
 }
 
 
-double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho,double **trans){
+double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho){
 #if 0
   fprintf(stderr,"\t-> [%s][%d] tk=(%f,%f) gls:(%f, %f,%f, %f) \n",__FUNCTION__,index,tk[0],tk[1],gls[0],gls[1],gls[2],gls[3] );
   for(int i=0;i<tk_l;i++)
@@ -635,13 +675,23 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
 
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
   calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize);
-  calculate_stationary(tk,tk_l,epsize,stationary,P);
+  calculate_stationary(tk_l,stationary,P);
   calculate_FW_BW_PP_Probs(tk,tk_l,epsize,rho);
+
+  if(DOTRANS){
+    for(int i=0;i<tk_l;i++)
+      for(int j=0;j<tk_l;j++){
+	//	fprintf(stderr,"i:%d j:%d trans[%d][%d]:%f\n",i,j,i,j,trans[i][j]);
+	trans[i][j] = calc_trans(i,j,P);
+      }
+    //printmatrixf((char*)"transitions.txt",trans,tk_l,tk_l);
+  }
+
   if(0)
     ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis,workspace);
   else
     ComputeBaumWelch(windows.size(),tk_l,fw,bw,emis,trans,baumwelch,pix);
-  
+  //  exit(0);
 #if 0
   if(index==0)
     printmatrixf((char*)"P_0.txt",P,8,tk_l);
@@ -669,18 +719,14 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
     printmatrixf((char*)"PP_1.txt",PP,8,tk_l);
 #endif
 
-  qval=qFunction_inner(tk,tk_l,epsize,rho,pix,windows.size(),P,PP);//no need to recompute P. But we fix this later;
+  if(0)
+    qval=qFunction_inner(tk,tk_l,epsize,rho,pix,windows.size(),P,PP);//no need to recompute P. But we fix this later;
+  else
+    qval=qFunction_inner2(tk,tk_l,epsize,rho,pix,windows.size(),P,baumwelch,trans);
   fprintf(stderr,"\t-> hmm[%d]\tqval: %f fwllh: %f bwllh: %f\n",index,qval,fwllh,bwllh);
   //  fprintf(stderr,"\t-> [%s] stop\n",__FUNCTION__ );
   //  exit(0);
-  if(DOTRANS){
-    for(int i=0;i<tk_l;i++)
-      for(int j=0;j<tk_l;j++){
-	//	fprintf(stderr,"i:%d j:%d\n",i,j);
-	trans[i][j] = calc_trans(i,j,P);
-      }
-    printmatrixf((char*)"transitions.txt",trans,tk_l,tk_l);
-  }
+
   return qval;
   exit(0);
   

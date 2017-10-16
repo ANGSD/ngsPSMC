@@ -69,10 +69,10 @@ public:
   }
   void allocate(int tk_l);
   //  void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,double **bw,double *stationary);
-  void calculate_stationary(double *tk,int tk_l,double *lambda,double *results,double **P);
+  //  void calculate_stationary(int tk_l,double *results,double **P);
   void calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,double rho);
   //  void calculate_FW_BW_PP_Probs();
-  double make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho,double **trans);
+  double make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho);
   
 private:
   void ComputeR2(int v,double **mat){

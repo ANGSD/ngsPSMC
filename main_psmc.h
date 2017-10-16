@@ -33,6 +33,7 @@ typedef struct {
   perFasta *pf;
   int RD;
   int nThreads;
+  int nIter;
 }args;
 args * getArgs(int argc,char **argv);
 void destroy_args(args *p);

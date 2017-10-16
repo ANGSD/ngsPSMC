@@ -346,6 +346,8 @@ args * getArgs(int argc,char **argv){
       p->RD = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-nThreads"))
       p->nThreads = atoi(*(++argv));
+    else  if(!strcasecmp(*argv,"-nIter"))
+      p->nIter = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-p"))
       p->par->pattern =  strdup(*(++argv));
     else  if(!strcasecmp(*argv,"-tkfile"))
