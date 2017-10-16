@@ -18,6 +18,7 @@ typedef struct{
   double *epsize;
   double theta;
   double rho;
+  double **trans;
 }shared_forhmm;
 
 
@@ -30,6 +31,7 @@ typedef struct{
   int numWind;
   double theta;
   double rho;
+  double **trans;
   //  double *epsize;
 }oPars;
 
@@ -52,14 +54,25 @@ double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,doubl
 
 double qFunction(const double *params ,const void *d){
   oPars *data = (oPars*) d;
-
+  //  fprintf(stderr,"pix:%f\n",data->pix);
   return qFunction_inner(data->tk,data->tk_l,params,data->rho,data->pix,data->numWind,data->nP,data->PP);
+
+}
+
+
+double qFunction_inner2(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **PP,double **trans);
+
+
+double qFunction2(const double *params ,const void *d){
+  oPars *data = (oPars*) d;
+  //  fprintf(stderr,"pix:%f\n",data->pix);
+  return qFunction_inner2(data->tk,data->tk_l,params,data->rho,data->pix,data->numWind,data->nP,data->PP,data->trans);
 
 }
 static int ncals=0;
 double qFunction_wrapper(const double *pars,const void *){
   ncals++;
-  fprintf(stderr,"\t-> calling objective function: remap_l:%d\n\n",remap_l);
+  //  fprintf(stderr,"\t-> calling objective function: remap_l:%d\n\n",remap_l);
   double pars2[ops[0].tk_l];
   int at=0;
   for(int i=0;i<remap_l;i++)
@@ -67,16 +80,16 @@ double qFunction_wrapper(const double *pars,const void *){
       pars2[at++] = pars[i]; 
   double ret =0;
   for(int i=0;i<nChr;i++)
-    ret += qFunction(pars2,&ops[i]);
+    ret += qFunction2(pars2,&ops[i]);
   
-  fprintf(stderr,"qfun:%f\n",ret);
+  //  fprintf(stderr,"qfun:%f\n",ret);
 
   return -ret;
 }
 
 
 void make_remapper(psmc_par *pp){
-  fprintf(stderr,"makeadsfadsfasfasfadf\n");
+  //  fprintf(stderr,"makeadsfadsfasfasfadf\n");
   int at=0;
   remap = new double[pp->n_free];
   remap_l=pp->n_free;
@@ -124,11 +137,16 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
     ops[i].numWind=objs[i]->windows.size();
     ops[i].rho= rho;
     ops[i].theta = theta;
+    ops[i].trans = objs[i]->trans;
   }
-  double max_llh = findmax_bfgs(ndim,pars,NULL,qFunction_wrapper,NULL,lbd,ubd,nbd,1);
-  fprintf(stderr,"\t-> optim done: after ncalls:%d\n",ncals);
-  for(int i=0;i<ndim;i++)
+  double max_llh = findmax_bfgs(ndim,pars,NULL,qFunction_wrapper,NULL,lbd,ubd,nbd,-1);
+  fprintf(stderr,"\t-> optim done: after ncalls:%d new qval:%f\n",ncals,max_llh);
+  for(int i=0;0&i<ndim;i++)
     fprintf(stderr,"newpars: %f\n", pars[i]);
+  int at=0;
+  for(int i=0;i<remap_l;i++)
+    for(int j=0;j<remap[i];j++)
+      epsize[at++] = pars[i]; 
 }
 
 void printarray(FILE *fp,double *ary,int l);
@@ -162,7 +180,7 @@ void *run_a_hmm(void *ptr){
   size_t at =(size_t) ptr;
   //  fprintf(stderr,"at:%lu\n",at);
   //  sleep(drand48()*10);
-  objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
+  objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho,shmm.trans);
   pthread_exit(NULL);
 }
 
@@ -180,7 +198,7 @@ void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double theta,doub
   //  double qval =0;
   if(nThreads==1)
     for(int i=0;i<nChr;i++){
-      objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
+      objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho,shmm.trans);
   }else {
     int at=0;
     while(at<nChr){
@@ -227,7 +245,7 @@ void main_analysis_optim(double *tk,int tk_l,double *epsize,double theta,double 
   pthread_t thread[nThreads];
   if(nThreads==1)
     for(int i=0;i<nChr;i++)
-      objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
+      objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho,shmm.trans);
   else {
     int at=0;
     while(at<nChr){
@@ -260,30 +278,25 @@ void main_analysis_optim(double *tk,int tk_l,double *epsize,double theta,double 
 
 }
 
-double calc_all_qvals(double *pars){
-  double sum_qval =0;
-
-  return sum_qval;
-}
-
-
-void superoptimizer2000(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp){
-  fprintf(stderr,"pp->n:%d\n",pp->n);
-  fprintf(stderr,"pp->n_free:%d\n",pp->n_free);
-  for(int i=0;i<pp->n+1;i++)
-    fprintf(stderr,"pars_map[%d]\t%d\n",i,pp->par_map[i]);
-  
-}
-
-
 void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp){
 
   //first make_hmm for all chrs;
-  // theta=0.0001;
+  //  theta= 0.046797;
+  //rho = 0.006664;
   //  rho=0.1;
-  main_analysis_make_hmm(tk,tk_l,epsize,theta,rho);
-  runoptim3(tk,tk_l,epsize,theta,rho,pp);
-  if(0){
+  for(int i=0;i<2;i++){
+    fprintf(stderr,"Running analysis, RD:%d rho:%f theta:%f\n",i,rho,theta);
+    for(int i=0;i<tk_l;i++) 
+      fprintf(stderr,"epsize:%d) %f %f\n",i,tk[i],epsize[i]);
+    main_analysis_make_hmm(tk,tk_l,epsize,theta,rho);
+    //    break;
+    runoptim3(tk,tk_l,epsize,theta,rho,pp);
+    //    break;
+  }
+  for(int i=0;i<tk_l;i++) 
+    fprintf(stderr,"epsize_after_all_rounds:%d) %f\n",i,epsize[i]);
+    
+#if 0
     double tmptk[tk_l];
     double tmpepsize[tk_l];
     double tmptheta;
@@ -306,8 +319,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
       tot_qval += qvals[i];
       fprintf(stderr," qval[%d]: %f tot_qval:%f\n",i,qvals[i],tot_qval);
     }
-
-  }
+#endif
 }
 
 int psmc_wrapper(args *pars,int block) {
@@ -315,7 +327,7 @@ int psmc_wrapper(args *pars,int block) {
   psmc_par *p=pars->par;
 #if 1 //print pars
   fprintf(stderr,"\t-> par->n:%d\tpar->n_free:%d\tpar_map:%p\tpar->pattern:%s\tpar->times:%p\tpar->params:%p\n",p->n,p->n_free,p->par_map,p->pattern,p->times,p->params);
-  for(int i=0;1&&i<pars->par->n+1;i++)
+  for(int i=0;0&&i<pars->par->n+1;i++)
     fprintf(stderr,"[psmc_wrapper]:%i)\t%f\t%f\n",i,pars->par->times[i],pars->par->params[i]);
   //  exit(0);
 #endif

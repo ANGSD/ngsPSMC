@@ -168,7 +168,7 @@ double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,doubl
   clock_t t=clock();
   time_t t2=time(NULL);
 #endif
-#if 1
+#if 0
   for(int i=0;i<tk_l;i++)
     fprintf(stderr,"[%s] %d) %f\n",__FUNCTION__,i,epsize[i]);
 #endif
@@ -183,7 +183,40 @@ double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,doubl
     Q += tmpQ;
     //    fprintf(stderr,"\t-> Q[%d]:%f\n",i,tmpQ);
   }
-  fprintf(stderr,"\t-> ESUM:%f Q:%f\n",esum,Q);
+  if(fabs(numWind-1-esum)>0.5)
+    fprintf(stderr,"\t-> POTENTIAL PROBLEM ESUM:%f Q:%f numWind:%d\n",esum,Q,numWind);
+#ifdef __SHOW_TIME__
+   fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
+   fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2)); 
+#endif
+  return Q;
+  
+}
+
+
+
+double qFunction_inner2(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **PP,double **trans){
+#ifdef __SHOW_TIME__
+  clock_t t=clock();
+  time_t t2=time(NULL);
+#endif
+#if 0
+  for(int i=0;i<tk_l;i++)
+    fprintf(stderr,"[%s] %d) %f\n",__FUNCTION__,i,epsize[i]);
+#endif
+  
+  
+  ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
+  //  printmatrixf((char*)"P_check.txt",nP,8,tk_l);
+  double Q = 0;
+  double esum =0;
+  for (unsigned i = 0; i < tk_l; i++){
+    double tmpQ = qkFunction(i, pix,numWind,nP,PP,tk_l,esum);
+    Q += tmpQ;
+    //    fprintf(stderr,"\t-> Q[%d]:%f\n",i,tmpQ);
+  }
+  if(fabs(numWind-1-esum)>0.5)
+    fprintf(stderr,"\t-> POTENTIAL PROBLEM ESUM:%f Q:%f numWind:%d\n",esum,Q,numWind);
 #ifdef __SHOW_TIME__
    fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
    fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2)); 
@@ -369,8 +402,10 @@ void fastPSMC::allocate(int tk_l_arg){
   bw = new double *[tk_l];
   //pp = new double *[tk_l];
   emis = new double *[tk_l];
+  baumwelch = new double *[tk_l+1];
   for(int i=0;i<tk_l;i++){
     emis[i] = new double[numWindows+1];
+    baumwelch[i] = new double[tk_l];
 #if 0
     for(int j=0;j<numWindows+1;j++)
       emis[i][j] = 0;//1.0;
@@ -380,6 +415,7 @@ void fastPSMC::allocate(int tk_l_arg){
     //    pp[i] = new double[numWindows+1];
 
   }
+  baumwelch[tk_l] = new double[tk_l];
   //  fprintf(stderr,"\t-> emission allocated with [%d][%d]\n",tk_l,numWindows+1);
   P = new double *[8];
   PP= new double *[8];
@@ -483,7 +519,10 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
 	fprintf(stderr,"\t\t\tgls(%d,%d)=",2*i,2*i+1);
 	fprintf(stderr,"(%f,%f)\n",gls[2*i],gls[2*i+1]);
 #endif
-	emis[j][v+1] += log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6)*(1-inner));//<- check
+	if(0)
+	  emis[j][v+1] += log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6.0)*(1.0-inner));//<- check
+	else
+	  emis[j][v+1] += log((exp(gls[i*2])/1.0) *inner + (exp(gls[2*i+1])/1.0)*(1.0-inner));//<- check
 	if(isinf(emis[j][v+1])){
 	  fprintf(stderr,"\t-> Huge bug in code contact developer. Emissions evaluates to zero\n");
 	  /*
@@ -560,17 +599,49 @@ void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,dou
 }
 
 
-double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho){
 
+void ComputeBaumWelch(unsigned numWind,int tk_l,double **fw,double **bw,double **emis,double **trans,double **baumwelch,double pix){
+#ifdef __SHOW_TIME__
+  clock_t t=clock();
+  time_t t2=time(NULL);
+#endif
+  for(int i=0;i<tk_l;i++){
+    for(int j=0;j<tk_l;j++){
+      double tmp = 0;
+      for(int w=1;w<numWind;w++){
+	tmp += exp(fw[i][w]+trans[i][j]+emis[j][w+1]+bw[j][w+1]);
+
+      }
+      baumwelch[i][j] = exp(log(tmp)-pix);
+    }
+  }
+  for(int i=0; i < tk_l; i++)
+    baumwelch[tk_l][i] = exp(fw[i][1]+bw[i][1]-pix);
+  
+#ifdef __SHOW_TIME__
+ fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
+ fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2)); 
+#endif
+}
+
+
+double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho,double **trans){
+#if 0
   fprintf(stderr,"\t-> [%s][%d] tk=(%f,%f) gls:(%f, %f,%f, %f) \n",__FUNCTION__,index,tk[0],tk[1],gls[0],gls[1],gls[2],gls[3] );
+  for(int i=0;i<tk_l;i++)
+    fprintf(stderr,"[%s] %d) %f %f\n",__FUNCTION__,i,tk[i],epsize[i]);
+#endif
   //prepare global probs
 
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
   calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize);
   calculate_stationary(tk,tk_l,epsize,stationary,P);
   calculate_FW_BW_PP_Probs(tk,tk_l,epsize,rho);
-  ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis,workspace);
-
+  if(0)
+    ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis,workspace);
+  else
+    ComputeBaumWelch(windows.size(),tk_l,fw,bw,emis,trans,baumwelch,pix);
+  
 #if 0
   if(index==0)
     printmatrixf((char*)"P_0.txt",P,8,tk_l);

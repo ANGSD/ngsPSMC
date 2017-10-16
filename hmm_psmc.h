@@ -3,7 +3,7 @@
  */
 double lprod(double a,double b);
 double lprod(double a,double b,double c,double d);
-#define DOTRANS 0
+#define DOTRANS 1
 
 double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **PP,int);
 void setTk(int n, double *t, double max_t, double alpha, double *inp_ti);
@@ -16,7 +16,10 @@ struct wins{
 };
 
 //void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double **emis);
+/*
+  baumwelch,PP is not in logspace
 
+ */
 class fastPSMC {
 public:
   int index;
@@ -38,6 +41,8 @@ public:
   double *workspace;
   double fwllh;
   double bwllh;
+
+  double **baumwelch;
   double qval;
   fastPSMC(){
     trans = NULL;
@@ -67,7 +72,7 @@ public:
   void calculate_stationary(double *tk,int tk_l,double *lambda,double *results,double **P);
   void calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,double rho);
   //  void calculate_FW_BW_PP_Probs();
-  double make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho);
+  double make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho,double **trans);
   
 private:
   void ComputeR2(int v,double **mat){
