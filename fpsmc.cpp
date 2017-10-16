@@ -88,7 +88,7 @@ double qFunction_wrapper(const double *pars,const void *){
   
 
   if(std::isinf(ret))
-    ret= -10000;
+    ret= -1000000;
   //  fprintf(stderr,"qfun:%e\n",ret);
   return -ret;
 }
@@ -298,6 +298,8 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
     for(int i=0;i<tk_l;i++) 
       fprintf(stderr,"making hmm with epsize:%d) %f %f\n",i,tk[i],epsize[i]);
     main_analysis_make_hmm(tk,tk_l,epsize,theta,rho);
+    fprintf(stderr,"readchines this point\n");
+
     //    break;
     runoptim3(tk,tk_l,epsize,theta,rho,pp);
     //    break;
@@ -374,47 +376,5 @@ int psmc_wrapper(args *pars,int block) {
       break;
   }
   main_analysis(tk,tk_l,epsize,pars->par->TR[0],pars->par->TR[1],pars->par,pars->nIter);
-
-  
-  
-#if 0
-  printarrayf("tk",tk,tk_l);
-  printmatrixf("fw",objs[0]->fw,tk_l,objs[0]->windows.size()+1);
-  printmatrixf("bw",objs[0]->bw,tk_l,objs[0]->windows.size()+1);
-  printmatrixf("emis",objs[0]->emis,tk_l,objs[0]->windows.size()+1);
-  printmatrixf("P",obj.P,7,tk_l);
-#endif
-  //printmatrixf("pp",objs[0]->pp,tk_l,objs[0]->windows.size()+1);
-  // 
-  /*
-    printarrayf("stationary",obj.stationary,tk_l);
-    
-    printarrayf("epsize",epsize,tk_l);
-
-    printmatrixf("emis",obj.emis,tk_l,obj.
-windows.size()+1);
-
-    printarrayf("r1",obj.R1,tk_l);
-    printarrayf("r2",obj.R2,tk_l);
-  */
-  
-  //calculate window end points
-  
-  //  obj.printWindows(stdout);
-  //allocate internal structures needed
- 
-  //make an hmm
-
-  // objs[0].make_hmm(tk,tk_l,epsize);
-  /*
-    printarrayf("stationary",obj.stationary,tk_l);
-    printarrayf("tk",tk,tk_l);
-    printarrayf("epsize",epsize,tk_l);
-    printmatrixf("P",obj.P,7,tk_l);
-    printmatrixf("emis",obj.emis,tk_l,obj.windows.size()+1);
-    printmatrixf("fw",obj.fw,tk_l,obj.windows.size()+1);
-    printarrayf("r1",obj.R1,tk_l);
-    printarrayf("r2",obj.R2,tk_l);
-  */
   return 1;
 }

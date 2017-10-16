@@ -470,7 +470,7 @@ void fastPSMC::allocate(int tk_l_arg){
     baumwelch[i] = new double[tk_l];
 #if 0
     for(int j=0;j<numWindows+1;j++)
-      emis[i][j] = 0;//1.0;
+      emis[i][j] = 0;//1.1;
 #endif
     fw[i] = new double[numWindows+1];
     bw[i] = new double[numWindows+1];
@@ -478,6 +478,9 @@ void fastPSMC::allocate(int tk_l_arg){
 
   }
   baumwelch[tk_l] = new double[tk_l];
+  for(int i=0;i<tk_l+1;i++)
+    for(int j=0;j<tk_l;j++)
+      baumwelch[i][j] = -777;
   //  fprintf(stderr,"\t-> emission allocated with [%d][%d]\n",tk_l,numWindows+1);
   P = new double *[8];
   PP= new double *[8];
@@ -576,7 +579,11 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
       //fprintf(stderr,"\tj:%d\n",j);
       emis[j][v+1] = 0;
       //    double inner = exp(nontmpdir[j]);///exp(-2.0*tk[j]*theta); // this part relates to issue #1
-      double inner = exp(-2.0*tk[j]*theta); // this part relates to issue #1
+      double inner;
+      if (j< tk_l-1)
+	inner = exp(-2.0*(tk[j]+tk[j+1])/2.0*theta); // this part relates to issue #1
+      else
+	inner = exp(-2.0*(tk[j]+tk[j])*theta); // this part relates to issue #1
       //      fprintf(stderr,"\t\t%d from:%d to:%d inner:%f\n",j,windows[v].from,windows[v].to,inner);
       for(int i=windows[v].from;i<=windows[v].to;i++){//for all elements in window
 #if 0
@@ -635,7 +642,7 @@ void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,dou
 }
 
 
-
+//results is in baumwelch matrix the content is not in log but normal space
 void ComputeBaumWelch(unsigned numWind,int tk_l,double **fw,double **bw,double **emis,double **trans,double **baumwelch,double pix){
 
 #ifdef __SHOW_TIME__
@@ -645,19 +652,24 @@ void ComputeBaumWelch(unsigned numWind,int tk_l,double **fw,double **bw,double *
 
   for(int i=0;i<tk_l;i++){
     for(int j=0;j<tk_l;j++){
-      double tmp = 0;
+      double tmp = log(0);
       for(int w=1;w<numWind;w++){
-	//fprintf(stderr,"i:%d w:%d\n",i,w);
-	tmp += exp(fw[i][w]+trans[i][j]+emis[j][w+1]+bw[j][w+1]);
+	//	fprintf(stderr,"i:%d j:%d w:%d fw:%e trans:%e emis:%e bw:%e\n",i,j,w,fw[i][w],trans[i][j],emis[j][w+1],bw[j][w+1]);
+	tmp = addProtect2(tmp,fw[i][w]+trans[i][j]+emis[j][w+1]+bw[j][w+1]);
+	if(0&&w>20)
+	  exit(0);
       }
-      baumwelch[i][j] = exp(log(tmp)-pix);
+      //      fprintf(stderr,"baum tpm:%f pix:%f\n",tmp,pix);
+      baumwelch[i][j] = exp(tmp-pix);
     }
   }
   for(int i=0; i < tk_l; i++)
     baumwelch[tk_l][i] = exp(fw[i][1]+bw[i][1]-pix);
-  
+#if 0
+  printmatrixf("baumwelch.txt",baumwelch,tk_l+1,tk_l);
+  exit(0);
+#endif
 
-    
 #ifdef __SHOW_TIME__
   fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
   fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2)); 
@@ -718,7 +730,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   else if(index==1)
     printmatrixf((char*)"PP_1.txt",PP,8,tk_l);
 #endif
-
+  //  return 0;
   if(0)
     qval=qFunction_inner(tk,tk_l,epsize,rho,pix,windows.size(),P,PP);//no need to recompute P. But we fix this later;
   else
