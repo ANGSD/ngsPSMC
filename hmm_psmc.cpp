@@ -10,7 +10,7 @@
 int fastPSMC::tot_index=0;
 
 //#define __SHOW_TIME__
-
+extern int doQuadratic;
 
 /*
   Calculate stationary distrubution
@@ -704,7 +704,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
     //printmatrixf((char*)"transitions.txt",trans,tk_l,tk_l);
   }
 
-  if(0)
+  if(doQuadratic==0)
     ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis,workspace);
   else
     ComputeBaumWelch(windows.size(),tk_l,fw,bw,emis,trans,baumwelch,pix);
@@ -736,7 +736,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
     printmatrixf((char*)"PP_1.txt",PP,8,tk_l);
 #endif
   //  return 0;
-  if(0)
+  if(doQuadratic==0)
     qval=qFunction_inner(tk,tk_l,epsize,rho,pix,windows.size(),P,PP);//no need to recompute P. But we fix this later;
   else
     qval=qFunction_inner2(tk,tk_l,epsize,rho,pix,windows.size(),P,baumwelch,trans);

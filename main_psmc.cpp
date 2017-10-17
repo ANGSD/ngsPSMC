@@ -330,6 +330,7 @@ args * getArgs(int argc,char **argv){
   p->tkfile = NULL;
   p->RD = -1;
   p->nThreads =1;
+  p->doQuad =0;
   char *inffilename=NULL;
   if(argc==0)
     return p;
@@ -358,8 +359,8 @@ args * getArgs(int argc,char **argv){
       p->seed = atol(*(++argv));
     else  if(!strcasecmp(*argv,"-infile"))
       inffilename = strdup(*++argv);
-
-    
+    else  if(!strcasecmp(*argv,"-doQuad"))
+      p->doQuad = atoi(*++argv);
     else  if(!strcasecmp(*argv,"-r")){
       p->chooseChr = get_region(*(++argv),p->start,p->stop);
       if(!p->chooseChr)
@@ -372,11 +373,14 @@ args * getArgs(int argc,char **argv){
     }
     argv++;
   }
+  extern int doQuadratic;
+  doQuadratic = p->doQuad;
+  
   setpars(inffilename,p->par,p->RD);
   if(p->seed==0)
     p->seed = time(NULL);
   srand48(p->seed);
-  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d fname:%s seed:%ld winsize:%d RD:%d nThreads:%d\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->block,p->RD,p->nThreads);
+  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d fname:%s seed:%ld winsize:%d RD:%d nThreads:%d doQuad:%d\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->block,p->RD,p->nThreads,p->doQuad);
   //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
   if(p->par->pattern==NULL)
     p->par->pattern = strdup(DEFAULT_PATTERN);

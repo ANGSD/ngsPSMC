@@ -12,6 +12,9 @@ extern int nThreads;
 
 int nChr = 0;
 
+int doQuadratic = 0;
+
+
 typedef struct{
   double *tk;
   int tk_l;
@@ -82,8 +85,10 @@ double qFunction_wrapper(const double *pars,const void *){
     }
   double ret =0;
   for(int i=0;i<nChr;i++)
-    ret += qFunction2(pars2,&ops[i]);
-  
+    if(doQuadratic)
+      ret += qFunction2(pars2,&ops[i]);
+    else
+      ret += qFunction(pars2,&ops[i]);
 
   if(std::isinf(ret))
     ret= -1000000000;
