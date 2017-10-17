@@ -303,8 +303,10 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
 void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter){
 
   //first make_hmm for all chrs;
-  theta=0.046797;
+#if 1
+  theta=0.046797/2.0;
   rho = 0.006664;
+#endif
   //  rho=0.1;
   double dummyepsize[tk_l];
   for(int i=0;i<tk_l;i++)
