@@ -571,6 +571,7 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
  
   //  double tmp[windows.size()];
   double nontmpdir[tk_l];
+  
   ComputeP1(tk,tk_l,nontmpdir,epsize,theta);
 
  for(int v=0;v<windows.size();v++){//for each window
@@ -578,13 +579,15 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
     for(int j=0;j<tk_l;j++){//for each interval/state
       //fprintf(stderr,"\tj:%d\n",j);
       emis[j][v+1] = 0;
-      //    double inner = exp(nontmpdir[j]);///exp(-2.0*tk[j]*theta); // this part relates to issue #1
-      double inner;
+      double inner = exp(nontmpdir[j]);///exp(-2.0*tk[j]*theta); // this part relates to issue #1
+#if 1
+      //      double inner;
       if (j< tk_l-1)
 	inner = exp(-2.0*(tk[j]+tk[j+1])/2.0*theta); // this part relates to issue #1
       else
 	inner = exp(-2.0*(tk[j]+tk[j])*theta); // this part relates to issue #1
       //      fprintf(stderr,"\t\t%d from:%d to:%d inner:%f\n",j,windows[v].from,windows[v].to,inner);
+#endif
       for(int i=windows[v].from;i<=windows[v].to;i++){//for all elements in window
 #if 0
 	fprintf(stderr,"\t\t\tgls(%d,%d)=",2*i,2*i+1);
@@ -735,7 +738,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
     qval=qFunction_inner(tk,tk_l,epsize,rho,pix,windows.size(),P,PP);//no need to recompute P. But we fix this later;
   else
     qval=qFunction_inner2(tk,tk_l,epsize,rho,pix,windows.size(),P,baumwelch,trans);
-  fprintf(stderr,"\t-> hmm[%d]\tqval: %f fwllh: %f bwllh: %f\n",index,qval,fwllh,bwllh);
+  //  fprintf(stderr,"\t-> hmm[%d]\tqval: %f fwllh: %f bwllh: %f\n",index,qval,fwllh,bwllh);
   //  fprintf(stderr,"\t-> [%s] stop\n",__FUNCTION__ );
   //  exit(0);
 

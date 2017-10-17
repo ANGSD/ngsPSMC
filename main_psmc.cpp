@@ -324,7 +324,7 @@ args * getArgs(int argc,char **argv){
   p->nSites =0;
   p->fname = NULL;
   p->onlyOnce = 0;
-  p->seed =0;
+  p->seed =1;
   p->block = 100;//default 100bp
   p->par =(psmc_par*) calloc(1,sizeof(psmc_par));
   p->tkfile = NULL;
