@@ -351,6 +351,7 @@ void fastPSMC::calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,doubl
   time_t t2=time(NULL);
 #endif
     //we first set the initial fwprobs to stationary distribution
+  //  fprintf(stderr,"BEFOPRE forware\n");
   for(int i=0;i<tk_l;i++){
       fw[i][0] = stationary[i];
       //      fprintf(stderr,"fw[%d]:stat[%d]:%f\n",i,i,fw[i][0]);
@@ -361,6 +362,7 @@ void fastPSMC::calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,doubl
     //v=0 is above and is the initial distribution, we therefore plug in at v+1
     for(int v=0;v<windows.size();v++){
       ComputeRs(v,fw);//<-prepare R1,R2
+
 #if 0
       printarrayf("r1",R1,tk_l);
       printarrayf("r2",R2,tk_l);
@@ -370,7 +372,7 @@ void fastPSMC::calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,doubl
       for (unsigned i = 1; i < tk_l; i++)
 	fw[i][v+1]= addProtect4(lprod(fw[i][v],P[1][i]) , lprod(R2[i-1],P[2][i]) , lprod(R1[i],P[3][i]) , lprod(fw[i][v],P[4][i]))+emis[i][v+1];
     }
-
+    //fprintf(stderr,"AFter forwardx\n");
     //    fprintf(stderr,"tk_l:%d\n",tk_l);
     double tmp[tk_l];
     for(int i=0;i<tk_l;i++){
@@ -580,7 +582,7 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
       //fprintf(stderr,"\tj:%d\n",j);
       emis[j][v+1] = 0;
       double inner = exp(nontmpdir[j]);///exp(-2.0*tk[j]*theta); // this part relates to issue #1
-#if 1
+#if 0
       //      double inner;
       if (j< tk_l-1)
 	inner = exp(-2.0*(tk[j]+tk[j+1])/2.0*theta); // this part relates to issue #1
