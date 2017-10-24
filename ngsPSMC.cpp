@@ -229,6 +229,7 @@ int main(int argc,char **argv){
   if(argc==1){
     fprintf(stderr, "\t-> ---./ngsPSMC\n");
     fprintf(stderr,"\t-> ./ngsPSMC [print print_header makeold] afile.psmc.idx \n");
+    fprintf(stderr,"\t-> ./ngsPSMC -tole -maxIter -winSize -RD -nThreads -nIter -p -tkfile -nSites -seed -infile -doQuard\n");
     return 0;
   }
 

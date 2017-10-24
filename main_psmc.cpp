@@ -86,7 +86,7 @@ int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars)
 	return pars_map;
 }
 void setpars( char *fname,psmc_par *pp,int which) {
-  //  fprintf(stderr,"[%s]:%s which:%d\n",__FUNCTION__,fname,which);
+  fprintf(stderr,"[%s]:%s which:%d\n",__FUNCTION__,fname,which);
   FILE *fp = NULL;
   fp=fopen(fname,"r");
   if(!fp){
@@ -291,6 +291,7 @@ void setpars2( char *fname,int which,double *tmptk,double *tmpepsize,double &tmp
 
 
 void readtkfile(args *p){
+  fprintf(stderr,"\t[%s]\n",__FUNCTION__);
   FILE *fp = NULL;
   if(!(fp=fopen(p->tkfile,"wb"))){
     fprintf(stderr,"\t-> Problem writing file: \'%s\'\n",p->tkfile);
@@ -375,8 +376,8 @@ args * getArgs(int argc,char **argv){
   }
   extern int doQuadratic;
   doQuadratic = p->doQuad;
-  
-  setpars(inffilename,p->par,p->RD);
+  if(inffilename)
+    setpars(inffilename,p->par,p->RD);
   if(p->seed==0)
     p->seed = time(NULL);
   srand48(p->seed);
