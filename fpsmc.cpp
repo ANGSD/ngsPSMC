@@ -301,7 +301,7 @@ void main_analysis_optim(double *tk,int tk_l,double *epsize,double theta,double 
 }
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize);
 void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter){
-
+  fprintf(stderr,"\t-> nIter:%d\n",nIter);
   //first make_hmm for all chrs;
 #if 1
   theta=0.046797/2.0;
@@ -315,18 +315,21 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
   for(int i=0;0&&i<nChr;i++)
     calculate_emissions(tk,tk_l,objs[i]->gls,objs[i]->windows,theta,objs[i]->emis,dummyepsize);
 
-
-  for(int i=0;i<nIter;i++){
-    fprintf(stderr,"Running analysis, RD:%d rho:%f theta:%f\n",i,rho,theta);
+  int i=0;
+  while(1){
+    fprintf(stderr,"\t-> Running analysis, RD:%d rho:%f theta:%f\n",i,rho,theta);
+#if 0
     for(int i=0;i<tk_l;i++) 
       fprintf(stderr,"making hmm with epsize:%d) %f %f\n",i,tk[i],epsize[i]);
+#endif
     main_analysis_make_hmm(tk,tk_l,epsize,theta,rho);
-    fprintf(stderr,"readchines this point\n");
-
-    //    break;
+    
+    if(i++>=nIter)
+      break;
     runoptim3(tk,tk_l,epsize,theta,rho,pp);
     //    break;
   }
+  
   for(int i=0;i<tk_l;i++) 
     fprintf(stderr,"epsize_after_all_rounds:%d) %f\n",i,epsize[i]);
 
