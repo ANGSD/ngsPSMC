@@ -319,8 +319,8 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
   while(1){
     fprintf(stderr,"\t-> Running analysis, RD:%d rho:%f theta:%f\n",i,rho,theta);
 #if 1
-    for(int i=0;i<tk_l;i++) 
-      fprintf(stderr,"making hmm with epsize:%d) %f %f\n",i,tk[i],epsize[i]);
+    for(int ii=0;ii<tk_l;ii++) 
+      fprintf(stderr,"making hmm with epsize:%d) %f %f\n",ii,tk[ii],epsize[ii]);
 #endif
     main_analysis_make_hmm(tk,tk_l,epsize,theta,rho);
     
