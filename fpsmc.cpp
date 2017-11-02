@@ -345,7 +345,7 @@ int psmc_wrapper(args *pars,int block) {
   //  exit(0);
 #endif
   int tk_l = pars->par->n+1;
-  fprintf(stderr,"tk_l:%d\n",tk_l);
+  fprintf(stderr,"tk_l in psmc_wrapper pars->par->n+1 tk_l:%d\n",tk_l);
   double *tk = new double [tk_l];
   double *epsize = new double [tk_l];
   setEPSize(epsize,tk_l,p->params);

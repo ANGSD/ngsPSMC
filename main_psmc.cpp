@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "main_psmc.h"
 #include "fpsmc.h"
+#include <htslib/kstring.h>
 extern int nThreads;
 
 double lprod(double a,double b,double c,double d){
@@ -85,6 +86,7 @@ int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars)
 	free(tmp); free(stack);
 	return pars_map;
 }
+
 void setpars( char *fname,psmc_par *pp,int which) {
   fprintf(stderr,"[%s]:%s which:%d\n",__FUNCTION__,fname,which);
   FILE *fp = NULL;
@@ -165,7 +167,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
       break;
     }
   }
-  //  fprintf(stderr,"number of lines with RS:%lu\n",RS.size());exit(0);
+  fprintf(stderr,"\t->Number of lines with RS:%lu\n",RS.size());
   char *nline = strdup(line);
   char *tok = strtok(nline,"\n\t ");
   tok = strtok(NULL,"\n\t ");
@@ -189,112 +191,11 @@ void setpars( char *fname,psmc_par *pp,int which) {
 }
 
 
-void setpars2( char *fname,int which,double *tmptk,double *tmpepsize,double &tmptheta,double &tmprho) {
-  //  fprintf(stderr,"[%s]:%s which:%d\n",__FUNCTION__,fname,which);
-  FILE *fp = NULL;
-  fp=fopen(fname,"r");
-  if(!fp){
-    fprintf(stderr,"\t-> Problem opening file:%s\n",fname);
-    exit(0);
-  }
-  char *buf = new char[fsize(fname)+10];
-  memset(buf,0,fsize(fname)+10);
-  fread(buf,sizeof(char),fsize(fname),fp);
-  fclose(fp);
-  char *slashslash[100];
-  
-  //stupid loop below....
-  int n=0;
-
-  //catch first case seperately
-
-  for(int i=0;1&i<strlen(buf)-1;i++){//offset with one so we dont get the last empty output from PSCMC
-    if(strncmp(buf+i,"\nRD\t",4)==0){
-      assert(i>8);//check that we can plug in dummy values.
-      slashslash[n] = buf+i;
-      buf[i-1] ='0';
-
-      buf[i-2] ='\t';
-      buf[i-3] ='T';
-      buf[i-4] ='I';
-      buf[i-5] ='\n';
-      buf[i-6] = buf[i-7]= '/';
-      buf[i-8] ='\n';
-      //      slashslash[n++] = buf+i-8;
-      // fprintf(stderr,"buf:\'%s\'",slashslash[n]);
-      break;
-    }
-  }
-  //  exit(0);
-
-  for(int i=0;i<strlen(buf)-1;i++){//offset with one so we dont get the last empty output from PSCMC
-    if(strncmp(buf+i,"\n//\n",4)==0)
-      slashslash[n++] = buf+i;
-  }
-  fprintf(stderr,"\t-> Number of rounds:%d\n",n-2);
-  if(which>=n-1){
-    fprintf(stderr,"\t-> which higher than number of rounds, setting which to last element");
-    which=-1;
-  }
-  //  fprintf(stderr,"whcich:%d slah:%s\n",which,slashslash[which]);
-  char *last = which!=-1?slashslash[which]:slashslash[n-2];
-  //  fprintf(stderr,"slashslash[%d]:%s\n",which,last);exit(0);
-  char *line = NULL;
-  strtok(last,"\n");
-
-  line=strtok(NULL,"\n");
-  int IT=-1;
-  sscanf(line,"IT\t%d",&IT);
-  int RD=-1;
-  line=strtok(NULL,"\n"); sscanf(line,"RD\t%d",&RD);
-  fprintf(stderr,"\t-> Using round: %d\n",RD);
-  double LK=-1;
-  line=strtok(NULL,"\n"); sscanf(line,"LK\t%lf",&LK);
-  double QD[2]={-1,-1};
-  line=strtok(NULL,"\n"); sscanf(line,"QD\t%lf -> %lf",&QD[0],&QD[1]);
-  double RI=-1;
-  line=strtok(NULL,"\n"); sscanf(line,"RI\t%lf",&RI);
-  double TR[2]={-1,-1};
-  line=strtok(NULL,"\n"); sscanf(line,"TR\t%lf\t%lf",&TR[0],&TR[1]);
-  double MT={-1};
-  line=strtok(NULL,"\n"); sscanf(line,"MT\t%lf",&MT);
-  double C_pi=-1;
-  double n_recomb=-1;
-  line=strtok(NULL,"\n"); sscanf(line,"MM\tC_pi: %lf, n_recomb: %lf",&C_pi,&n_recomb);
-  std::vector<char *> RS;
-  fprintf(stderr,"\t-> IT:%d RD:%d lk:%f qd[0]:%f qd[1]:%f ri:%f tr[0]:%f tr[1]:%f mt:%f c_pi:%f n_rebomc:%f\n",IT,RD,LK,QD[0],QD[1],RI,TR[0],TR[1],MT,C_pi,n_recomb);
-  while(((line=strtok(NULL,"\n")))){
-    if(line[0]=='R'&&line[1]=='S')
-      RS.push_back(line);
-    else{
-      break;
-    }
-  }
-  //  fprintf(stderr,"number of lines with RS:%lu\n",RS.size());exit(0);
-  char *nline = strdup(line);
-  char *tok = strtok(nline,"\n\t ");
-  tok = strtok(NULL,"\n\t ");
-  
-  tmptheta = TR[0];
-  tmprho = TR[1];
-  //  fprintf(stderr,"RS:%lu\n",RS.size());
-  for(int i=0;i<RS.size();i++){
-    int val;
-    sscanf(RS[i],"RS\t%d\t%lf\t%lf\t",&val,&tmptk[i],&tmpepsize[i]);
-    //    fprintf(stderr,"PP->params[%d]:%e\n",i,pp->params[i]);
-    assert(val==i);
-  }
-  fprintf(stderr,"\t-> Done reading parameters from file: \'%s\'\n",fname);
-  //  exit(0);
-}
-
-
-
-void readtkfile(args *p){
+void readtkfile(psmc_par *pp,const char *fname){
   fprintf(stderr,"\t[%s]\n",__FUNCTION__);
   FILE *fp = NULL;
-  if(!(fp=fopen(p->tkfile,"wb"))){
-    fprintf(stderr,"\t-> Problem writing file: \'%s\'\n",p->tkfile);
+  if(!(fp=fopen(fname,"rb"))){
+    fprintf(stderr,"\t-> Problem writing file: \'%s\'\n",fname);
     exit(0);
   }
   char buf[4096];
@@ -306,13 +207,60 @@ void readtkfile(args *p){
     tk.push_back(atof(strtok(buf,"\n\t ")));
     lambda.push_back(atof(strtok(NULL,"\n\t ")));
   }
-  fprintf(stderr,"number of tks read from file:%lu\n",tk.size());
-  p->tk= new double[tk.size()];
-  p->lambda = new double[tk.size()];
-  for(int i=0;i<tk.size();i++){
-    p->tk[i] = tk[i];
-    p->lambda[i] = lambda[i];
+  fprintf(stderr,"\t-> Number of tks read from file:%lu\n",tk.size());
+  pp->TR[0] = -666.0;
+  pp->TR[1] = -666.0;
+  pp->params= new double[tk.size()-1];
+  pp->times = new double[tk.size()-1];
+  for(int i=0;i<tk.size()-1;i++){
+    pp->times[i] = tk[i+1];
+    pp->params[i] = lambda[i+1];
   }
+  std::vector<int> mult;
+  for(int at=0;at<tk.size()-1;at++){
+
+    int counter =0;
+    //    fprintf(stderr,"at:%d params[%d]:%f\n",at,at,pp->params[at]);
+    while(counter+1<tk.size()-1){
+      //fprintf(stderr,"params[%d]:%f params[%d]:%f\n",counter,pp->params[at+counter],at,pp->params[at]);
+      if(pp->params[at+counter]!=pp->params[at])
+	break;
+      counter++;
+    }
+    at+=counter-1;
+    mult.push_back(counter);
+  }
+  for(int i=0;0&i<mult.size();i++)
+    fprintf(stderr,"mult: %d %d\n",i,mult[i]); 
+  //  exit(0)  ;
+  std::vector<int> mult2;
+  kstring_t kstr;kstr.s=NULL;kstr.l=0;kstr.m=0;
+  for(int at=0;at<mult.size();at++){
+    int counter =0;
+    //    fprintf(stderr,"at:%d params[%d]:%f\n",at,at,pp->params[at]);
+    while(counter+at<mult.size()){
+      //fprintf(stderr,"params[%d]:%f params[%d]:%f\n",counter,pp->params[at+counter],at,pp->params[at]);
+      if(mult[at+counter]!=mult[at])
+	break;
+      counter++;
+    }
+    assert(counter>0);
+    if(counter>1)
+      ksprintf(&kstr,"%d*%d",counter,mult[at]);
+    else
+      ksprintf(&kstr,"%d",mult[at]);
+    at+=counter-1;
+    mult2.push_back(counter);
+    if(at<mult.size()-1)
+      ksprintf(&kstr,"+");
+  }
+  
+  for(int i=0;0&i<mult2.size();i++)
+    fprintf(stderr,"mult2: %d %d\n",i,mult2[i]);
+  pp->pattern=strdup(kstr.s);
+  free(kstr.s);
+  //  fprintf(stderr,"buf:%s\n",kstr.s);
+  //exit(0);
 }
 
 
@@ -383,14 +331,15 @@ args * getArgs(int argc,char **argv){
   srand48(p->seed);
   fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d fname:%s seed:%ld winsize:%d RD:%d nThreads:%d doQuad:%d\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->block,p->RD,p->nThreads,p->doQuad);
   //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
+  if(p->tkfile)
+    readtkfile(p->par,p->tkfile);
   if(p->par->pattern==NULL)
     p->par->pattern = strdup(DEFAULT_PATTERN);
   //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
-  if(p->par->pattern!=NULL&&p->par->params==NULL)
+  if(p->par->pattern!=NULL)
     p->par->par_map = psmc_parse_pattern(p->par->pattern, &p->par->n_free, &p->par->n);
   
-  if(p->tkfile)
-    readtkfile(p);
+
   nThreads = p->nThreads;
   return p;
 }

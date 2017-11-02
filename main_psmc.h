@@ -28,8 +28,8 @@ typedef struct {
   int block;
   psmc_par *par;
   char *tkfile;
-  double *tk;
-  double *lambda;
+  // double *tk;
+  //  double *lambda;
   perFasta *pf;
   int RD;
   int nThreads;
