@@ -217,20 +217,21 @@ void readtkfile(psmc_par *pp,const char *fname){
     pp->params[i] = lambda[i+1];
   }
   std::vector<int> mult;
-  for(int at=0;at<tk.size()-1;at++){
-
+  int at=0;
+  while(at<tk.size()-1){
     int counter =0;
-    //    fprintf(stderr,"at:%d params[%d]:%f\n",at,at,pp->params[at]);
-    while(counter+1<tk.size()-1){
-      //fprintf(stderr,"params[%d]:%f params[%d]:%f\n",counter,pp->params[at+counter],at,pp->params[at]);
+    //  fprintf(stderr,"at:%d params[%d]:%f\n",at,at,pp->params[at]);
+    while(counter<tk.size()-1){
+      //  fprintf(stderr,"at:%d counter:%d params[%d]:%f params[%d]:%f\n",at,counter,counter,pp->params[at+counter],at,pp->params[at]);
       if(pp->params[at+counter]!=pp->params[at])
 	break;
       counter++;
     }
-    at+=counter-1;
+    fprintf(stderr,"counter:%d at:%d\n",counter,at);
+    at+=counter;
     mult.push_back(counter);
   }
-  for(int i=0;0&i<mult.size();i++)
+  for(int i=0;i<mult.size();i++)
     fprintf(stderr,"mult: %d %d\n",i,mult[i]); 
   //  exit(0)  ;
   std::vector<int> mult2;
@@ -261,6 +262,7 @@ void readtkfile(psmc_par *pp,const char *fname){
   free(kstr.s);
   //  fprintf(stderr,"buf:%s\n",kstr.s);
   //exit(0);
+  fprintf(stderr,"\t[%s] done\n",__FUNCTION__);
 }
 
 

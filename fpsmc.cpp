@@ -354,7 +354,7 @@ int psmc_wrapper(args *pars,int block) {
   //  fprintf(stderr,"[%s] tk=(%f,%f)\n",__FUNCTION__,tk[0],tk[1]);//exit(0);
 #if 1
   for(int i=0;i<tk_l;i++)
-    fprintf(stderr,"(tk,epsize)[%d]:(%e,%e)\n",i,tk[i],epsize[i]);
+    fprintf(stderr,"psmc_wrapper: (tk,epsize)[%d]:(%f,%f)\n",i,tk[i],epsize[i]);
 #endif
   
   //initialize all hmm (one for each chr), for now just a single
