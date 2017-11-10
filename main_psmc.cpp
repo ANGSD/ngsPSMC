@@ -282,6 +282,7 @@ args * getArgs(int argc,char **argv){
   p->RD = -1;
   p->nThreads =1;
   p->doQuad =0;
+  p->smartsize =0;
   char *inffilename=NULL;
   if(argc==0)
     return p;
@@ -290,6 +291,8 @@ args * getArgs(int argc,char **argv){
     //    fprintf(stderr,"%s\n",*argv);
     if(!strcasecmp(*argv,"-tole"))
       p->tole = atof(*(++argv));
+    else if(!strcasecmp(*argv,"-smartsize"))
+      p->smartsize = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-maxIter"))
       p->maxIter = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-winSize"))

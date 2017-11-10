@@ -6,6 +6,7 @@
 #include "main_psmc.h"
 #include "hmm_psmc.h"
 #include "bfgs.h"
+#include "compute.h"
 #include <errno.h>
 
 extern int nThreads;
@@ -299,9 +300,22 @@ void main_analysis_optim(double *tk,int tk_l,double *epsize,double theta,double 
   fprintf(stderr,"\t[total llh]  fwllh:%f\n\t[total llh]  bwllh:%f\n\t[total qval] qval:%f\n",fwllh,bwllh,qval);
 
 }
+
+void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
+  fprintf(stderr,"[smartsize] start;\n");
+  double **newepsize = new double*[nChr];
+  for(int i=0;i<nChr;i++){
+    newepsize[i] = new double[tk_l];
+    smartsize1(tk_l,myobjs[i]->windows.size(),myobjs[i]->fw,myobjs[i]->bw,tk,myobjs[i]->P[1],myobjs[i]->emis,myobjs[i]->pix,rho,newepsize[i]);
+  }
+
+  fprintf(stderr,"[smartsize] done;\n");
+}
+
+
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize);
-void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter){
-  fprintf(stderr,"\t-> nIter:%d\n",nIter);
+void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter,int doSmartsize){
+  fprintf(stderr,"\t-> nIter:%d dosmartsize:%d\n",nIter,doSmartsize);
   //first make_hmm for all chrs;
 #if 1
   theta=0.046797/2.0;
@@ -326,7 +340,10 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
     
     if(i++>=nIter)
       break;
-    runoptim3(tk,tk_l,epsize,theta,rho,pp);
+    if(doSmartsize==0)
+      runoptim3(tk,tk_l,epsize,theta,rho,pp);
+    else
+      smartsize(objs,tk,tk_l,rho);
     //    break;
   }
   
@@ -378,6 +395,6 @@ int psmc_wrapper(args *pars,int block) {
     if(pars->chooseChr!=NULL)
       break;
   }
-  main_analysis(tk,tk_l,epsize,pars->par->TR[0],pars->par->TR[1],pars->par,pars->nIter);
+  main_analysis(tk,tk_l,epsize,pars->par->TR[0],pars->par->TR[1],pars->par,pars->nIter,pars->smartsize);
   return 1;
 }

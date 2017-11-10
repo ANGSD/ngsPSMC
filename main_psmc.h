@@ -15,6 +15,7 @@ typedef struct{
 
 
 typedef struct {
+  int smartsize;
   char *chooseChr;
   int start;
   int stop;
