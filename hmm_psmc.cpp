@@ -140,7 +140,8 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
   double ret = 0;
   for(int i=0;i<7;i++) 
     //    if(i!=2&&i!=)
-    ret += qi[i];
+    if(i==6)
+      ret += qi[i];
 
   return ret;
 }

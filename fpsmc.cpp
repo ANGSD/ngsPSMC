@@ -315,7 +315,7 @@ void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
 
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize);
 void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter,int doSmartsize){
-  fprintf(stderr,"\t-> nIter:%d dosmartsize:%d\n",nIter,doSmartsize);
+  fprintf(stderr,"[main_analysis]\t-> nIter:%d dosmartsize:%d\n",nIter,doSmartsize);
   //first make_hmm for all chrs;
 #if 1
   theta=0.046797/2.0;

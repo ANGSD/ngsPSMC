@@ -313,9 +313,13 @@ args * getArgs(int argc,char **argv){
       p->seed = atol(*(++argv));
     else  if(!strcasecmp(*argv,"-infile"))
       inffilename = strdup(*++argv);
-    else  if(!strcasecmp(*argv,"-doQuad"))
-      p->doQuad = atoi(*++argv);
-    else  if(!strcasecmp(*argv,"-r")){
+    else  if(!strcasecmp(*argv,"-doLinear")){
+      int mytmp = atoi(*++argv);
+      if(mytmp ==1)
+	p->doQuad = 0;
+      else
+	p->doQuad =1;
+    }else  if(!strcasecmp(*argv,"-r")){
       p->chooseChr = get_region(*(++argv),p->start,p->stop);
       if(!p->chooseChr)
 	return NULL;
