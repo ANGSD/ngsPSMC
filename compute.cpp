@@ -358,6 +358,28 @@ double ComputeXXX(int i,int j,double **P){
   return returnVal;
 }
 
+void ComputeExpectedCoalTime(double *tk,int tk_l,double *expectCoalT,const double *epsize){
+  for (unsigned i = 0; i < tk_l-1; i++){
+    double expterm = exp(-1/epsize[i]*(tk[i+1] - tk[i]));
+    double fact1 = epsize[i]/(1 - expterm);
+    double fact2 = 1 + tk[i]/epsize[i] - (1 + tk[i+1]/epsize[i])*expterm;
+    expectCoalT[i] = fact1*fact2;
+    
+#if 0
+    fprintf(stderr,"\t-> P4[%d]: %f \n",i,P4[i]);
+#endif
+	assert(expectCoalT[i] >= tk[i] && expectCoalT[i] <= tk[i+1]);
+    if(isnan(expectCoalT[i])){
+      fprintf(stderr,"expectCoalT[%d]: %f, aborted\n", i, expectCoalT[i]);
+      exit(0);
+    }
+  }
+
+  //  fprintf(stderr,"TOPTOP top:%f bot:%f exp:%f rho:%f epSize[tk_l-1]:%e\n",top,bottom,expot,rho,epsize[tk_l-1]);
+    expectCoalT[tk_l-1] = epsize[tk_l - 1] + tk[tk_l - 1];
+    assert(expectCoalT[tk_l-1] >= tk[tk_l - 1]);
+
+}
 
 
 double calc_trans(int k, int j,double **P){

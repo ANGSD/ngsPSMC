@@ -17,6 +17,7 @@ void ComputeP3(double *tk,int tk_l,double *P3,const double *epsize,double rho);
 void ComputeP4(double *tk,int tk_l,double *P4,const double *epsize,double rho);
 void ComputeP7(double *tk,int tk_l,double *P7,double *P3,const double *epsize,double rho);
 void ComputeP0(int tk_l,double *P0,double *P5); //probability P(T > i)
+void ComputeExpectedCoalTime(double *tk,int tk_l,double *expectCoalT,const double *epsize);
 double ComputeXXX(int i,int j,double **P);
 double calc_trans(int k, int j,double **P);
 double smartsize1(int tk_l,int numWind,double **fw,double **bw,double *tk,double *P1,double **emis,double pix,double rho,double *newEpSize);
