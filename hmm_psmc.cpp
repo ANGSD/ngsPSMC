@@ -574,8 +574,19 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
  
   //  double tmp[windows.size()];
   double nontmpdir[tk_l];
-  
-  ComputeP1(tk,tk_l,nontmpdir,epsize,theta);
+  double expectCoalT[tk_l];
+  int emis_approx = 1;
+  if (emis_approx == 0)
+  	ComputeP1(tk,tk_l,nontmpdir,epsize,theta);
+  else if (emis_approx == 1){
+    ComputeExpectedCoalTime(tk, tk_l, expectCoalT, epsize);
+    for (int i = 0; i < tk_l; i++)
+      nontmpdir[i] = -2*theta*expectCoalT[i];
+  }
+  else{
+     fprintf(stderr,"\tAborted in hmm_psmc.cpp, line 587.\n");
+     exit(0);
+  }  
 
  for(int v=0;v<windows.size();v++){//for each window
     //    fprintf(stderr,"v:%d from:%d to:%d\n",v,windows[v].from,windows[v].to);
