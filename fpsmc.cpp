@@ -113,7 +113,7 @@ void make_remapper(psmc_par *pp){
 
 }
 
-
+static int  mysupercounter =0;
 void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp){
   fprintf(stderr,"STARNG OPTIM\n");
 #if 0
@@ -165,7 +165,8 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
     fprintf(stderr,"post opt: %f\n",pars[i]);
   fprintf(stderr,"\t-> optim done: after ncalls:%d best total qval:%f\n",ncals,max_llh);
   for(int i=0;1&i<ndim;i++)
-    fprintf(stderr,"newpars after optim: %f\n", pars[i]);
+    fprintf(stderr,"newpars after optim[%d]: %f\n",mysupercounter, pars[i]);
+  mysupercounter++;
   at=0;
   for(int i=0;i<remap_l;i++)
     for(int j=0;j<remap[i];j++)
