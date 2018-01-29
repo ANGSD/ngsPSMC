@@ -319,8 +319,8 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
   fprintf(stderr,"[main_analysis]\t-> nIter:%d dosmartsize:%d\n",nIter,doSmartsize);
   //first make_hmm for all chrs;
 #if 1
-  theta=0.046797/2.0;
-  rho = 0.006664;
+  theta=0.026660844/2.0;
+  rho = 0.003510;
 #endif
   //  rho=0.1;
   double dummyepsize[tk_l];
@@ -333,7 +333,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
   int i=0;
   while(1){
     fprintf(stderr,"\t-> Running analysis, RD:%d rho:%f theta:%f\n",i,rho,theta);
-#if 1
+#if 0
     for(int ii=0;ii<tk_l;ii++) 
       fprintf(stderr,"making hmm with epsize:%d) %f %f\n",ii,tk[ii],epsize[ii]);
 #endif
@@ -349,7 +349,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
   }
   
   for(int i=0;i<tk_l;i++) 
-    fprintf(stderr,"epsize_after_all_rounds:%d) %f\n",i,epsize[i]);
+    fprintf(stdout,"epsize_after_all_rounds:\t%d\t%f\t%f\n",i,tk[i],epsize[i]);
 
 }
 
