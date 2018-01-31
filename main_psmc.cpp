@@ -7,6 +7,7 @@
 #include <htslib/kstring.h>
 extern int nThreads;
 
+
 double lprod(double a,double b,double c,double d){
   if(isinf(a)||isinf(b)||isinf(c)||isinf(d)){
     //    fprintf(stderr,"Something is inf\n");
@@ -265,6 +266,7 @@ void readtkfile(psmc_par *pp,const char *fname){
   fprintf(stderr,"\t[%s] done\n",__FUNCTION__);
 }
 
+int doGlStyle =0;
 
 args * getArgs(int argc,char **argv){
   args *p = new args;
@@ -283,6 +285,8 @@ args * getArgs(int argc,char **argv){
   p->nThreads =1;
   p->doQuad =0;
   p->smartsize =0;
+  p->outname = strdup("output");
+  p->fres = p->flog = NULL;
   char *inffilename=NULL;
   if(argc==0)
     return p;
@@ -301,10 +305,14 @@ args * getArgs(int argc,char **argv){
       p->RD = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-nThreads"))
       p->nThreads = atoi(*(++argv));
+    else  if(!strcasecmp(*argv,"-doGlStyle"))
+      doGlStyle = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-nIter"))
       p->nIter = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-p"))
       p->par->pattern =  strdup(*(++argv));
+    else  if(!strcasecmp(*argv,"-out"))
+      p->outname =  strdup(*(++argv));
     else  if(!strcasecmp(*argv,"-tkfile"))
       p->tkfile =  strdup(*(++argv));
     else  if(!strcasecmp(*argv,"-nSites"))
@@ -338,7 +346,7 @@ args * getArgs(int argc,char **argv){
   if(p->seed==0)
     p->seed = time(NULL);
   srand48(p->seed);
-  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d fname:%s seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->block,p->RD,p->nThreads,p->doQuad);
+  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d fname:%s seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->block,p->RD,p->nThreads,p->doQuad,doGlStyle);
   //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
   if(p->tkfile)
     readtkfile(p->par,p->tkfile);
@@ -348,14 +356,32 @@ args * getArgs(int argc,char **argv){
   if(p->par->pattern!=NULL)
     p->par->par_map = psmc_parse_pattern(p->par->pattern, &p->par->n_free, &p->par->n);
   
-
+  char tmp[1024];
+  snprintf(tmp,1024,"%s.log",p->outname);
+  fprintf(stderr,"\t-> Writing file: \'%s\'\n",tmp);
+  if(fexists(tmp)){
+    fprintf(stderr,"\t-> File exists, will exit\n");
+    exit(0);
+  }
+  p->flog = fopen(tmp,"w");
+  snprintf(tmp,1024,"%s.res",p->outname);
+  fprintf(stderr,"\t-> Writing file: \'%s\'\n",tmp);
+  if(fexists(tmp)){
+    fprintf(stderr,"\t-> File exists, will exit\n");
+    exit(0);
+  }
+  p->fres = fopen(tmp,"w");
+  
   nThreads = p->nThreads;
+  
   return p;
 }
 
 //made a seperate function for this. Im assuming our args will contain allocated data at some point.
 void destroy_args(args *p){
   perpsmc_destroy(p->perc);
+  fclose(p->flog);
+  fclose(p->fres);
   delete p;
 }
 

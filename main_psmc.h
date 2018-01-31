@@ -36,6 +36,9 @@ typedef struct {
   int nThreads;
   int nIter;
   int doQuad;
+  char *outname;
+  FILE *fres;
+  FILE *flog;
 }args;
 args * getArgs(int argc,char **argv);
 void destroy_args(args *p);

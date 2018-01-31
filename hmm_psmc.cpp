@@ -607,7 +607,8 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
 	fprintf(stderr,"\t\t\tgls(%d,%d)=",2*i,2*i+1);
 	fprintf(stderr,"(%f,%f)\n",gls[2*i],gls[2*i+1]);
 #endif
-	if(0)
+	extern int doGlStyle;
+	if(doGlStyle)
 	  emis[j][v+1] += log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6.0)*(1.0-inner));//<- check
 	else
 	  emis[j][v+1] += log((exp(gls[i*2])/1.0) *inner + (exp(gls[2*i+1])/1.0)*(1.0-inner));//<- check
