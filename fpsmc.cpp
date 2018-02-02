@@ -114,8 +114,8 @@ void make_remapper(psmc_par *pp){
 }
 
 static int  mysupercounter =0;
-void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp){
-  fprintf(stderr,"STARNG OPTIM\n");
+void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,FILE *FLOG){
+  fprintf(stderr,"\t-> Starting Optimization\n");
 #if 0
   fprintf(stderr,"pp->n:%d\n",pp->n);
   fprintf(stderr,"pp->n_free:%d\n",pp->n_free);
@@ -158,13 +158,17 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
     ops[i].trans = objs[i]->trans;
     //    fprintf(stderr,"trans[0][0]\n",ops[i].trans[0][0]);exit(0);
   }
+  fprintf(FLOG,"preopt[%s]",mysupercounter);
   for(int i=0;i<ndim;i++)
-     fprintf(stderr,"pre opt: %f\n",pars[i]);
+     fprintf(FLOG,"\t%f",pars[i]);
+  fprintf(FLOG,"\n");
   double max_llh = findmax_bfgs(ndim,pars,NULL,qFunction_wrapper,NULL,lbd,ubd,nbd,-1);
+  fprintf(FLOG,"postopt[%d]",mysupercounter);
   for(int i=0;i<ndim;i++)     
-    fprintf(stderr,"post opt: %f\n",pars[i]);
-  fprintf(stderr,"\t-> optim done: after ncalls:%d best total qval:%f\n",ncals,max_llh);
-  for(int i=0;1&i<ndim;i++)
+    fprintf(FLOG,"\t%f",pars[i]);
+  fprintf(FLOG,"\n");
+  fprintf(FLOG,"\t-> optim done: after ncalls:%d best total qval:%f\n",ncals,max_llh);
+  for(int i=0;0&i<ndim;i++)
     fprintf(stderr,"newpars after optim[%d]: %f\n",mysupercounter, pars[i]);
   mysupercounter++;
   at=0;
@@ -315,11 +319,11 @@ void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
 
 
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize);
-void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter,int doSmartsize){
+void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter,int doSmartsize,FILE *FRES,FILE *FLOG){
   fprintf(stderr,"[main_analysis]\t-> nIter:%d dosmartsize:%d\n",nIter,doSmartsize);
   //first make_hmm for all chrs;
 #if 1
-  theta=0.026660844/2.0;
+  theta=0.027731/2 ;//0.026660844/2.0;
   rho = 0.003510;
 #endif
   //  rho=0.1;
@@ -342,7 +346,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
     if(i++>=nIter)
       break;
     if(doSmartsize==0)
-      runoptim3(tk,tk_l,epsize,theta,rho,pp);
+      runoptim3(tk,tk_l,epsize,theta,rho,pp,FLOG);
     else
       smartsize(objs,tk,tk_l,rho);
     //    break;
@@ -370,7 +374,7 @@ int psmc_wrapper(args *pars,int block) {
   //(nelems,array,max_t,alpha,array with values from file, can be NULL)
   setTk(tk_l,tk,15,0.01,p->times);//<- last position will be infinity
   //  fprintf(stderr,"[%s] tk=(%f,%f)\n",__FUNCTION__,tk[0],tk[1]);//exit(0);
-#if 1
+#if 0
   for(int i=0;i<tk_l;i++)
     fprintf(stderr,"psmc_wrapper: (tk,epsize)[%d]:(%f,%f)\n",i,tk[i],epsize[i]);
 #endif
@@ -396,6 +400,6 @@ int psmc_wrapper(args *pars,int block) {
     if(pars->chooseChr!=NULL)
       break;
   }
-  main_analysis(tk,tk_l,epsize,pars->par->TR[0],pars->par->TR[1],pars->par,pars->nIter,pars->smartsize);
+  main_analysis(tk,tk_l,epsize,pars->par->TR[0],pars->par->TR[1],pars->par,pars->nIter,pars->smartsize,pars->fres,pars->flog);
   return 1;
 }
