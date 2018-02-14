@@ -158,7 +158,7 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
     ops[i].trans = objs[i]->trans;
     //    fprintf(stderr,"trans[0][0]\n",ops[i].trans[0][0]);exit(0);
   }
-  fprintf(FLOG,"preopt[%s]",mysupercounter);
+  fprintf(FLOG,"preopt[%d]",mysupercounter);
   for(int i=0;i<ndim;i++)
      fprintf(FLOG,"\t%f",pars[i]);
   fprintf(FLOG,"\n");
@@ -174,7 +174,8 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
   at=0;
   for(int i=0;i<remap_l;i++)
     for(int j=0;j<remap[i];j++)
-      epsize[at++] = pars[i]; 
+      epsize[at++] = pars[i];
+  fflush(FLOG);;
 }
 
 void printarray(FILE *fp,double *ary,int l);
