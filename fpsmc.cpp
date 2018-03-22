@@ -194,6 +194,23 @@ void printmatrixf(char *fname,double **m,int x,int y){
   fclose(fp);
 }
 
+void printmatrixf2(char *fname,int index,double **m,int x,int y){
+  //  return ;
+  char tmpnam[1024];
+  snprintf(tmpnam,1024,"%s_%d",fname,index);
+  fprintf(stderr,"\t-> tmpnam:%s\n",tmpnam);
+  printmatrixf(tmpnam,m,x,y);
+}
+
+
+void printmatrixf3(char *fname,char *fname2,int index,double **m,int x,int y){
+  //  return ;
+  char tmpnam[1024];
+  snprintf(tmpnam,1024,"%s_%s_%d",fname,fname2,index);
+  fprintf(stderr,"\t-> tmpnam:%s\n",tmpnam);
+  printmatrixf(tmpnam,m,x,y);
+}
+
 void printarrayf(char *fname,double *m,int x){
   //  return;
   FILE *fp = NULL;
@@ -344,8 +361,10 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
 #endif
     main_analysis_make_hmm(tk,tk_l,epsize,theta,rho);
     
-    if(i++>=nIter)
+    if(i++>=nIter){
+      fprintf(stderr,"\t-> Breaking since i>nIter\n");
       break;
+    }
     if(doSmartsize==0)
       runoptim3(tk,tk_l,epsize,theta,rho,pp,FLOG);
     else
@@ -401,6 +420,7 @@ int psmc_wrapper(args *pars,int block) {
     if(pars->chooseChr!=NULL)
       break;
   }
+  objs[0]->outnames = strdup(pars->outname);
   main_analysis(tk,tk_l,epsize,pars->par->TR[0],pars->par->TR[1],pars->par,pars->nIter,pars->smartsize,pars->fres,pars->flog);
   return 1;
 }

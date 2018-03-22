@@ -24,6 +24,7 @@ class fastPSMC {
 public:
   int index;
   static int tot_index;
+  static char *outnames;
   double pix;
   int tk_l;
   double max_t;

@@ -8,7 +8,7 @@
 #include "compute.h"
 
 int fastPSMC::tot_index=0;
-
+char *fastPSMC::outnames = NULL;
 //#define __SHOW_TIME__
 extern int doQuadratic;
 
@@ -38,7 +38,7 @@ void calculate_stationary(int tk_l,double *results,double **P){
 
 }
 
-
+void printmatrixf3(char *fname,char *fname2,int index,double **m,int x,int y);
 void printmatrixf(char *fname,double **m,int x,int y);
 void printarrayf(char *fname,double *m,int x);
 
@@ -732,16 +732,10 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   else
     ComputeBaumWelch(windows.size(),tk_l,fw,bw,emis,trans,baumwelch,pix);
   //  exit(0);
-#if 0
-  if(index==0)
-    printmatrixf((char*)"P_0.txt",P,8,tk_l);
-  else if(index==1)
-    printmatrixf((char*)"P_1.txt",P,8,tk_l);
-  //calculate emissions¯
-  if(index==0)
-    printmatrixf((char*)"emis_0",emis,tk_l,windows.size()+1); 
-  else if(index==1)
-    printmatrixf((char*)"emis_1",emis,tk_l,windows.size()+1); 
+#if 1
+  printmatrixf3(outnames,(char*)"P"   ,index,P,8,tk_l);
+  printmatrixf3(outnames,(char*)"emis",index,emis,tk_l,windows.size()+1); 
+  
   if(index==0)
     printarrayf((char*)"stationary_0",stationary,tk_l);
   else if(index==1)
