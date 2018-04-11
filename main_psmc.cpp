@@ -89,7 +89,7 @@ int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars)
 }
 
 void setpars( char *fname,psmc_par *pp,int which) {
-  fprintf(stderr,"[%s]:%s which:%d\n",__FUNCTION__,fname,which);
+  fprintf(stderr,"\t-> [%s]:%s which:%d\n",__FUNCTION__,fname,which);
   FILE *fp = NULL;
   fp=fopen(fname,"r");
   if(!fp){
@@ -287,6 +287,7 @@ args * getArgs(int argc,char **argv){
   p->smartsize =0;
   p->outname = strdup("output");
   p->fres = p->flog = NULL;
+  p->init = -1;
   char *inffilename=NULL;
   if(argc==0)
     return p;
@@ -321,6 +322,8 @@ args * getArgs(int argc,char **argv){
       p->seed = atol(*(++argv));
     else  if(!strcasecmp(*argv,"-infile"))
       inffilename = strdup(*++argv);
+    else  if(!strcasecmp(*argv,"-init"))
+      p->init = atof(*++argv);
     else  if(!strcasecmp(*argv,"-doLinear")){
       int mytmp = atoi(*++argv);
       if(mytmp ==1)
@@ -373,7 +376,10 @@ args * getArgs(int argc,char **argv){
   p->fres = fopen(tmp,"w");
   
   nThreads = p->nThreads;
-  
+  if(p->init!=-1)
+    for(int i=0;i<p->par->n+1;i++)
+      p->par->params[i] = p->init;
+      
   return p;
 }
 

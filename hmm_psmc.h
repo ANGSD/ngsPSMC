@@ -15,7 +15,6 @@ struct wins{
   int to;//inclusive
 };
 
-//void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double **emis);
 /*
   baumwelch,PP is not in logspace
 

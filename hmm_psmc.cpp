@@ -2,6 +2,7 @@
 #include <vector>
 #include <cassert>
 #include <cmath>
+#include <htslib/kstring.h>
 #include "psmcreader.h"
 #include "main_psmc.h"
 #include "hmm_psmc.h"
@@ -9,7 +10,9 @@
 
 int fastPSMC::tot_index=0;
 char *fastPSMC::outnames = NULL;
+
 //#define __SHOW_TIME__
+
 extern int doQuadratic;
 
 /*
@@ -562,12 +565,15 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
   stationary(i) = exp(-sum_{j=0}^{i-1}{tau_j/lambda_j}*P2[i])
  */
 int verber =1;
-void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize){
+void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize,BGZF*ding){
+  //  fprintf(stderr,"\t->calculate_emissions: ding:%p\n",ding);
 #ifdef __SHOW_TIME__
   clock_t t=clock();
   time_t t2=time(NULL);
 #endif 
-
+  kstring_t kstr;kstr.s=NULL;kstr.l=kstr.m=0;
+  if(ding)
+    ksprintf(&kstr,"win\ttk\tsite\tgl1\tgl2\temis\n");
   //  fprintf(stderr,"\t-> [Calculating emissions with tk_l:%d and windows.size():%lu:%s ] theta:%f gls:(%f,%f,%f,%f) start\n",tk_l,windows.size(),__TIME__,theta,gls[0],gls[1],gls[2],gls[3]);
   //initialize the first:
   for(int j=0;j<tk_l;j++)
@@ -590,9 +596,8 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
   }  
 
  for(int v=0;v<windows.size();v++){//for each window
-    //    fprintf(stderr,"v:%d from:%d to:%d\n",v,windows[v].from,windows[v].to);
+   //    fprintf(stderr,"v:%d from:%d to:%d\n",v,windows[v].from,windows[v].to);
     for(int j=0;j<tk_l;j++){//for each interval/state
-      //fprintf(stderr,"\tj:%d\n",j);
       emis[j][v+1] = 0;
       double inner = exp(nontmpdir[j]);///exp(-2.0*tk[j]*theta); // this part relates to issue #1
 #if 0
@@ -603,7 +608,7 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
 	inner = exp(-2.0*(tk[j]+tk[j])*theta); // this part relates to issue #1
       //      fprintf(stderr,"\t\t%d from:%d to:%d inner:%f\n",j,windows[v].from,windows[v].to,inner);
 #endif
-      for(int i=windows[v].from;i<=windows[v].to;i++){//for all elements in window
+      for(int i=windows[v].from;i<=windows[v].to;i++) {//for all elements in window
 #if 0
 	fprintf(stderr,"\t\t\tgls(%d,%d)=",2*i,2*i+1);
 	fprintf(stderr,"(%f,%f)\n",gls[2*i],gls[2*i+1]);
@@ -615,13 +620,18 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
 	    verber=0;
 	  }
 	  emis[j][v+1] += log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6.0)*(1.0-inner));//<- check
+	  if(ding)
+	    ksprintf(&kstr,"%d\t%f\t%d\t%f\t%f\t%f\n",v,tk[j],i,gls[2*i],gls[2*i+1],log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6.0)*(1.0-inner)));
 	}else{
 	  if(verber){
 	    fprintf(stderr,"div 4.0 6.0 NO\n");
 	    verber = 0;
 	  }
 	  emis[j][v+1] += log((exp(gls[i*2])/1.0) *inner + (exp(gls[2*i+1])/1.0)*(1.0-inner));//<- check
+	  if(ding)
+	    ksprintf(&kstr,"%d\t%f\t%d\t%f\t%f\t%f\n",v,tk[j],i,gls[2*i],gls[2*i+1],log((exp(gls[i*2])/1.0) *inner + (exp(gls[2*i+1])/1.0)*(1.0-inner)));//<- check)
 	}
+
 	if(isinf(emis[j][v+1])){
 	  fprintf(stderr,"\t-> Huge bug in code contact developer. Emissions evaluates to zero\n");
 	  /*
@@ -632,9 +642,12 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
       }
     }
   }
+ if(ding!=NULL)
+   bgzf_write(ding,kstr.s,kstr.l);
+ free(kstr.s);
   //  exit(0);
   //fprintf(stderr,"\t-> [Calculating emissions with tk_l:%d and windows.size():%lu:%s ] stop\n",tk_l,windows.size(),__TIME__);
-#if __SHOW_TIME__
+#ifdef  __SHOW_TIME__
   fprintf(stderr, "\t[TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
   fprintf(stderr, "\t[Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2));  
 #endif
@@ -714,7 +727,16 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   //prepare global probs
 
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
-  calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize);
+  BGZF *tmp_bg =NULL;
+  if(0){
+    char tmpnam[1024];
+    snprintf(tmpnam,1024,"%s_emisfull_%d",outnames,index);
+    fprintf(stderr,"\t-> tmpnam:%s\n",tmpnam);
+    tmp_bg = bgzf_open(tmpnam,"w");
+  }
+  calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize,tmp_bg);
+  if(tmp_bg)
+    bgzf_close(tmp_bg);
   calculate_stationary(tk_l,stationary,P);
   calculate_FW_BW_PP_Probs(tk,tk_l,epsize,rho);
 
@@ -732,7 +754,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   else
     ComputeBaumWelch(windows.size(),tk_l,fw,bw,emis,trans,baumwelch,pix);
   //  exit(0);
-#if 1
+#if 0
   printmatrixf3(outnames,(char*)"P"   ,index,P,8,tk_l);
   printmatrixf3(outnames,(char*)"emis",index,emis,tk_l,windows.size()+1); 
   

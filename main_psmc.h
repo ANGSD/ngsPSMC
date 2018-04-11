@@ -39,6 +39,7 @@ typedef struct {
   char *outname;
   FILE *fres;
   FILE *flog;
+  double init;
 }args;
 args * getArgs(int argc,char **argv);
 void destroy_args(args *p);
