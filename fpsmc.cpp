@@ -114,7 +114,10 @@ void make_remapper(psmc_par *pp){
 }
 
 static int  mysupercounter =0;
+
 void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,FILE *FLOG){
+  clock_t t=clock();
+  time_t t2=time(NULL);
   fprintf(stderr,"\t-> Starting Optimization\n");
 #if 0
   fprintf(stderr,"pp->n:%d\n",pp->n);
@@ -176,6 +179,8 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
     for(int j=0;j<remap[i];j++)
       epsize[at++] = pars[i];
   fflush(FLOG);;
+  fprintf(stderr, "\t[RUNOPTIM3 TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
+   fprintf(stderr, "\t[RUNOPTIM3 Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2)); 
 }
 
 void printarray(FILE *fp,double *ary,int l);
