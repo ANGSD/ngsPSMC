@@ -343,6 +343,8 @@ void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
 
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize);
 void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter,int doSmartsize,FILE *FRES,FILE *FLOG){
+  //test fix:
+  theta  = theta/100.0;
 #if 1
   fprintf(FLOG,"\t-> [main_analysis]\t-> nIter:%d dosmartsize:%d theta:%f rho:%f\n",nIter,doSmartsize,theta,rho);
   for(int i=0;i<tk_l;i++)
