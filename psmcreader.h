@@ -12,7 +12,7 @@ typedef struct{
   myMap mm;
   BGZF *bgzf_pos;
   BGZF *bgzf_gls;
-  int version;//is version1, now
+  int version;//1 is gl, otherwise assuming fasta
   int *pos;//contains the positions
   char *fname;//input.saf.idx?
   size_t first;//if we have specified a region, then this is the first index to use

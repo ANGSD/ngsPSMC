@@ -73,10 +73,11 @@ double qFunction2(const double *params ,const void *d){
 
 }
 
+extern int SIG_COND;//<- used for killing program
 static int ncals=0;
 double qFunction_wrapper(const double *pars,const void *){
   ncals++;
-  //  fprintf(stderr,"\t-> calling objective function: remap_l:%d\n\n",remap_l);
+  fprintf(stderr,"\t-> calling objective function: remap_l:%d [%d]\n",remap_l,ncals);
   double pars2[ops[0].tk_l];
   int at=0;
   for(int i=0;i<remap_l;i++)
@@ -85,15 +86,15 @@ double qFunction_wrapper(const double *pars,const void *){
       //      fprintf(stderr,"\t-> pars2: %e\n",pars2[at-1]);
     }
   double ret =0;
-  for(int i=0;i<nChr;i++)
+  for(int i=0;SIG_COND&&i<nChr;i++)
     if(doQuadratic)
       ret += qFunction2(pars2,&ops[i]);
     else
       ret += qFunction(pars2,&ops[i]);
 
-  if(std::isinf(ret))
+  if(std::isinf(ret)||SIG_COND==0)
     ret= -1000000000;
-  //  fprintf(stderr,"qfun:%e\n",ret);
+  fprintf(stderr,"qfun:%e\n",ret);
   return -ret;
 }
 
@@ -173,6 +174,7 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
   fprintf(FLOG,"\t-> optim done: after ncalls:%d best total qval:%f\n",ncals,max_llh);
   for(int i=0;0&i<ndim;i++)
     fprintf(stderr,"newpars after optim[%d]: %f\n",mysupercounter, pars[i]);
+  fflush(stderr);fflush(FLOG);
   mysupercounter++;
   at=0;
   for(int i=0;i<remap_l;i++)
@@ -344,7 +346,7 @@ void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize);
 void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter,int doSmartsize,FILE *FRES,FILE *FLOG){
   //test fix:
-  theta  = theta/100.0;
+
 #if 1
   fprintf(FLOG,"\t-> [main_analysis]\t-> nIter:%d dosmartsize:%d theta:%f rho:%f\n",nIter,doSmartsize,theta,rho);
   for(int i=0;i<tk_l;i++)
@@ -361,7 +363,8 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
     calculate_emissions(tk,tk_l,objs[i]->gls,objs[i]->windows,theta,objs[i]->emis,dummyepsize);
 
   int i=0;
-  while(1){
+  extern int SIG_COND;
+  while(SIG_COND){
     fprintf(FLOG,"\t-> Running analysis, RD:%d rho:%f theta:%f\n",i,rho,theta);
 #if 0
     for(int ii=0;ii<tk_l;ii++) 
@@ -386,8 +389,8 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
 
 }
 
-int psmc_wrapper(args *pars,int block) {
-  fprintf(stderr,"\t-> we are in file: %s function: %s line:%d\n",__FILE__,__FUNCTION__,__LINE__);
+int psmc_wrapper(args *pars,int blocksize) {
+  fprintf(stderr,"\t-> we are in file: %s function: %s line:%d blocksize:%d\n",__FILE__,__FUNCTION__,__LINE__,blocksize);
   psmc_par *p=pars->par;
 #if 1 //print pars
   fprintf(stderr,"\t-> par->n:%d\tpar->n_free:%d\tpar_map:%p\tpar->pattern:%s\tpar->times:%p\tpar->params:%p\n",p->n,p->n_free,p->par_map,p->pattern,p->times,p->params);
@@ -422,7 +425,7 @@ int psmc_wrapper(args *pars,int block) {
     //    fprintf(stderr,"\t-> Parsing chr:%s \n",it2->first);
     fastPSMC *obj=objs[nChr++]=new fastPSMC;
     //    fprintf(stderr,"gls1:%f %f %f %f\n",pars->perc->gls[0],pars->perc->gls[1],pars->perc->gls[2],pars->perc->gls[3]);
-    obj->setWindows(pars->perc->gls,pars->perc->pos,pars->perc->last,pars->block);
+    obj->setWindows(pars->perc->gls,pars->perc->pos,pars->perc->last,pars->blocksize);
     //fprintf(stderr,"gls2:%f %f %f %f\n",pars->perc->gls[0],pars->perc->gls[1],pars->perc->gls[2],pars->perc->gls[3]);
     //  obj->printWindows(stdout);exit(0);
     obj->allocate(tk_l);

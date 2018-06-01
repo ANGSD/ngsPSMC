@@ -178,7 +178,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
   assert(RS.size()-1==pp->n);
   pp->params = new double[RS.size()];
   pp->times = new double[RS.size()];
-  pp->TR[0] = TR[0]/2.0;
+  pp->TR[0] = TR[0];
   pp->TR[1] = TR[1];
   //  fprintf(stderr,"RS:%lu\n",RS.size());
   for(int i=0;i<RS.size();i++){
@@ -278,7 +278,7 @@ args * getArgs(int argc,char **argv){
   p->fname = NULL;
   p->onlyOnce = 0;
   p->seed =1;
-  p->block = 100;//default 100bp
+  p->blocksize = 100;//default 100bp
   p->par =(psmc_par*) calloc(1,sizeof(psmc_par));
   p->tkfile = NULL;
   p->RD = -1;
@@ -301,7 +301,7 @@ args * getArgs(int argc,char **argv){
     else  if(!strcasecmp(*argv,"-maxIter"))
       p->maxIter = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-winSize"))
-      p->block = atoi(*(++argv));
+      p->blocksize = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-RD"))
       p->RD = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-nThreads"))
@@ -346,10 +346,18 @@ args * getArgs(int argc,char **argv){
   doQuadratic = p->doQuad;
   if(inffilename)
     setpars(inffilename,p->par,p->RD);
+
+  //adjust theta:
+  p->par->TR[0] = p->par->TR[0]/2.0;
+  if(p->perc->version!=1){
+    fprintf(stderr,"\t-> Adjusing theta with blocksize: %d\n",p->blocksize);
+    p->par->TR[0] = p->par->TR[0]/(1.0*p->blocksize);
+  }
+  
   if(p->seed==0)
     p->seed = time(NULL);
   srand48(p->seed);
-  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d fname:%s seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->block,p->RD,p->nThreads,p->doQuad,doGlStyle);
+  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d fname:%s seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doQuad,doGlStyle);
   //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
   if(p->tkfile)
     readtkfile(p->par,p->tkfile);
@@ -414,7 +422,7 @@ int main_psmc(int argc, char **argv){
   writepsmc_header(stderr,pars->perc);
 
   if(1){
-    psmc_wrapper(pars,100);
+    psmc_wrapper(pars,pars->blocksize);
   }else{
     //below is old printout, keeping for reference
     for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){
