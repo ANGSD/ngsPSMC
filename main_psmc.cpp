@@ -168,7 +168,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
       break;
     }
   }
-  fprintf(stderr,"\t->Number of lines with RS:%lu\n",RS.size());
+  fprintf(stderr,"\t-> Number of lines with RS:%lu\n",RS.size());
   char *nline = strdup(line);
   char *tok = strtok(nline,"\n\t ");
   tok = strtok(NULL,"\n\t ");
@@ -349,7 +349,8 @@ args * getArgs(int argc,char **argv){
 
   //adjust theta:
   p->par->TR[0] = p->par->TR[0]/2.0;
-  if(p->perc->version!=1){
+  fprintf(stderr,"\t-> p->perc->version:%d (one is gls, otherwise fasta)\n",p->perc->version);
+  if(p->perc->version==1){
     fprintf(stderr,"\t-> Adjusing theta with blocksize: %d\n",p->blocksize);
     p->par->TR[0] = p->par->TR[0]/(1.0*p->blocksize);
   }
