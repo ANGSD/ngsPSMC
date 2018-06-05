@@ -82,7 +82,7 @@ void *qFunction2_thd(void *ptr);
 void *qFunction_thd(void *ptr);
 double qFunction_wrapper(const double *pars,const void *){
   ncals++;
-  fprintf(stderr,"\t-> calling objective function: remap_l:%d [%d]\n",remap_l,ncals);
+  //fprintf(stderr,"\t-> calling objective function: remap_l:%d [%d]\n",remap_l,ncals);
   double pars2[ops[0].tk_l];
   int at=0;
   for(int i=0;i<remap_l;i++)
@@ -133,7 +133,7 @@ double qFunction_wrapper(const double *pars,const void *){
   if(std::isinf(ret)||SIG_COND==0)
     ret= -1000000000;
   
-  fprintf(stderr,"qfun:%e\n",ret);
+  //  fprintf(stderr,"qfun:%e\n",ret);
   return -ret;
 }
 
@@ -155,7 +155,7 @@ void make_remapper(psmc_par *pp){
 
 static int  mysupercounter =0;
 
-void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,FILE *FLOG){
+void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,FILE *FLOG,double &ret_llh,double &ret_qval){
   clock_t t=clock();
   time_t t2=time(NULL);
   fprintf(stderr,"\t-> Starting Optimization\n");
@@ -205,7 +205,9 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
   for(int i=0;i<ndim;i++)
      fprintf(FLOG,"\t%f",pars[i]);
   fprintf(FLOG,"\n");
+  //we are not optimizing llh but qfunction
   double max_llh = findmax_bfgs(ndim,pars,NULL,qFunction_wrapper,NULL,lbd,ubd,nbd,-1);
+  ret_qval=max_llh;
   fprintf(FLOG,"\tpostopt[%d]",mysupercounter);
   for(int i=0;i<ndim;i++)     
     fprintf(FLOG,"\t%f",pars[i]);
@@ -221,7 +223,9 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
       epsize[at++] = pars[i];
   fflush(FLOG);;
   fprintf(stderr, "\t[RUNOPTIM3 TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
-   fprintf(stderr, "\t[RUNOPTIM3 Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2)); 
+   fprintf(stderr, "\t[RUNOPTIM3 Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2));
+   for(int i=0;i<ndim;i++)
+     fprintf(stdout,"RS\t%d\t%f\t%f\tpi_k\tA_kl\tA_kk\n",i,tk[i],pars[i]);
 }
 
 void printarray(FILE *fp,double *ary,int l);
@@ -297,7 +301,7 @@ void *qFunction_thd(void *ptr){
 
 
 
-void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho){
+void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho,double &ret_llh,double &ret_qval){
 
   fprintf(stderr,"\t-> [%s:%s:%d] nthreads:%d tk_l:%d theta:%f rho:%f\n",__FILE__,__FUNCTION__,__LINE__,nThreads,tk_l,theta,rho);
   shmm.tk=tk;
@@ -342,6 +346,8 @@ void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double theta,doub
     qval += objs[i]->qval;
   }
   fprintf(stderr,"\t[total llh]  fwllh:%f\n\t[total llh]  bwllh:%f\n\t[total qval] qval:%f\n",fwllh,bwllh,qval);
+  ret_llh=fwllh;
+  ret_qval=qval;
 #endif
 }
 
@@ -405,7 +411,7 @@ void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize);
 void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter,int doSmartsize,FILE *FRES,FILE *FLOG){
   //test fix:
-
+  double ret_llh,ret_qval,ret_llh2,ret_qval2;
 #if 1
   fprintf(FLOG,"\t-> [main_analysis]\t-> nIter:%d dosmartsize:%d theta:%f rho:%f\n",nIter,doSmartsize,theta,rho);
   for(int i=0;i<tk_l;i++)
@@ -424,21 +430,27 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
   int i=0;
   extern int SIG_COND;
   while(SIG_COND){
+    fprintf(stdout,"RD\t%d\n",i);
     fprintf(FLOG,"\t-> Running analysis, RD:%d rho:%f theta:%f\n",i,rho,theta);
 #if 0
     for(int ii=0;ii<tk_l;ii++) 
       fprintfFLOG,"\t[%d]\tmaking hmm with epsize:%d) %f %f\n",i,ii,tk[ii],epsize[ii]);
 #endif
-    main_analysis_make_hmm(tk,tk_l,epsize,theta,rho);
-    
+    main_analysis_make_hmm(tk,tk_l,epsize,theta,rho,ret_llh,ret_qval);
+    fprintf(stdout,"LK\t%f\n",ret_llh);
     if(i++>=nIter){
       fprintf(stderr,"\t-> Breaking since i>nIter\n");
       break;
     }
     if(doSmartsize==0)
-      runoptim3(tk,tk_l,epsize,theta,rho,pp,FLOG);
+      runoptim3(tk,tk_l,epsize,theta,rho,pp,FLOG,ret_llh2,ret_qval2);
     else
       smartsize(objs,tk,tk_l,rho);
+    fprintf(stdout,"QD\t%f -> %f\n",ret_qval,ret_qval2);
+    fprintf(stdout,"RI\t?\n");
+    fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
+    fprintf(stdout,"MT\t?\n");
+    //RS is printed in runoptim
     //    break;
     fflush(FLOG);
   }
