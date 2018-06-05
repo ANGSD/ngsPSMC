@@ -13,7 +13,8 @@ extern int nThreads;
 
 int nChr = 0;
 
-int doQuadratic = 0;
+
+int doQuadratic = 0; //<-only used in qFunction_wrapper
 
 
 typedef struct{
@@ -38,6 +39,8 @@ typedef struct{
   double rho;
   double **trans;
   //  double *epsize;
+  double llh;
+  double *parsIn;
 }oPars;
 
 int remap_l;
@@ -75,6 +78,8 @@ double qFunction2(const double *params ,const void *d){
 
 extern int SIG_COND;//<- used for killing program
 static int ncals=0;
+void *qFunction2_thd(void *ptr);
+void *qFunction_thd(void *ptr);
 double qFunction_wrapper(const double *pars,const void *){
   ncals++;
   fprintf(stderr,"\t-> calling objective function: remap_l:%d [%d]\n",remap_l,ncals);
@@ -86,14 +91,48 @@ double qFunction_wrapper(const double *pars,const void *){
       //      fprintf(stderr,"\t-> pars2: %e\n",pars2[at-1]);
     }
   double ret =0;
-  for(int i=0;SIG_COND&&i<nChr;i++)
-    if(doQuadratic)
-      ret += qFunction2(pars2,&ops[i]);
-    else
-      ret += qFunction(pars2,&ops[i]);
+  if(nThreads==1){
+    for(int i=0;SIG_COND&&i<nChr;i++)
+      if(doQuadratic)
+	ret += qFunction2(pars2,&ops[i]);
+      else
+	ret += qFunction(pars2,&ops[i]);
+  }else {
+    pthread_t thread[nThreads];
+    for(int i=0;i<nChr;i++)
+      ops[i].parsIn = pars2;
+    int at=0;
+    while(SIG_COND&&at<nChr){
+      int thisround = std::min(nChr-at,nThreads);
+      for(int t=0;t<thisround;t++){
+	size_t index = at+t;
+	if(doQuadratic){
+	  if(pthread_create( &thread[t], NULL, qFunction2_thd, (void*) index)){
+	    fprintf(stderr,"[%s] Problem spawning thread\n%s\n",__FUNCTION__,strerror(errno));
+	    exit(0);
+	  }
+	}else{
+	   if(pthread_create( &thread[t], NULL, qFunction_thd, (void*) index)){
+	    fprintf(stderr,"[%s] Problem spawning thread\n%s\n",__FUNCTION__,strerror(errno));
+	    exit(0);
+	  }
+	}
+      }
+      for(int t=0;t<thisround;t++){
+	if(pthread_join( thread[t], NULL)){
+	  fprintf(stderr,"[%s] Problem joining thread\n%s\n",__FUNCTION__,strerror(errno));
+	  exit(0);
+	}
+      }
+      at+=thisround;
+    }
+    for(int i=0;i<nChr;i++)
+      ret += ops[i].llh;
 
+  }    
   if(std::isinf(ret)||SIG_COND==0)
     ret= -1000000000;
+  
   fprintf(stderr,"qfun:%e\n",ret);
   return -ret;
 }
@@ -236,6 +275,26 @@ void *run_a_hmm(void *ptr){
   objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
   pthread_exit(NULL);
 }
+
+void *qFunction2_thd(void *ptr){
+  size_t at =(size_t) ptr;
+  //  fprintf(stderr,"at:%lu\n",at);
+  //  sleep(drand48()*10);
+  ops[at].llh = qFunction2(ops[at].parsIn,&ops[at]);
+  //  objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
+  pthread_exit(NULL);
+}
+
+
+void *qFunction_thd(void *ptr){
+  size_t at =(size_t) ptr;
+  //  fprintf(stderr,"at:%lu\n",at);
+  //  sleep(drand48()*10);
+  ops[at].llh = qFunction(ops[at].parsIn,&ops[at]);
+  //  objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
+  pthread_exit(NULL);
+}
+
 
 
 void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho){
