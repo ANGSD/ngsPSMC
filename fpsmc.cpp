@@ -150,7 +150,12 @@ void make_remapper(psmc_par *pp){
     at+=howMany;
     remap[i] = howMany;
   }
-
+  
+#if 0
+  for(int i=0;i<pp->n_free;i++)
+    fprintf(stderr,"[%d]: %d\n",i,remap[i]);
+#endif
+  
 }
 
 static int  mysupercounter =0;
@@ -167,10 +172,10 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
 #endif
   make_remapper(pp);
   int ndim = pp->n_free;
+  fprintf(stderr,"\t-> ndim:%d\n",ndim);
 
   double pars[ndim];
-  for(int i=0;0&&i<ndim;i++)
-    pars[i] =5.0*drand48()+1e-3;
+ 
 
   int at=0;
   for(int i=0;i<remap_l;i++){
@@ -218,14 +223,20 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
   fflush(stderr);fflush(FLOG);
   mysupercounter++;
   at=0;
-  for(int i=0;i<remap_l;i++)
-    for(int j=0;j<remap[i];j++)
+  for(int i=0;i<remap_l;i++){
+    for(int j=0;j<remap[i];j++){
+      //      fprintf(stderr,"epsize[%d]: %f\n",at,epsize[at]);
       epsize[at++] = pars[i];
+    }
+  }
+  for(int i=0;0&&i<at;i++)
+    fprintf(stderr,"[%d]: %f\n",i,epsize[i]);
+
   fflush(FLOG);;
-  fprintf(stderr, "\t[RUNOPTIM3 TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
-   fprintf(stderr, "\t[RUNOPTIM3 Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2));
-   for(int i=0;i<ndim;i++)
-     fprintf(stdout,"RS\t%d\t%f\t%f\tpi_k\tA_kl\tA_kk\n",i,tk[i],pars[i]);
+  fprintf(stderr, "\t-> [RUNOPTIM3 TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
+  fprintf(stderr, "\t-> [RUNOPTIM3 Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2));
+ 
+  fflush(stdout);
 }
 
 void printarray(FILE *fp,double *ary,int l);
@@ -416,48 +427,60 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
   fprintf(FLOG,"\t-> [main_analysis]\t-> nIter:%d dosmartsize:%d theta:%f rho:%f\n",nIter,doSmartsize,theta,rho);
   for(int i=0;i<tk_l;i++)
     fprintf(FLOG,"\t-> [main_analysis]\t->\t%f\t%f\n",tk[i],epsize[i]);
-  #endif
+#endif
   //first make_hmm for all chrs;
   fprintf(FLOG,"[main_analysis]\t-> nIter:%d dosmartsize:%d theta:%f rho:%f\n",nIter,doSmartsize,theta,rho);
   //  rho=0.1;
   double dummyepsize[tk_l];
   for(int i=0;i<tk_l;i++)
     dummyepsize[i] = 1.0;
-
+  
   for(int i=0;0&&i<nChr;i++)
     calculate_emissions(tk,tk_l,objs[i]->gls,objs[i]->windows,theta,objs[i]->emis,dummyepsize);
-
+  
   int i=0;
   extern int SIG_COND;
-  while(SIG_COND){
+  while(SIG_COND) {
     fprintf(stdout,"RD\t%d\n",i);
     fprintf(FLOG,"\t-> Running analysis, RD:%d rho:%f theta:%f\n",i,rho,theta);
 #if 0
     for(int ii=0;ii<tk_l;ii++) 
       fprintfFLOG,"\t[%d]\tmaking hmm with epsize:%d) %f %f\n",i,ii,tk[ii],epsize[ii]);
 #endif
-    main_analysis_make_hmm(tk,tk_l,epsize,theta,rho,ret_llh,ret_qval);
-    fprintf(stdout,"LK\t%f\n",ret_llh);
-    if(i++>=nIter){
-      fprintf(stderr,"\t-> Breaking since i>nIter\n");
-      break;
-    }
-    if(doSmartsize==0)
-      runoptim3(tk,tk_l,epsize,theta,rho,pp,FLOG,ret_llh2,ret_qval2);
-    else
-      smartsize(objs,tk,tk_l,rho);
-    fprintf(stdout,"QD\t%f -> %f\n",ret_qval,ret_qval2);
-    fprintf(stdout,"RI\t?\n");
-    fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
-    fprintf(stdout,"MT\t?\n");
-    //RS is printed in runoptim
-    //    break;
-    fflush(FLOG);
+  main_analysis_make_hmm(tk,tk_l,epsize,theta,rho,ret_llh,ret_qval);
+  fprintf(stdout,"LK\t%f\n",ret_llh);
+  if(i++>=nIter){
+    fprintf(stderr,"\t-> Breaking since i>nIter\n");
+    break;
   }
+  if(doSmartsize==0)
+    runoptim3(tk,tk_l,epsize,theta,rho,pp,FLOG,ret_llh2,ret_qval2);
+  else
+    smartsize(objs,tk,tk_l,rho);
+  fprintf(stdout,"QD\t%f -> %f\n",ret_qval,ret_qval2);
+  fprintf(stdout,"RI\t?\n");
+  fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
+  fprintf(stdout,"MT\t?\n");
+  //RS is printed in runoptim
+  //    break;
+  fflush(FLOG);
+  
+  for(int i=0;i<tk_l;i++)
+    fprintf(stdout,"RS\t%d\t%f\t%f\tpi_k\tA_kl\tA_kk\n",i,tk[i],epsize[i]);
+  
+  fprintf(stdout,"PA\t%s\t%f\t%f",pp->pattern,theta,rho);
+  int at=0;
+  for(int i=0;i<remap_l;i++){
+    fprintf(stdout,"\t%f",epsize[at+remap[i]-1]);
+    at+=remap[i];
+  }
+  fprintf(stdout,"\n");
+  fflush(stdout);
+}
   
   for(int i=0;i<tk_l;i++) 
     fprintf(stderr,"epsize_after_all_rounds:\t%d\t%f\t%f\n",i,tk[i],epsize[i]);
-
+  
 }
 
 int psmc_wrapper(args *pars,int blocksize) {
