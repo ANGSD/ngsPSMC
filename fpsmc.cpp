@@ -421,15 +421,21 @@ void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
 
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize);
 void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter,int doSmartsize,FILE *FRES,FILE *FLOG){
+  assert(FLOG!=NULL);
   //test fix:
   double ret_llh,ret_qval,ret_llh2,ret_qval2;
 #if 1
-  fprintf(FLOG,"\t-> [main_analysis]\t-> nIter:%d dosmartsize:%d theta:%f rho:%f\n",nIter,doSmartsize,theta,rho);
+  fprintf(FLOG,"FLOGS:%p\n",FLOG);
+  fprintf(FLOG,"ninter:%d\n",nIter);
+  fprintf(FLOG,"domartsiez:%d\n",doSmartsize);
+  fprintf(FLOG,"theta:%f\n",theta);
+  fprintf(FLOG,"rho:%f\n",rho);
+  fprintf(FLOG,"\t-> [%s]\t-> nIter:%d dosmartsize:%d theta:%f rho:%f\n",__FUNCTION__,nIter,doSmartsize,theta,rho);
   for(int i=0;i<tk_l;i++)
-    fprintf(FLOG,"\t-> [main_analysis]\t->\t%f\t%f\n",tk[i],epsize[i]);
+    fprintf(FLOG,"\t-> [%s]\t->\t%f\t%f\n",__FUNCTION__,tk[i],epsize[i]);
 #endif
   //first make_hmm for all chrs;
-  fprintf(FLOG,"[main_analysis]\t-> nIter:%d dosmartsize:%d theta:%f rho:%f\n",nIter,doSmartsize,theta,rho);
+  fprintf(FLOG,"[%s]\t-> nIter:%d dosmartsize:%d theta:%f rho:%f\n",__FUNCTION__,nIter,doSmartsize,theta,rho);
   //  rho=0.1;
   double dummyepsize[tk_l];
   for(int i=0;i<tk_l;i++)
@@ -447,36 +453,36 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
     for(int ii=0;ii<tk_l;ii++) 
       fprintfFLOG,"\t[%d]\tmaking hmm with epsize:%d) %f %f\n",i,ii,tk[ii],epsize[ii]);
 #endif
-  main_analysis_make_hmm(tk,tk_l,epsize,theta,rho,ret_llh,ret_qval);
-  fprintf(stdout,"LK\t%f\n",ret_llh);
-  if(i++>=nIter){
-    fprintf(stderr,"\t-> Breaking since i>nIter\n");
-    break;
+    main_analysis_make_hmm(tk,tk_l,epsize,theta,rho,ret_llh,ret_qval);
+    fprintf(stdout,"LK\t%f\n",ret_llh);
+    if(i++>=nIter){
+      fprintf(stderr,"\t-> Breaking since i>nIter\n");
+      break;
+    }
+    if(doSmartsize==0)
+      runoptim3(tk,tk_l,epsize,theta,rho,pp,FLOG,ret_llh2,ret_qval2);
+    else
+      smartsize(objs,tk,tk_l,rho);
+    fprintf(stdout,"QD\t%f -> %f\n",ret_qval,ret_qval2);
+    fprintf(stdout,"RI\t?\n");
+    fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
+    fprintf(stdout,"MT\t?\n");
+    //RS is printed in runoptim
+    //    break;
+    fflush(FLOG);
+    
+    for(int i=0;i<tk_l;i++)
+      fprintf(stdout,"RS\t%d\t%f\t%f\tpi_k\tA_kl\tA_kk\n",i,tk[i],epsize[i]);
+    
+    fprintf(stdout,"PA\t%s\t%f\t%f",pp->pattern,theta,rho);
+    int at=0;
+    for(int i=0;i<remap_l;i++){
+      fprintf(stdout,"\t%f",epsize[at+remap[i]-1]);
+      at+=remap[i];
+    }
+    fprintf(stdout,"\n");
+    fflush(stdout);
   }
-  if(doSmartsize==0)
-    runoptim3(tk,tk_l,epsize,theta,rho,pp,FLOG,ret_llh2,ret_qval2);
-  else
-    smartsize(objs,tk,tk_l,rho);
-  fprintf(stdout,"QD\t%f -> %f\n",ret_qval,ret_qval2);
-  fprintf(stdout,"RI\t?\n");
-  fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
-  fprintf(stdout,"MT\t?\n");
-  //RS is printed in runoptim
-  //    break;
-  fflush(FLOG);
-  
-  for(int i=0;i<tk_l;i++)
-    fprintf(stdout,"RS\t%d\t%f\t%f\tpi_k\tA_kl\tA_kk\n",i,tk[i],epsize[i]);
-  
-  fprintf(stdout,"PA\t%s\t%f\t%f",pp->pattern,theta,rho);
-  int at=0;
-  for(int i=0;i<remap_l;i++){
-    fprintf(stdout,"\t%f",epsize[at+remap[i]-1]);
-    at+=remap[i];
-  }
-  fprintf(stdout,"\n");
-  fflush(stdout);
-}
   
   for(int i=0;i<tk_l;i++) 
     fprintf(stderr,"epsize_after_all_rounds:\t%d\t%f\t%f\n",i,tk[i],epsize[i]);
@@ -527,6 +533,7 @@ int psmc_wrapper(args *pars,int blocksize) {
       break;
   }
   objs[0]->outnames = strdup(pars->outname);
+  assert(pars->flog!=NULL);
   main_analysis(tk,tk_l,epsize,pars->par->TR[0],pars->par->TR[1],pars->par,pars->nIter,pars->smartsize,pars->fres,pars->flog);
   fprintf(pars->fres,"%f\t%f\n",pars->par->TR[0],pars->par->TR[1]);
   for(int i=0;i<tk_l;i++)
