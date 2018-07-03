@@ -376,6 +376,7 @@ args * getArgs(int argc,char **argv){
     exit(0);
   }
   p->flog = fopen(tmp,"w");
+  assert(p->flog!=NULL);
   snprintf(tmp,1024,"%s.res",p->outname);
   fprintf(stderr,"\t-> Writing file: \'%s\'\n",tmp);
   if(fexists(tmp)){
@@ -423,6 +424,7 @@ int main_psmc(int argc, char **argv){
   writepsmc_header(stderr,pars->perc);
 
   if(1){
+    assert(pars->flog!=NULL);
     psmc_wrapper(pars,pars->blocksize);
   }else{
     //below is old printout, keeping for reference

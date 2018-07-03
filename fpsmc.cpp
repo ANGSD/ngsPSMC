@@ -170,7 +170,7 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
   for(int i=0;i<pp->n+1;i++)
     fprintf(stderr,"pars_map[%d]\t%d\n",i,pp->par_map[i]);
 #endif
-  make_remapper(pp);
+
   int ndim = pp->n_free;
   fprintf(stderr,"\t-> ndim:%d\n",ndim);
 
@@ -422,6 +422,7 @@ void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize);
 void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter,int doSmartsize,FILE *FRES,FILE *FLOG){
   assert(FLOG!=NULL);
+  make_remapper(pp);
   //test fix:
   double ret_llh,ret_qval,ret_llh2,ret_qval2;
 #if 1
@@ -454,15 +455,21 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
       fprintfFLOG,"\t[%d]\tmaking hmm with epsize:%d) %f %f\n",i,ii,tk[ii],epsize[ii]);
 #endif
     main_analysis_make_hmm(tk,tk_l,epsize,theta,rho,ret_llh,ret_qval);
-    fprintf(stdout,"LK\t%f\n",ret_llh);
+    //    fprintf(stderr,"ret_llh:%f ret_qval:%f\n",ret_llh,ret_qval);
+    //    exit(0);
     if(i++>=nIter){
       fprintf(stderr,"\t-> Breaking since i>nIter\n");
       break;
     }
-    if(doSmartsize==0)
-      runoptim3(tk,tk_l,epsize,theta,rho,pp,FLOG,ret_llh2,ret_qval2);
-    else
-      smartsize(objs,tk,tk_l,rho);
+    if(i!=1) {
+      if(doSmartsize==0)
+	runoptim3(tk,tk_l,epsize,theta,rho,pp,FLOG,ret_llh2,ret_qval2);
+      else
+	smartsize(objs,tk,tk_l,rho);
+    }else
+      ret_llh2=ret_llh;//<- stupid little thing...
+
+    fprintf(stdout,"LK\t%f\n",ret_llh2);
     fprintf(stdout,"QD\t%f -> %f\n",ret_qval,ret_qval2);
     fprintf(stdout,"RI\t?\n");
     fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
@@ -473,11 +480,11 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
     
     for(int i=0;i<tk_l;i++)
       fprintf(stdout,"RS\t%d\t%f\t%f\tpi_k\tA_kl\tA_kk\n",i,tk[i],epsize[i]);
-    
-    fprintf(stdout,"PA\t%s\t%f\t%f",pp->pattern,theta,rho);
+    //    fprintf(stderr,"remap_l:%d\n",remap_l);
+    fprintf(stdout,"PA\t%s %.9f %.9f 666.666666666",pp->pattern,theta,rho);
     int at=0;
     for(int i=0;i<remap_l;i++){
-      fprintf(stdout,"\t%f",epsize[at+remap[i]-1]);
+      fprintf(stdout," %.9f",epsize[at+remap[i]-1]);
       at+=remap[i];
     }
     fprintf(stdout,"\n");
