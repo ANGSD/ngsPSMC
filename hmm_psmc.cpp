@@ -582,7 +582,7 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
   //  double tmp[windows.size()];
   double nontmpdir[tk_l];
   double expectCoalT[tk_l];
-  int emis_approx = 1;
+  int emis_approx = 0;
   if (emis_approx == 0)
   	ComputeP1(tk,tk_l,nontmpdir,epsize,theta);
   else if (emis_approx == 1){

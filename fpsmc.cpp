@@ -473,13 +473,14 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
     fprintf(stdout,"QD\t%f -> %f\n",ret_qval,ret_qval2);
     fprintf(stdout,"RI\t?\n");
     fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
-    fprintf(stdout,"MT\t?\n");
+    fprintf(stdout,"MT\t1000000.0\n");
     //RS is printed in runoptim
     //    break;
     fflush(FLOG);
     
     for(int i=0;i<tk_l;i++)
-      fprintf(stdout,"RS\t%d\t%f\t%f\tpi_k\tA_kl\tA_kk\n",i,tk[i],epsize[i]);
+      fprintf(stdout,"RS\t%d\t%f\t%f\t1000000.0\t1000000.0\t1000000.0\n",i,tk[i],epsize[i]);
+      //      fprintf(stdout,"RS\t%d\t%f\t%f\tpi_k\tA_kl\tA_kk\n",i,tk[i],epsize[i]);
     //    fprintf(stderr,"remap_l:%d\n",remap_l);
     fprintf(stdout,"PA\t%s %.9f %.9f 666.666666666",pp->pattern,theta,rho);
     int at=0;
