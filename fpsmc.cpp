@@ -466,6 +466,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
 	runoptim3(tk,tk_l,epsize,theta,rho,pp,FLOG,ret_llh2,ret_qval2);
       else
 	smartsize(objs,tk,tk_l,rho);
+      fprintf(stderr,"YOYOYOYOYOYYOYOYOYOYOYOYOYOYO: %f %f\n",ret_llh,ret_llh2);
     }else
       ret_llh2=ret_llh;//<- stupid little thing...
 
