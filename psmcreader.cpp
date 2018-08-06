@@ -64,7 +64,7 @@ int psmcversion(const char *fname){
 
 
 
-perpsmc * perpsmc_init(char *fname){
+perpsmc * perpsmc_init(char *fname,int nChr){
   perpsmc *ret = new perpsmc ;
   ret->fname = strdup(fname);
   ret->gls =NULL;
@@ -109,8 +109,10 @@ perpsmc * perpsmc_init(char *fname){
     }
     return ret;
   }
-
+  int at=0;
   while(fread(&clen,sizeof(size_t),1,fp)){
+    if(nChr!=-1&&at++>nChr)
+      break;
     char *chr = (char*)malloc(clen+1);
     assert(clen==fread(chr,1,clen,fp));
     chr[clen] = '\0';

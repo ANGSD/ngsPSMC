@@ -282,6 +282,7 @@ args * getArgs(int argc,char **argv){
   p->par =(psmc_par*) calloc(1,sizeof(psmc_par));
   p->tkfile = NULL;
   p->RD = -1;
+  p->nChr = -1;
   p->nThreads =1;
   p->doQuad =0;
   p->smartsize =0;
@@ -324,6 +325,8 @@ args * getArgs(int argc,char **argv){
       inffilename = strdup(*++argv);
     else  if(!strcasecmp(*argv,"-init"))
       p->init = atof(*++argv);
+   else  if(!strcasecmp(*argv,"-nChr"))
+      p->nChr = atoi(*++argv);
     else  if(!strcasecmp(*argv,"-doLinear")){
       int mytmp = atoi(*++argv);
       if(mytmp ==1)
@@ -336,12 +339,13 @@ args * getArgs(int argc,char **argv){
 	return NULL;
     }
     else{
-      p->perc = perpsmc_init(*argv);
+
       p->fname = *argv;
 
     }
     argv++;
   }
+  p->perc = perpsmc_init(p->fname,p->nChr);
   extern int doQuadratic;
   doQuadratic = p->doQuad;
   if(inffilename)
