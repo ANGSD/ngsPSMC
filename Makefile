@@ -1,5 +1,5 @@
 #modied from htslib makefile
-FLAGS=-ggdb
+FLAGS=-O3
 
 CFLAGS += $(FLAGS)
 CXXFLAGS += $(FLAGS)

@@ -160,10 +160,11 @@ void make_remapper(psmc_par *pp){
 
 static int  mysupercounter =0;
 
-void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,FILE *FLOG,double &ret_llh,double &ret_qval){
+void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,FILE *FLOG,double &ret_qval){
   clock_t t=clock();
   time_t t2=time(NULL);
   fprintf(stderr,"\t-> Starting Optimization\n");
+  fflush(stderr);
 #if 0
   fprintf(stderr,"pp->n:%d\n",pp->n);
   fprintf(stderr,"pp->n_free:%d\n",pp->n_free);
@@ -206,18 +207,20 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
     ops[i].trans = objs[i]->trans;
     //    fprintf(stderr,"trans[0][0]\n",ops[i].trans[0][0]);exit(0);
   }
+  ncals=0;
+  //  mysupercounter=0;
   fprintf(FLOG,"\tpreopt[%d]",mysupercounter);
   for(int i=0;i<ndim;i++)
      fprintf(FLOG,"\t%f",pars[i]);
   fprintf(FLOG,"\n");
   //we are not optimizing llh but qfunction
-  double max_llh = findmax_bfgs(ndim,pars,NULL,qFunction_wrapper,NULL,lbd,ubd,nbd,-1);
-  ret_qval=max_llh;
+  double max_qval = findmax_bfgs(ndim,pars,NULL,qFunction_wrapper,NULL,lbd,ubd,nbd,-1);
+  ret_qval=max_qval;
   fprintf(FLOG,"\tpostopt[%d]",mysupercounter);
   for(int i=0;i<ndim;i++)     
     fprintf(FLOG,"\t%f",pars[i]);
   fprintf(FLOG,"\n");
-  fprintf(FLOG,"\t-> optim done: after ncalls:%d best total qval:%f\n",ncals,max_llh);
+  fprintf(FLOG,"\t-> optim done: after ncalls:%d best total qval:%f\n",ncals,max_qval);
   for(int i=0;0&i<ndim;i++)
     fprintf(stderr,"newpars after optim[%d]: %f\n",mysupercounter, pars[i]);
   fflush(stderr);fflush(FLOG);
@@ -237,6 +240,7 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
   fprintf(stderr, "\t-> [RUNOPTIM3 Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2));
  
   fflush(stdout);
+  fflush(stderr);
 }
 
 void printarray(FILE *fp,double *ary,int l);
@@ -424,7 +428,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
   assert(FLOG!=NULL);
   make_remapper(pp);
   //test fix:
-  double ret_llh,ret_qval,ret_llh2,ret_qval2;
+  double ret_llh,ret_qval,ret_qval2;
 #if 1
   fprintf(FLOG,"FLOGS:%p\n",FLOG);
   fprintf(FLOG,"ninter:%d\n",nIter);
@@ -442,57 +446,48 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
   for(int i=0;i<tk_l;i++)
     dummyepsize[i] = 1.0;
   
-  for(int i=0;0&&i<nChr;i++)
-    calculate_emissions(tk,tk_l,objs[i]->gls,objs[i]->windows,theta,objs[i]->emis,dummyepsize);
-  
-  int i=0;
+  int at_it=0;
   extern int SIG_COND;
   while(SIG_COND) {
-    fprintf(stdout,"RD\t%d\n",i);
-    fprintf(FLOG,"\t-> Running analysis, RD:%d rho:%f theta:%f\n",i,rho,theta);
+    fprintf(stderr,"----------------------------------------\n");
+    fprintf(FLOG,"\t-> Running analysis, RD:%d rho:%f theta:%f\n",at_it,rho,theta);
 #if 0
     for(int ii=0;ii<tk_l;ii++) 
       fprintfFLOG,"\t[%d]\tmaking hmm with epsize:%d) %f %f\n",i,ii,tk[ii],epsize[ii]);
 #endif
+  fflush(FLOG);
     main_analysis_make_hmm(tk,tk_l,epsize,theta,rho,ret_llh,ret_qval);
-    //    fprintf(stderr,"ret_llh:%f ret_qval:%f\n",ret_llh,ret_qval);
-    //    exit(0);
-    if(i++>=nIter){
-      fprintf(stderr,"\t-> Breaking since i>nIter\n");
-      break;
-    }
-    if(i!=1) {
-      if(doSmartsize==0)
-	runoptim3(tk,tk_l,epsize,theta,rho,pp,FLOG,ret_llh2,ret_qval2);
-      else
-	smartsize(objs,tk,tk_l,rho);
-      fprintf(stderr,"YOYOYOYOYOYYOYOYOYOYOYOYOYOYO: %f %f\n",ret_llh,ret_llh2);
-    }else
-      ret_llh2=ret_llh;//<- stupid little thing...
-
-    fprintf(stdout,"LK\t%f\n",ret_llh2);
+    if(ncals>0)
+      fprintf(stdout,"IT\t%d\n",ncals);
+    fprintf(stdout,"RD\t%d\n",at_it);
+    fprintf(stdout,"LK\t%f\n",ret_llh);
     fprintf(stdout,"QD\t%f -> %f\n",ret_qval,ret_qval2);
     fprintf(stdout,"RI\t?\n");
     fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
     fprintf(stdout,"MT\t1000000.0\n");
-    //RS is printed in runoptim
-    //    break;
-    fflush(FLOG);
-    
     for(int i=0;i<tk_l;i++)
       fprintf(stdout,"RS\t%d\t%f\t%f\t1000000.0\t1000000.0\t1000000.0\n",i,tk[i],epsize[i]);
-      //      fprintf(stdout,"RS\t%d\t%f\t%f\tpi_k\tA_kl\tA_kk\n",i,tk[i],epsize[i]);
-    //    fprintf(stderr,"remap_l:%d\n",remap_l);
     fprintf(stdout,"PA\t%s %.9f %.9f 666.666666666",pp->pattern,theta,rho);
     int at=0;
     for(int i=0;i<remap_l;i++){
       fprintf(stdout," %.9f",epsize[at+remap[i]-1]);
       at+=remap[i];
     }
-    fprintf(stdout,"\n");
+    fprintf(stdout,"//\n");
     fflush(stdout);
-  }
-  
+
+    if(at_it++>=nIter){
+      fprintf(stderr,"\t-> Breaking since i>nIter\n");
+      break;
+    }
+    if(doSmartsize==0)
+      runoptim3(tk,tk_l,epsize,theta,rho,pp,FLOG,ret_qval2);
+    else
+      smartsize(objs,tk,tk_l,rho);
+
+    
+}
+
   for(int i=0;i<tk_l;i++) 
     fprintf(stderr,"epsize_after_all_rounds:\t%d\t%f\t%f\n",i,tk[i],epsize[i]);
   

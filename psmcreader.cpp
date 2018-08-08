@@ -65,6 +65,7 @@ int psmcversion(const char *fname){
 
 
 perpsmc * perpsmc_init(char *fname,int nChr){
+
   perpsmc *ret = new perpsmc ;
   ret->fname = strdup(fname);
   ret->gls =NULL;
@@ -88,12 +89,17 @@ perpsmc * perpsmc_init(char *fname,int nChr){
   ret->version = psmcversion(fname);
   ret->nSites =0;
   fprintf(stderr,"\t-> Version of fname: \'%s\' is:%d\n",fname,ret->version);
+  int at=0;//incrementer for breaking out of filereading if -nChr has been supplied
+
+  //loop for gl
   if(ret->version!=1){
     fprintf(stderr,"\t-> Looks like you are trying to use a version of PSMC that does not exists, assuming its a fastafile\n");
     fclose(fp);
     fp=NULL;
     ret->pf = perFasta_init(fname);
     for(int i=0;i<faidx_nseq(ret->pf->fai);i++){
+      if(nChr!=-1&&at++>=nChr)
+	break;
       char *chr = strdup(faidx_iseq(ret->pf->fai,i));
       fprintf(stderr,"\t->[%s] %d) chr: %s\n",__FUNCTION__,i,chr);
       datum d;
@@ -109,9 +115,10 @@ perpsmc * perpsmc_init(char *fname,int nChr){
     }
     return ret;
   }
-  int at=0;
+
+  //loop for fasta
   while(fread(&clen,sizeof(size_t),1,fp)){
-    if(nChr!=-1&&at++>nChr)
+    if(nChr!=-1&&at++>=nChr)
       break;
     char *chr = (char*)malloc(clen+1);
     assert(clen==fread(chr,1,clen,fp));
