@@ -1,10 +1,5 @@
-
-typedef struct{
-  std::vector<double> eN1;
-  std::vector<double> eN2;
-  double rho[2];
-  double theta;
-}msarg;
-
+#pragma once
+#include "main_psmc.h"
 
 msarg function(char *str);
+void transform(msarg &ms,psmc_par *par);

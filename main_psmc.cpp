@@ -2,9 +2,11 @@
 #include <ctime>
 #include  <cmath>
 #include <ctype.h>
+#include "msArg_toPars.h"
 #include "main_psmc.h"
 #include "fpsmc.h"
 #include <htslib/kstring.h>
+
 extern int nThreads;
 
 
@@ -289,6 +291,7 @@ args * getArgs(int argc,char **argv){
   p->outname = strdup("output");
   p->fres = p->flog = NULL;
   p->init = -1;
+  p->msstr = NULL;
   char *inffilename=NULL;
   if(argc==0)
     return p;
@@ -317,6 +320,8 @@ args * getArgs(int argc,char **argv){
       p->outname =  strdup(*(++argv));
     else  if(!strcasecmp(*argv,"-tkfile"))
       p->tkfile =  strdup(*(++argv));
+    else  if(!strcasecmp(*argv,"-ms"))
+      p->msstr =  strdup(*(++argv));
     else  if(!strcasecmp(*argv,"-nSites"))
       p->nSites = atol(*(++argv));
     else  if(!strcasecmp(*argv,"-seed"))
@@ -345,6 +350,7 @@ args * getArgs(int argc,char **argv){
     }
     argv++;
   }
+
   p->perc = perpsmc_init(p->fname,p->nChr);
   extern int doQuadratic;
   doQuadratic = p->doQuad;
@@ -362,7 +368,7 @@ args * getArgs(int argc,char **argv){
   if(p->seed==0)
     p->seed = time(NULL);
   srand48(p->seed);
-  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d fname:%s seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d -nChr:%d\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doQuad,doGlStyle,p->nChr);
+  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d fname:%s seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d -nChr:%d -ms:\'%s\'\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doQuad,doGlStyle,p->nChr,p->msstr);
   //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
   if(p->tkfile)
     readtkfile(p->par,p->tkfile);

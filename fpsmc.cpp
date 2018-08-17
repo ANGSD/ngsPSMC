@@ -2,12 +2,14 @@
 #include <cassert>
 #include <cmath>
 #include <pthread.h>
-#include "psmcreader.h"
+#include <errno.h>
 #include "main_psmc.h"
+#include "psmcreader.h"
+#include "msArg_toPars.h"
 #include "hmm_psmc.h"
 #include "bfgs.h"
 #include "compute.h"
-#include <errno.h>
+
 
 extern int nThreads;
 
@@ -502,6 +504,12 @@ int psmc_wrapper(args *pars,int blocksize) {
     fprintf(stderr,"[psmc_wrapper]:%i)\t%f\t%f\n",i,pars->par->times[i],pars->par->params[i]);
   //  exit(0);
 #endif
+  //
+  if(pars->msstr){
+    pars->msstr_arg = function(pars->msstr); 
+    transform(pars->msstr_arg,pars->par);
+  }
+
   int tk_l = pars->par->n+1;
   fprintf(stderr,"tk_l in psmc_wrapper pars->par->n+1 tk_l:%d\n",tk_l);
   double *tk = new double [tk_l];

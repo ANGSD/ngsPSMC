@@ -13,6 +13,14 @@ typedef struct{
   double TR[2];
 }psmc_par;
 
+typedef struct{
+  std::vector<double> eN1;
+  std::vector<double> eN2;
+  double rho[2];
+  double theta;
+}msarg;
+
+
 
 typedef struct {
   int nChr;
@@ -41,6 +49,8 @@ typedef struct {
   FILE *fres;
   FILE *flog;
   double init;
+  char *msstr;
+  msarg msstr_arg;
 }args;
 args * getArgs(int argc,char **argv);
 void destroy_args(args *p);
