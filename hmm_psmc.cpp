@@ -320,6 +320,7 @@ void UpdateEPSize(int maxTime, double W[],double sW[],double epSize[],double T[]
   n, is the true length of tk. First entry zero, last entry INF
  */
 void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
+  assert(inp_ti!=NULL);
   //  fprintf(stderr,"[%s] (n,tk,max_t,alpha,inp_ti)=(%d,%p,%f,%f,%p)\n",__FUNCTION__,n,t,max_t,alpha,inp_ti);
   int k;
   if (inp_ti == 0) {
@@ -335,15 +336,15 @@ void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
 }
 
 
-void setEPSize(double *ary,int l,double *from_infile){
-  // fprintf(stderr,"l:%d\n",l);
+void setEPSize(double *ary,int tk_l,double *from_infile){
+  fprintf(stderr,"tk_l:%d\n",tk_l);
   if(!from_infile)
-    for (int i = 0; i <l; i++)
-      ary[l]=1;
+    for (int i = 0; i <tk_l; i++)
+      ary[i]=1;
   else{
-    memcpy(ary,from_infile,l*sizeof(double));
+    memcpy(ary,from_infile,tk_l*sizeof(double));
   }
-  for(int i=0;0&&i<l;i++)
+  for(int i=0;0&&i<tk_l;i++)
     fprintf(stderr,"%d) %f\n",i,from_infile[i]);
   //  exit(0);
 }

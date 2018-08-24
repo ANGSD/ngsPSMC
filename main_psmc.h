@@ -8,8 +8,8 @@ typedef struct{
   int n_free; // number of free lambdas
   int *par_map; // parameter groups
   char *pattern;
-  double *times;
-  double *params;
+  double *times;//<-splittimes
+  double *params;//<- effective population sizes
   double TR[2];
 }psmc_par;
 

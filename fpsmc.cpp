@@ -141,19 +141,22 @@ double qFunction_wrapper(const double *pars,const void *){
 
 
 void make_remapper(psmc_par *pp){
-  //  fprintf(stderr,"makeadsfadsfasfasfadf\n");
+  fprintf(stderr,"\t-> make_remapper pp->n_free:%d\n",pp->n_free);
   int at=0;
   remap = new int[pp->n_free];
   remap_l=pp->n_free;
   for(int i=0;i<pp->n_free;i++){
     int howMany=0;
-    while(pp->par_map[at+howMany]==pp->par_map[at])
+    while(pp->par_map[at+howMany]==pp->par_map[at]){
       howMany++;
+      if(at+howMany==pp->n+1)//important for breaking properly
+	break;
+    }
     at+=howMany;
     remap[i] = howMany;
   }
   
-#if 0
+#if 1
   for(int i=0;i<pp->n_free;i++)
     fprintf(stderr,"[%d]: %d\n",i,remap[i]);
 #endif
@@ -428,9 +431,10 @@ void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize);
 void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter,int doSmartsize,FILE *FRES,FILE *FLOG){
   assert(FLOG!=NULL);
-  make_remapper(pp);
+
   //test fix:
   double ret_llh,ret_qval,ret_qval2;
+  ret_qval=ret_qval2=0;
 #if 1
   fprintf(FLOG,"FLOGS:%p\n",FLOG);
   fprintf(FLOG,"ninter:%d\n",nIter);
@@ -464,6 +468,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
     fprintf(stdout,"RD\t%d\n",at_it);
     fprintf(stdout,"LK\t%f\n",ret_llh);
     fprintf(stdout,"QD\t%f -> %f\n",ret_qval,ret_qval2);
+    //    exit(0);
     fprintf(stdout,"RI\t?\n");
     fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
     fprintf(stdout,"MT\t1000000.0\n");
@@ -475,7 +480,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
       fprintf(stdout," %.9f",epsize[at+remap[i]-1]);
       at+=remap[i];
     }
-    fprintf(stdout,"//\n");
+    fprintf(stdout,"\n//\n");
     fflush(stdout);
 
     if(at_it++>=nIter){
@@ -505,17 +510,22 @@ int psmc_wrapper(args *pars,int blocksize) {
   //  exit(0);
 #endif
   //
+
   if(pars->msstr){
     pars->msstr_arg = function(pars->msstr); 
     transform(pars->msstr_arg,pars->par);
-  }
+  }else
+    make_remapper(pars->par);
 
   int tk_l = pars->par->n+1;
-  fprintf(stderr,"tk_l in psmc_wrapper pars->par->n+1 tk_l:%d\n",tk_l);
+  fprintf(stderr,"\t-> tk_l in psmc_wrapper pars->par->n+1 tk_l:%d p->times:%p\n",tk_l,p->times);
   double *tk = new double [tk_l];
   double *epsize = new double [tk_l];
-  setEPSize(epsize,tk_l,p->params);
+  fprintf(stderr,"p->times:%p p->params:%p\n",p->times,p->params);
+  //  if(p->params)
+    setEPSize(epsize,tk_l,p->params);
   //(nelems,array,max_t,alpha,array with values from file, can be NULL)
+  // if(p->times)
   setTk(tk_l,tk,15,0.01,p->times);//<- last position will be infinity
   //  fprintf(stderr,"[%s] tk=(%f,%f)\n",__FUNCTION__,tk[0],tk[1]);//exit(0);
 #if 0

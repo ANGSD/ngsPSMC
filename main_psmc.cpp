@@ -82,7 +82,8 @@ int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars)
 	}
 	for (k = l = 0; k != top; ++k) l += stack[k];
 	*n_pars = l - 1; *n_free = top;
-	pars_map = (int*)malloc(sizeof(int) * (*n_pars + 1));
+	//	fprintf(stderr,"psmc_parse_pattern: n_pars:%d\n",*n_pars);
+	pars_map = (int*)malloc(sizeof(int) * (*n_pars + 1));//<-bug
 	for (k = i = 0; k != top; ++k)
 		for (l = 0; l < stack[k]; ++l)
 			pars_map[i++] = k;
@@ -433,10 +434,9 @@ int main_psmc(int argc, char **argv){
   //this will printout the header
   writepsmc_header(stderr,pars->perc);
 
-  if(1){
-    assert(pars->flog!=NULL);
-    psmc_wrapper(pars,pars->blocksize);
-  }else{
+  assert(pars->flog!=NULL);
+  psmc_wrapper(pars,pars->blocksize);
+#if 0
     //below is old printout, keeping for reference
     for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){
       //set perchr iterator, if pars->chooseChr, then we have only use a single chr
@@ -449,7 +449,8 @@ int main_psmc(int argc, char **argv){
       if(pars->chooseChr!=NULL)
 	break;
     }
-  }
+
+#endif
   destroy_args(pars);
   return 0;
 }
