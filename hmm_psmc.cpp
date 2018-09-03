@@ -377,6 +377,16 @@ void fastPSMC::calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,doubl
       for (unsigned i = 1; i < tk_l; i++)
 	fw[i][v+1]= addProtect4(lprod(fw[i][v],P[1][i]) , lprod(R2[i-1],P[2][i]) , lprod(R1[i],P[3][i]) , lprod(fw[i][v],P[4][i]))+emis[i][v+1];
     }
+    FILE *fp = NULL;
+    if(0){
+      fp=fopen("fw.txt","wb");
+      for(int v=0;v<windows.size();v++){
+	for (unsigned i = 1; i < tk_l; i++)
+	  fprintf(fp,"%f ",fw[i][v+1]);
+	fprintf(fp,"\n");
+      }
+      fclose(fp);
+    }
     //fprintf(stderr,"AFter forwardx\n");
     //    fprintf(stderr,"tk_l:%d\n",tk_l);
     double tmp[tk_l];
@@ -388,7 +398,7 @@ void fastPSMC::calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,doubl
     assert(!isnan(pix));
     fwllh = pix;
     //fprintf(stderr,"forward(pic) llh:%f\n",pix);
-
+    //exit(0);
 
     //now do backward algorithm
     //initialize by stationary
@@ -530,16 +540,21 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
   int endPos = beginPos+block-1;
   
   while(1) {
-    //    fprintf(stderr,"Beginpos:%d EndPos:%d\n",beginPos,endPos);
+    //fprintf(stdout,"Beginpos:%d EndPos:%d\n",beginPos,endPos);
     wins w;
     if(endPos>pos[last-1])
       break;
     
     while(pos[beginIndex]<beginPos)
       beginIndex++;
-    while(pos[endIndex]<endPos)
-      endIndex++;
-    endIndex--;
+    endIndex=beginIndex;
+    if(pos[endIndex]<endPos){
+      while(pos[endIndex]<endPos){
+	//	fprintf(stdout,"runs?\n");
+	endIndex++;
+      }
+      endIndex--;
+    }
 #if 0
     //fprintf(stdout,"\t-> endpos:%d\n",pos[endIndex]);
     fprintf(stdout,"\t-> winsize:%d bp:%d,ep:%d bi:%d ei:%d ei-bi:%d\n",block,beginPos,endPos,beginIndex,endIndex,endIndex-beginIndex);
@@ -551,7 +566,7 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
     endPos+=block;
     //    exit(0);
   }
-  //  exit(0);
+  //exit(0);
 }
 
 
@@ -597,7 +612,8 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
   }  
 
  for(int v=0;v<windows.size();v++){//for each window
-   //    fprintf(stderr,"v:%d from:%d to:%d\n",v,windows[v].from,windows[v].to);
+   assert(windows[v].from<=windows[v].to);
+   //   fprintf(stderr,"v:%d from:%d to:%d\n",v,windows[v].from,windows[v].to);
     for(int j=0;j<tk_l;j++){//for each interval/state
       emis[j][v+1] = 0;
       double inner = exp(nontmpdir[j]);///exp(-2.0*tk[j]*theta); // this part relates to issue #1
@@ -610,6 +626,7 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
       //      fprintf(stderr,"\t\t%d from:%d to:%d inner:%f\n",j,windows[v].from,windows[v].to,inner);
 #endif
       for(int i=windows[v].from;i<=windows[v].to;i++) {//for all elements in window
+	//	fprintf(stderr,"never herer\n");
 #if 0
 	fprintf(stderr,"\t\t\tgls(%d,%d)=",2*i,2*i+1);
 	fprintf(stderr,"(%f,%f)\n",gls[2*i],gls[2*i+1]);

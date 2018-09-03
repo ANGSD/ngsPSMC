@@ -179,7 +179,7 @@ perpsmc * perpsmc_init(char *fname,int nChr){
  }
 
  //chr start stop is given from commandine
- myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop){
+myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize){
    #ifdef __SHOW_TIME__
    clock_t t=clock();
    time_t t2=time(NULL);
@@ -224,7 +224,7 @@ perpsmc * perpsmc_init(char *fname,int nChr){
      int asdf = it->second.nSites;
      char *tmp = faidx_fetch_seq(pp->pf->fai, it->first, 0, 0x7fffffff, &asdf);
      for(int i=0;i<it->second.nSites;i++){
-       pp->pos[i] = i*100;
+       pp->pos[i] = i*blockSize;
        //important relates to problems with divide by zero in compuation of  backward probablity
        pp->gls[2*i]=pp->gls[2*i+1]=-500;
        //K=het

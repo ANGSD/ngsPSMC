@@ -78,9 +78,9 @@ void print_main(int argc,char **argv){
   for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){
     
     if(pars->chooseChr!=NULL)
-      it = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop);
+      it = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop,pars->blocksize);
     else
-      it = iter_init(pars->perc,it->first,pars->start,pars->stop);
+      it = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);
 
     for(size_t s=pars->perc->first;s<pars->perc->last;s++)
       fprintf(stdout,"%s\t%d(%lu,%lu)\t%e\t%e\n",it->first,pars->perc->pos[s]+1,2*s,2*s+1,pars->perc->gls[2*s],pars->perc->gls[2*s+1]);
@@ -173,9 +173,9 @@ int makeold(int argc,char **argv){
   //first pull all the data
   for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){
     if(pars->chooseChr!=NULL)
-      it = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop);
+      it = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop,pars->blocksize);
     else
-      it = iter_init(pars->perc,it->first,pars->start,pars->stop);
+      it = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);
     
     //    fprintf(stderr,"it->first:%s\tlast:%lu\n",it->first,pars->perc->last);
     memcpy(gls+at,pars->perc->gls,sizeof(double)*2*pars->perc->last);
@@ -191,9 +191,9 @@ int makeold(int argc,char **argv){
   kstring_t kstr;kstr.l=kstr.m=0;kstr.s=NULL;
   for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){
     if(pars->chooseChr!=NULL)
-      it = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop);
+      it = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop,pars->blocksize);
     else
-      it = iter_init(pars->perc,it->first,pars->start,pars->stop);
+      it = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);
     ksprintf(&kstr,">%s\n",it->first);
     double *pp = new double[pars->perc->last];
     calcpost(opt,pars->perc->gls,pars->perc->last,pp);

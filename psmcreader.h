@@ -24,4 +24,4 @@ typedef struct{
 perpsmc* perpsmc_init(char *fname,int nChr);
 void writepsmc_header(FILE *fp,perpsmc *pp);
 void perpsmc_destroy(perpsmc *pp);
-myMap::iterator iter_init(perpsmc *,char *,int,int);
+myMap::iterator iter_init(perpsmc *,char *,int,int,int);

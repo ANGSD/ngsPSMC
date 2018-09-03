@@ -165,6 +165,24 @@ void make_remapper(psmc_par *pp){
 
 static int  mysupercounter =0;
 
+typedef struct{
+  clock_t t;
+  time_t t2;
+  double tids[2];
+}timer;
+
+timer starttimer(){
+  timer t;
+  t.t=clock();
+  t.t2=time(NULL);
+  return t;
+}
+
+void stoptimer(timer &t){
+  t.tids[0]= ((float)(clock() - t.t) / CLOCKS_PER_SEC)/60.0;
+  t.tids[1]= ((float)(time(NULL) - t.t2))/60.0;
+}
+
 void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,FILE *FLOG,double &ret_qval){
   clock_t t=clock();
   time_t t2=time(NULL);
@@ -462,7 +480,12 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
       fprintfFLOG,"\t[%d]\tmaking hmm with epsize:%d) %f %f\n",i,ii,tk[ii],epsize[ii]);
 #endif
   fflush(FLOG);
-    main_analysis_make_hmm(tk,tk_l,epsize,theta,rho,ret_llh,ret_qval);
+  timer hmm_t = starttimer();
+  fprintf(stderr,"\t-> calling main_analysis_make_hmm\n");fflush(stderr);
+  main_analysis_make_hmm(tk,tk_l,epsize,theta,rho,ret_llh,ret_qval);
+  fprintf(stderr," done\t-> calling main_analysis_make_hmm\n");fflush(stderr);
+  stoptimer(hmm_t);
+  
     if(ncals>0)
       fprintf(stdout,"IT\t%d\n",ncals);
     fprintf(stdout,"RD\t%d\n",at_it);
@@ -472,6 +495,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
     fprintf(stdout,"RI\t?\n");
     fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
     fprintf(stdout,"MT\t1000000.0\n");
+    fprintf(stdout,"MM buildhmm(wall(min),cpu(min)):(%f,%f) \n",hmm_t.tids[1],hmm_t.tids[0]);
     for(int i=0;i<tk_l;i++)
       fprintf(stdout,"RS\t%d\t%f\t%f\t1000000.0\t1000000.0\t1000000.0\n",i,tk[i],epsize[i]);
     fprintf(stdout,"PA\t%s %.9f %.9f 666.666666666",pp->pattern,theta,rho);
@@ -541,9 +565,9 @@ int psmc_wrapper(args *pars,int blocksize) {
   for (myMap::const_iterator it = pars->perc->mm.begin() ;it!=pars->perc->mm.end();it++) {
     myMap::const_iterator it2;
     if(pars->chooseChr!=NULL)
-      it2 = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop);
+      it2 = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop,pars->blocksize);
     else
-      it2 = iter_init(pars->perc,it->first,pars->start,pars->stop);
+      it2 = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);
     //    fprintf(stderr,"\t-> Parsing chr:%s \n",it2->first);
     fastPSMC *obj=objs[nChr++]=new fastPSMC;
     //    fprintf(stderr,"gls1:%f %f %f %f\n",pars->perc->gls[0],pars->perc->gls[1],pars->perc->gls[2],pars->perc->gls[3]);
