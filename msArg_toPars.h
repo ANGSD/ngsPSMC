@@ -2,4 +2,4 @@
 #include "main_psmc.h"
 
 msarg function(char *str);
-void transform(msarg &ms,psmc_par *par);
+void transform(msarg &ms,psmc_par *par,int winsize);

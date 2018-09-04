@@ -56,7 +56,7 @@ msarg function(char *str){
 //plug ms into par. 
 //parstruct is in main_psmc.h
 //msarg struct is in main_psmc.h
-void transform(msarg &ms,psmc_par *par){
+void transform(msarg &ms,psmc_par *par,int winsize){
   //fprintf(stderr,"theta: %f rho:(%f,%f) eN: par->pattern:%s par->par_map:%p\n",ms.theta,ms.rho[0],ms.rho[1],par->pattern,par->par_map);
   for(int i=0;0&&i<ms.eN1.size();i++)
     fprintf(stderr,"(%.3f,%.3f)\n",ms.eN1[i],ms.eN2[i]);
@@ -110,8 +110,8 @@ void transform(msarg &ms,psmc_par *par){
 
 #if 1
   fprintf(stderr,"ms.thteta:%f ms.rho[0]:%f ms.rho[1]:%f\n",ms.theta,ms.rho[0],ms.rho[1]);
-  double ngsPsmcTheta=ms.theta/ms.rho[1]/2.0;
-  double ngsPsmcRho = ms.rho[0]/ms.rho[1];
+  double ngsPsmcTheta=ms.theta/ms.rho[1]/2.0*winsize;
+  double ngsPsmcRho = ms.rho[0]/ms.rho[1]*winsize;
 
   par->TR[0]=ngsPsmcTheta;
   par->TR[1]=ngsPsmcRho;
