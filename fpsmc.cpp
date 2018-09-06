@@ -537,7 +537,7 @@ int psmc_wrapper(args *pars,int blocksize) {
 
   if(pars->msstr){
     pars->msstr_arg = function(pars->msstr); 
-    transform(pars->msstr_arg,pars->par,pars->blocksize);
+    transform(pars->msstr_arg,pars->par,pars->perc->pf!=NULL?pars->blocksize:1);
   }else
     make_remapper(pars->par);
 

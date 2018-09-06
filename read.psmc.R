@@ -70,3 +70,31 @@ if(FALSE){
 
     dev.off()
 }
+
+
+if(FALSE){
+    pdf("forvlad3.pdf")
+    d0 <- read.psmc1("test27/ngs5.ms.stdout",rd=0)
+    d1 <- read.psmc1("test27/ngs5.ms.stdout",rd=1)
+    plot(d0$RS[,2],d0$RS[,3],type='l',lwd=6,col=1,main="MS GL 5+5+5+5,win=100",ylim=c(0,max(rbind(d0$RS,d1$RS)[,3])) )
+    lines(d1$RS[,2],d1$RS[,3],type='l',lwd=3,col=2)
+    legend("topright",paste0(c("init.llh","optim1.llh"),"=",c(d0$LK,d1$LK)),fill=1:2)
+
+    d0 <- read.psmc1("test27/ngs6.ms.stdout",rd=0)
+    d1 <- read.psmc1("test27/ngs6.ms.stdout",rd=1)
+    plot(d0$RS[,2],d0$RS[,3],type='l',lwd=6,col=1,main="MS GL 10+10+10+10,win=100",ylim=c(0,max(rbind(d0$RS,d1$RS)[,3])))
+    lines(d1$RS[,2],d1$RS[,3],type='l',lwd=3,col=2)
+    legend("topright",paste0(c("init.llh","optim1.llh"),"=",c(d0$LK,d1$LK)),fill=1:2)
+
+    d0 <- read.psmc1("test27/ngs7.ms.stdout",rd=0)
+    d1 <- read.psmc1("test27/ngs7.ms.stdout",rd=1)
+    plot(d0$RS[,2],d0$RS[,3],type='l',lwd=6,col=1,main="MS GL 10+10+10+10 win=1",ylim=c(0,max(rbind(d0$RS,d1$RS)[,3])))
+    lines(d1$RS[,2],d1$RS[,3],type='l',lwd=3,col=2)
+    legend("topright",paste0(c("init.llh","optim1.llh"),"=",c(d0$LK,d1$LK)),fill=1:2)
+    d0 <- read.psmc1("test27/ngs8.ms.stdout",rd=0)
+    d1 <- read.psmc1("test27/ngs8.ms.stdout",rd=1)
+    plot(d0$RS[,2],d0$RS[,3],type='l',lwd=6,col=1,main="MS GL 5+5+5+5,win=1 )",ylim=c(0,max(rbind(d0$RS,d1$RS)[,3])))
+    lines(d1$RS[,2],d1$RS[,3],type='l',lwd=3,col=2)
+    legend("topright",paste0(c("init.llh","optim1.llh"),"=",c(d0$LK,d1$LK)),fill=1:2)
+    dev.off()
+}
