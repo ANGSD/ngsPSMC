@@ -60,7 +60,8 @@ void transform(msarg &ms,psmc_par *par,int winsize){
   //fprintf(stderr,"theta: %f rho:(%f,%f) eN: par->pattern:%s par->par_map:%p\n",ms.theta,ms.rho[0],ms.rho[1],par->pattern,par->par_map);
   for(int i=0;0&&i<ms.eN1.size();i++)
     fprintf(stderr,"(%.3f,%.3f)\n",ms.eN1[i],ms.eN2[i]);
-#if 1
+
+#if 0
   fprintf(stderr,"\n\t-> overwriting pattern:%s with 5+5+... eN1.size():%lu\n",par->pattern,ms.eN1.size());
   char buf[1024];memset(buf,0,1024);
   strcat(buf,"5");
@@ -69,25 +70,29 @@ void transform(msarg &ms,psmc_par *par,int winsize){
   //  strcat(buf,"\"");
   //  fprintf(stderr,"buf:%s",buf);
   par->pattern = strdup(buf);
-
-#endif
   fprintf(stderr,"\n");  
+#endif
+
 #if 1
   int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars);
-   par->par_map= psmc_parse_pattern(par->pattern,&par->n_free,&par->n);
+  par->par_map= psmc_parse_pattern(par->pattern,&par->n_free,&par->n);
  #endif
 
+
+   extern int remap_l;
+   extern int * remap;
 #if 1
   void make_remapper(psmc_par *pp);
-  make_remapper(par);  
+  make_remapper(par);
+  //fprintf(stderr,"remap_l: %d eN1.size():%d\n",remap_l,ms.eN1.size());
+  assert(ms.eN1.size()==remap_l);
+
 #endif
  
 #if 1
   par->times=new double[par->n+1];
   par->params=new double[par->n+1];
   int at =0;
-  extern int remap_l;
-  extern int * remap;
   //  fprintf(stderr,"remap_l:%d eN1.size():%d par->n_free:%d\n",remap_l,ms.eN1.size(),par->n_free);
 
   for(int i=0;i<remap_l;i++){

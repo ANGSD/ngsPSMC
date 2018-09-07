@@ -141,7 +141,7 @@ double qFunction_wrapper(const double *pars,const void *){
 
 
 void make_remapper(psmc_par *pp){
-  fprintf(stderr,"\t-> make_remapper pp->n_free:%d\n",pp->n_free);
+  fprintf(stderr,"\t->[%s] pp->n_free:%d\n",__FUNCTION__,pp->n_free);
   int at=0;
   remap = new int[pp->n_free];
   remap_l=pp->n_free;
@@ -156,7 +156,7 @@ void make_remapper(psmc_par *pp){
     remap[i] = howMany;
   }
   
-#if 1
+#if 0
   for(int i=0;i<pp->n_free;i++)
     fprintf(stderr,"[%d]: %d\n",i,remap[i]);
 #endif
@@ -244,7 +244,7 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_p
     fprintf(FLOG,"\t%f",pars[i]);
   fprintf(FLOG,"\n");
   fprintf(FLOG,"\t-> optim done: after ncalls:%d best total qval:%f\n",ncals,max_qval);
-  for(int i=0;0&i<ndim;i++)
+  for(int i=0;0&&(i<ndim);i++)
     fprintf(stderr,"newpars after optim[%d]: %f\n",mysupercounter, pars[i]);
   fflush(stderr);fflush(FLOG);
   mysupercounter++;
