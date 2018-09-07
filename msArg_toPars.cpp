@@ -6,12 +6,12 @@
 #include "msArg_toPars.h"
 #define MSARG "./ms 2 100 -t 8196 -r 1355 3000000 -l -eN 0.01 0.05 -eN 0.0375 0.5 -eN 1.25 1.0 "
 
-
+//simple fucntion that only READS msatyle input similar to MSARG
 msarg function(char *str){
   std::vector<double> eN1; //times
   std::vector<double> eN2; //sizes
   double theta=-1.0;
-  double rho[2];
+  double rho[2];// recombination regionlength
   
   //fprintf(stderr,"*str:%s\n",str);
   char *tok = strtok(str," \n");
@@ -57,31 +57,15 @@ msarg function(char *str){
 //parstruct is in main_psmc.h
 //msarg struct is in main_psmc.h
 void transform(msarg &ms,psmc_par *par,int winsize){
-  //fprintf(stderr,"theta: %f rho:(%f,%f) eN: par->pattern:%s par->par_map:%p\n",ms.theta,ms.rho[0],ms.rho[1],par->pattern,par->par_map);
+  fprintf(stderr,"\t->[%s] theta: %f rho:(%f,%f) eN: par->pattern:%s par->par_map:%p winsize:%d\n",__FUNCTION__,ms.theta,ms.rho[0],ms.rho[1],par->pattern,par->par_map,winsize);
   for(int i=0;0&&i<ms.eN1.size();i++)
     fprintf(stderr,"(%.3f,%.3f)\n",ms.eN1[i],ms.eN2[i]);
-
-#if 0
-  fprintf(stderr,"\n\t-> overwriting pattern:%s with 5+5+... eN1.size():%lu\n",par->pattern,ms.eN1.size());
-  char buf[1024];memset(buf,0,1024);
-  strcat(buf,"5");
-  for(int i=0;i<ms.eN1.size()-1;i++)
-    strcat(buf,"+5");
-  //  strcat(buf,"\"");
-  //  fprintf(stderr,"buf:%s",buf);
-  par->pattern = strdup(buf);
-  fprintf(stderr,"\n");  
-#endif
 
 #if 1
   int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars);
   par->par_map= psmc_parse_pattern(par->pattern,&par->n_free,&par->n);
- #endif
-
-
    extern int remap_l;
    extern int * remap;
-#if 1
   void make_remapper(psmc_par *pp);
   make_remapper(par);
   //fprintf(stderr,"remap_l: %d eN1.size():%d\n",remap_l,ms.eN1.size());
@@ -116,7 +100,8 @@ void transform(msarg &ms,psmc_par *par,int winsize){
 #if 1
   fprintf(stderr,"ms.thteta:%f ms.rho[0]:%f ms.rho[1]:%f\n",ms.theta,ms.rho[0],ms.rho[1]);
   double ngsPsmcTheta=ms.theta/ms.rho[1]/2.0*winsize;
-  double ngsPsmcRho = ms.rho[0]/ms.rho[1]*winsize;
+  //rho[0] recombination; rho[1] regionlength
+  double ngsPsmcRho = ms.rho[0]/ms.rho[1]/2.0*winsize;
 
   par->TR[0]=ngsPsmcTheta;
   par->TR[1]=ngsPsmcRho;

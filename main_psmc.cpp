@@ -110,7 +110,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
 
   //catch first case seperately
 
-  for(int i=0;1&i<strlen(buf)-1;i++){//offset with one so we dont get the last empty output from PSCMC
+  for(int i=0;1&&i<strlen(buf)-1;i++){//offset with one so we dont get the last empty output from PSCMC
     if(strncmp(buf+i,"\nRD\t",4)==0){
       assert(i>8);//check that we can plug in dummy values.
       slashslash[n] = buf+i;
@@ -260,7 +260,7 @@ void readtkfile(psmc_par *pp,const char *fname){
       ksprintf(&kstr,"+");
   }
   
-  for(int i=0;0&i<mult2.size();i++)
+  for(int i=0;0&&i<mult2.size();i++)
     fprintf(stderr,"mult2: %d %d\n",i,mult2[i]);
   pp->pattern=strdup(kstr.s);
   free(kstr.s);
@@ -358,13 +358,6 @@ args * getArgs(int argc,char **argv){
   if(inffilename)
     setpars(inffilename,p->par,p->RD);
 
-  //adjust theta:
-  p->par->TR[0] = p->par->TR[0]/2.0;
-  fprintf(stderr,"\t-> p->perc->version:%d (one is gls, otherwise fasta)\n",p->perc->version);
-  if(p->perc->version==1){
-    fprintf(stderr,"\t-> Adjusing theta with blocksize: %d\n",p->blocksize);
-    p->par->TR[0] = p->par->TR[0]/(1.0*p->blocksize);
-  }
   
   if(p->seed==0)
     p->seed = time(NULL);
@@ -417,16 +410,11 @@ void destroy_args(args *p){
 int main_psmc(int argc, char **argv){
   fprintf(stderr,"\t-> we are in file: %s function: %s line:%d\n",__FILE__,__FUNCTION__,__LINE__);
 
+  timer t = starttimer();
   //we loop over the single chromosomes
-#ifdef __SHOW_TIME__
-  clock_t t=clock();
-  time_t t2=time(NULL);
-#endif
+
   args *pars = getArgs(argc,argv);
-#ifdef __SHOW_TIME__
-  fprintf(stderr, "\t[TIME] cpu-time used =  %.2f sec for reading arguments\n", (float)(clock() - t) / CLOCKS_PER_SEC);
-  fprintf(stderr, "\t[Time] walltime used =  %.2f sec for reading arguments\n", (float)(time(NULL) - t2));  
-#endif
+
   for(int i=0;0&&i<pars->par->n+1;i++)
     fprintf(stderr,"%d) tk:%f lambda:%f\n",i,pars->par->times[i],pars->par->params[i]);
   if(!pars)
@@ -452,5 +440,7 @@ int main_psmc(int argc, char **argv){
 
 #endif
   destroy_args(pars);
+  stoptimer(t);
+  fprintf(stdout,"MM totaltime(wall(min),cpu(min)):(%f,%f) \n",t.tids[1],t.tids[0]);
   return 0;
 }

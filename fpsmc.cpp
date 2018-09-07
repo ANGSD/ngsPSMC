@@ -9,7 +9,7 @@
 #include "hmm_psmc.h"
 #include "bfgs.h"
 #include "compute.h"
-
+#include "fpsmc.h"
 
 extern int nThreads;
 
@@ -164,12 +164,6 @@ void make_remapper(psmc_par *pp){
 }
 
 static int  mysupercounter =0;
-
-typedef struct{
-  clock_t t;
-  time_t t2;
-  double tids[2];
-}timer;
 
 timer starttimer(){
   timer t;
@@ -541,6 +535,17 @@ int psmc_wrapper(args *pars,int blocksize) {
   }else
     make_remapper(pars->par);
 
+  //adjust theta:
+  pars->par->TR[0] = pars->par->TR[0]/2.0;
+  fprintf(stderr,"\t-> p->perc->version:%d (one is gls, otherwise fasta)\n",pars->perc->version);
+  if(pars->perc->version==1){//if it is gls
+    fprintf(stderr,"\t-> Adjusing theta with blocksize: %d\n",p->blocksize);
+    pars->par->TR[0] = p->par->TR[0]/(1.0*p->blocksize);
+  }
+  
+
+
+  
   int tk_l = pars->par->n+1;
   fprintf(stderr,"\t-> tk_l in psmc_wrapper pars->par->n+1 tk_l:%d p->times:%p\n",tk_l,p->times);
   double *tk = new double [tk_l];
