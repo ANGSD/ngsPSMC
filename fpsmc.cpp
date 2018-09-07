@@ -539,8 +539,8 @@ int psmc_wrapper(args *pars,int blocksize) {
   pars->par->TR[0] = pars->par->TR[0]/2.0;
   fprintf(stderr,"\t-> p->perc->version:%d (one is gls, otherwise fasta)\n",pars->perc->version);
   if(pars->perc->version==1){//if it is gls
-    fprintf(stderr,"\t-> Adjusing theta with blocksize: %d\n",p->blocksize);
-    pars->par->TR[0] = p->par->TR[0]/(1.0*p->blocksize);
+    fprintf(stderr,"\t-> Adjusing theta with blocksize: %d\n",pars->blocksize);
+    pars->par->TR[0] = pars->par->TR[0]/(1.0*pars->blocksize);
   }
   
 
