@@ -408,8 +408,8 @@ void destroy_args(args *p){
 
 //simple function 
 int main_psmc(int argc, char **argv){
-  fprint(stdout,"MM");
-  for(int i=0;i<argc,i++)
+  fprintf(stdout,"MM");
+  for(int i=0;i<argc;i++)
     fprintf(stdout," %s",argv[i]);
   fprintf(stdout,"\n");
   fprintf(stderr,"\t-> we are in file: %s function: %s line:%d\n",__FILE__,__FUNCTION__,__LINE__);
