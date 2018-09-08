@@ -101,7 +101,7 @@ perpsmc * perpsmc_init(char *fname,int nChr){
       if(nChr!=-1&&at++>=nChr)
 	break;
       char *chr = strdup(faidx_iseq(ret->pf->fai,i));
-      fprintf(stderr,"\t->[%s] %d) chr: %s\n",__FUNCTION__,i,chr);
+      fprintf(stderr,"\t-> [%s] %d) chr: %s\n",__FUNCTION__,i,chr);
       datum d;
       d.nSites = faidx_seq_len(ret->pf->fai,chr);
       d.pos=d.saf=0;
