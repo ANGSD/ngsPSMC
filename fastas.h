@@ -12,4 +12,5 @@ typedef struct{
 
 //this will initialize our data
 perFasta *perFasta_init(const char *fname);
+void perFasta_destroy(perFasta *);
 char *loadChr(perFasta *f, char*chrName,int chrId);

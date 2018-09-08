@@ -175,6 +175,8 @@ void setpars( char *fname,psmc_par *pp,int which) {
   char *nline = strdup(line);
   char *tok = strtok(nline,"\n\t ");
   tok = strtok(NULL,"\n\t ");
+  if(pp->pattern)
+    free(pp->pattern);
   pp->pattern=strdup(tok);
   if(pp->par_map)
     free(pp->par_map);
@@ -193,6 +195,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
   }
   fprintf(stderr,"\t-> Done reading parameters from file: \'%s\'\n",fname);
   //  exit(0);
+  free(nline);
   delete [] buf;
 }
 
@@ -360,9 +363,10 @@ args * getArgs(int argc,char **argv){
   p->perc = perpsmc_init(p->fname,p->nChr);
   extern int doQuadratic;
   doQuadratic = p->doQuad;
-  if(inffilename)
+  if(inffilename){
     setpars(inffilename,p->par,p->RD);
-
+    free(inffilename);
+  }
   
   if(p->seed==0)
     p->seed = time(NULL);
@@ -374,15 +378,18 @@ args * getArgs(int argc,char **argv){
   if(p->par->pattern==NULL)
     p->par->pattern = strdup(DEFAULT_PATTERN);
   //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
-  if(p->par->pattern!=NULL)
+  if(p->par->pattern!=NULL){
+    if(p->par->par_map)
+      free(p->par->par_map);
     p->par->par_map = psmc_parse_pattern(p->par->pattern, &p->par->n_free, &p->par->n);
-  
+  }
   char tmp[1024];
   snprintf(tmp,1024,"%s.log",p->outname);
   fprintf(stderr,"\t-> Writing file: \'%s\'\n",tmp);
   if(fexists(tmp)){
     fprintf(stderr,"\t-> File exists, will exit\n");
-    exit(0);
+    destroy_args(p);
+    return NULL;
   }
   p->flog = fopen(tmp,"w");
   assert(p->flog!=NULL);
@@ -390,7 +397,8 @@ args * getArgs(int argc,char **argv){
   fprintf(stderr,"\t-> Writing file: \'%s\'\n",tmp);
   if(fexists(tmp)){
     fprintf(stderr,"\t-> File exists, will exit\n");
-    exit(0);
+    destroy_args(p);
+    return NULL;
   }
   p->fres = fopen(tmp,"w");
   
@@ -404,28 +412,39 @@ args * getArgs(int argc,char **argv){
 
 //made a seperate function for this. Im assuming our args will contain allocated data at some point.
 void destroy_args(args *p){
+  if(p->msstr)
+    free(p->msstr);
   perpsmc_destroy(p->perc);
-  fclose(p->flog);
-  fclose(p->fres);
-  free(p->outname);
-  free(p->par->par_map);
+  if(p->flog)
+    fclose(p->flog);
+  if(p->fres)
+    fclose(p->fres);
+  if(p->outname)
+    free(p->outname);
+  if(p->par->par_map)
+    free(p->par->par_map);
+  if(p->par->pattern)
+    free(p->par->pattern);
+  if(p->par->params)
+    delete [] p->par->params;
+  if(p->par->times)
+    delete [] p->par->times;
+  if(p->par)
+    free(p->par);
   delete p;
 }
 
 
 //simple function 
 int main_psmc(int argc, char **argv){
-  fprintf(stdout,"MM");
-  for(int i=0;i<argc;i++)
-    fprintf(stdout," %s",argv[i]);
-  fprintf(stdout,"\n");
   fprintf(stderr,"\t-> we are in file: %s function: %s line:%d\n",__FILE__,__FUNCTION__,__LINE__);
 
   timer t = starttimer();
   //we loop over the single chromosomes
 
   args *pars = getArgs(argc,argv);
-
+  if(!pars)
+    return 0;
   for(int i=0;0&&i<pars->par->n+1;i++)
     fprintf(stderr,"%d) tk:%f lambda:%f\n",i,pars->par->times[i],pars->par->params[i]);
   if(!pars)
@@ -452,6 +471,6 @@ int main_psmc(int argc, char **argv){
 #endif
   destroy_args(pars);
   stoptimer(t);
-  fprintf(stdout,"MM totaltime(wall(min),cpu(min)):(%f,%f) \n",t.tids[1],t.tids[0]);
+  fprintf(stdout,"MM\ttotaltime(wall(min),cpu(min)):(%f,%f) \n",t.tids[1],t.tids[0]);
   return 0;
 }

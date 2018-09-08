@@ -62,17 +62,19 @@ int print_header(int argc,char **argv){
   return 0;
 }
 
-void print_main(int argc,char **argv){
+int print_main(int argc,char **argv){
   
   if(argc<1){
     fprintf(stderr,"\t-> Must supply afile.saf.idx files \n");
     fprintf(stderr,"\t-> Examples \n");
     fprintf(stderr,"\t-> ./ngsPSMC print pop1.saf.idx \n");
     fprintf(stderr,"\t-> ./ngsPSMC print pop1.saf.idx -r chr1:10000000-12000000\n");
-    return; 
+    return 0; 
   }
   
   args *pars = getArgs(argc,argv);
+  if(!pars)
+    return 0;
   writepsmc_header(stderr,pars->perc);
   
   for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){
@@ -165,6 +167,8 @@ int makeold(int argc,char **argv){
     return 0; 
   }
   args *pars = getArgs(argc,argv);
+  if(!pars)
+    return 0;
   writepsmc_header(stderr,pars->perc);
   
 
@@ -215,7 +219,8 @@ int makeold(int argc,char **argv){
 }
 
 int main(int argc,char **argv){
-
+  int argc_orig=argc;
+  char **argv_orig=argv;
   //start of signal handling
   struct sigaction sa;
   sigemptyset (&sa.sa_mask);
@@ -242,6 +247,11 @@ int main(int argc,char **argv){
   else if(!strcasecmp(*argv,"makeold"))
     makeold(--argc,++argv);
   else {
+    fprintf(stdout,"MM\t");
+    for(int i=0;i<argc_orig;i++)
+      fprintf(stdout," %s",argv_orig[i]);
+    fprintf(stdout,"\n");
+
     if(isatty(fileno(stdout))){
       fprintf(stderr,"\t-> You are printing results to the terminal consider dumping into a file\n");
       fprintf(stderr,"\t-> E.g.: \'./ngsPSMC ");

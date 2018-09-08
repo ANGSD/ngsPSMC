@@ -489,7 +489,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
     fprintf(stdout,"RI\t?\n");
     fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
     fprintf(stdout,"MT\t1000000.0\n");
-    fprintf(stdout,"MM buildhmm(wall(min),cpu(min)):(%f,%f) \n",hmm_t.tids[1],hmm_t.tids[0]);
+    fprintf(stdout,"MM\tbuildhmm(wall(min),cpu(min)):(%f,%f) \n",hmm_t.tids[1],hmm_t.tids[0]);
     for(int i=0;i<tk_l;i++)
       fprintf(stdout,"RS\t%d\t%f\t%f\t1000000.0\t1000000.0\t1000000.0\n",i,tk[i],epsize[i]);
     fprintf(stdout,"PA\t%s %.9f %.9f 666.666666666",pp->pattern,theta,rho);
@@ -589,5 +589,13 @@ int psmc_wrapper(args *pars,int blocksize) {
   fprintf(pars->fres,"%f\t%f\n",pars->par->TR[0],pars->par->TR[1]);
   for(int i=0;i<tk_l;i++)
     fprintf(pars->fres,"%f\t%f\n",tk[i],epsize[i]);
+  free(objs[0]->outnames);
+  for (int i=0;i<nChr;i++)
+    delete objs[i];
+  delete [] objs;
+  delete [] remap;
+  delete [] tk;
+  delete [] epsize;
+  delete [] ops;
   return 1;
 }

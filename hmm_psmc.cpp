@@ -460,8 +460,6 @@ void fastPSMC::calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,doubl
 #endif
 }
 
-
-
 void fastPSMC::allocate(int tk_l_arg){
 #ifdef __SHOW_TIME__
   clock_t t=clock();
@@ -804,6 +802,39 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   return qval;
   exit(0);
   
+}
+
+fastPSMC::~fastPSMC(){
+  fprintf(stderr,"\t-> calling destructor\n");
+  delete [] gls;
+  delete [] R1;
+  delete [] R2;
+  for(int i=0;i<tk_l;i++){
+    delete [] emis[i];
+    delete [] fw[i];
+    delete [] bw[i];
+    delete [] baumwelch[i];
+  }
+  delete [] baumwelch[tk_l];
+  for(int i=0;i<8;i++){
+    delete [] P[i];
+    delete [] PP[i];
+    delete [] nP[i];
+  }
+  delete [] emis;
+  delete [] fw;
+  delete [] bw;
+  delete [] baumwelch;
+  delete [] P;
+  delete [] PP;
+  delete [] nP;
+  if(DOTRANS){
+    for(int i=0;i<tk_l;i++)
+      delete [] trans[i];
+    delete [] trans;
+  }
+  delete [] workspace;
+  delete [] stationary;
 }
 /*
 double fastPSMC::fwllh(){

@@ -63,6 +63,8 @@ void transform(msarg &ms,psmc_par *par,int winsize){
 
 #if 1
   int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars);
+  if(par->par_map)
+    free(par->par_map);
   par->par_map= psmc_parse_pattern(par->pattern,&par->n_free,&par->n);
    extern int remap_l;
    extern int * remap;

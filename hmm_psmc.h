@@ -51,6 +51,7 @@ public:
     //rho = 0.207;
     index=tot_index++;
   }
+  ~fastPSMC();
   /*
     double fwllh();
     double bwllh();

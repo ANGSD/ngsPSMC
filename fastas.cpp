@@ -25,6 +25,15 @@ int isNewer(const char *newer,const char *older){
   return one.st_mtime>=two.st_mtime;
 }
 
+void perFasta_destroy(perFasta *pf){
+  if(pf->fastaname)
+    free(pf->fastaname);
+  if(pf->fai)
+    fai_destroy(pf->fai);
+  if(pf->seqs)
+    free(pf->seqs);
+  delete pf;
+}
 
 //this will initialize our data
 perFasta *perFasta_init(const char *fname){

@@ -17,6 +17,8 @@ void destroy(myMap &mm){
 
 
 void perpsmc_destroy(perpsmc *pp){
+  if(pp->pf)
+    perFasta_destroy(pp->pf);
   bgzf_close(pp->bgzf_gls);
   bgzf_close(pp->bgzf_pos);
   destroy(pp->mm);
@@ -27,6 +29,7 @@ void perpsmc_destroy(perpsmc *pp){
     delete [] pp->gls;
 
   free(pp->fname);
+  
   delete pp;
 }
 
