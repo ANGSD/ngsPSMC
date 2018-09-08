@@ -176,7 +176,8 @@ void setpars( char *fname,psmc_par *pp,int which) {
   char *tok = strtok(nline,"\n\t ");
   tok = strtok(NULL,"\n\t ");
   pp->pattern=strdup(tok);
-
+  if(pp->par_map)
+    free(pp->par_map);
   pp->par_map= psmc_parse_pattern(pp->pattern,&pp->n_free,&pp->n);
   assert(RS.size()-1==pp->n);
   pp->params = new double[RS.size()];
@@ -192,6 +193,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
   }
   fprintf(stderr,"\t-> Done reading parameters from file: \'%s\'\n",fname);
   //  exit(0);
+  delete [] buf;
 }
 
 
@@ -317,8 +319,11 @@ args * getArgs(int argc,char **argv){
       p->nIter = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-p"))
       p->par->pattern =  strdup(*(++argv));
-    else  if(!strcasecmp(*argv,"-out"))
+    else  if(!strcasecmp(*argv,"-out")){
+      if(p->outname)
+	free(p->outname);
       p->outname =  strdup(*(++argv));
+    }
     else  if(!strcasecmp(*argv,"-tkfile"))
       p->tkfile =  strdup(*(++argv));
     else  if(!strcasecmp(*argv,"-ms"))
@@ -402,6 +407,8 @@ void destroy_args(args *p){
   perpsmc_destroy(p->perc);
   fclose(p->flog);
   fclose(p->fres);
+  free(p->outname);
+  free(p->par->par_map);
   delete p;
 }
 
