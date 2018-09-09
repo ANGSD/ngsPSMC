@@ -53,6 +53,6 @@ typedef struct {
   char *msstr;
   msarg msstr_arg;
 }args;
-args * getArgs(int argc,char **argv);
+args * getArgs(int argc,char **argv,int dontprint);
 void destroy_args(args *p);
 int main_psmc(int argc,char **argv);

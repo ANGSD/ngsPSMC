@@ -52,7 +52,7 @@ int print_header(int argc,char **argv){
     return 0; 
   }
   
-  args *pars = getArgs(argc,argv);
+  args *pars = getArgs(argc,argv,1);
   if(!pars)
     return 1;
   
@@ -72,7 +72,7 @@ int print_main(int argc,char **argv){
     return 0; 
   }
   
-  args *pars = getArgs(argc,argv);
+  args *pars = getArgs(argc,argv,1);
   if(!pars)
     return 0;
   writepsmc_header(stderr,pars->perc);
@@ -166,7 +166,7 @@ int makeold(int argc,char **argv){
     fprintf(stderr,"\t-> output is a vcf2fq style file \n");
     return 0; 
   }
-  args *pars = getArgs(argc,argv);
+  args *pars = getArgs(argc,argv,1);
   if(!pars)
     return 0;
   writepsmc_header(stderr,pars->perc);

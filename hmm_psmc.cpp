@@ -744,15 +744,17 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
 
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
   BGZF *tmp_bg =NULL;
-  if(0){
+  if(1){
     char tmpnam[1024];
     snprintf(tmpnam,1024,"%s_emisfull_%d",outnames,index);
     fprintf(stderr,"\t-> tmpnam:%s\n",tmpnam);
     tmp_bg = bgzf_open(tmpnam,"w");
   }
   calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize,tmp_bg);
-  if(tmp_bg)
+  if(tmp_bg){
     bgzf_close(tmp_bg);
+    exit(0);
+  }
   calculate_stationary(tk_l,stationary,P);
   calculate_FW_BW_PP_Probs(tk,tk_l,epsize,rho);
 

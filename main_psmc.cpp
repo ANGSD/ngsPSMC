@@ -276,8 +276,10 @@ void readtkfile(psmc_par *pp,const char *fname){
 
 int doGlStyle =0;
 
-args * getArgs(int argc,char **argv){
+args * getArgs(int argc,char **argv,int dontprint){
   args *p = new args;
+  p->flog = NULL;
+  p->fres = NULL;
   p->chooseChr=NULL;
   p->start=p->stop=-1;
   p->maxIter=1e2;
@@ -383,25 +385,26 @@ args * getArgs(int argc,char **argv){
       free(p->par->par_map);
     p->par->par_map = psmc_parse_pattern(p->par->pattern, &p->par->n_free, &p->par->n);
   }
-  char tmp[1024];
-  snprintf(tmp,1024,"%s.log",p->outname);
-  fprintf(stderr,"\t-> Writing file: \'%s\'\n",tmp);
-  if(fexists(tmp)){
-    fprintf(stderr,"\t-> File exists, will exit\n");
-    destroy_args(p);
-    return NULL;
+  if(dontprint!=1){
+    char tmp[1024];
+    snprintf(tmp,1024,"%s.log",p->outname);
+    fprintf(stderr,"\t-> Writing file: \'%s\'\n",tmp);
+    if(fexists(tmp)){
+      fprintf(stderr,"\t-> File exists, will exit\n");
+      destroy_args(p);
+      return NULL;
+    }
+    p->flog = fopen(tmp,"w");
+    assert(p->flog!=NULL);
+    snprintf(tmp,1024,"%s.res",p->outname);
+    fprintf(stderr,"\t-> Writing file: \'%s\'\n",tmp);
+    if(fexists(tmp)){
+      fprintf(stderr,"\t-> File exists, will exit\n");
+      destroy_args(p);
+      return NULL;
+    }
+    p->fres = fopen(tmp,"w");
   }
-  p->flog = fopen(tmp,"w");
-  assert(p->flog!=NULL);
-  snprintf(tmp,1024,"%s.res",p->outname);
-  fprintf(stderr,"\t-> Writing file: \'%s\'\n",tmp);
-  if(fexists(tmp)){
-    fprintf(stderr,"\t-> File exists, will exit\n");
-    destroy_args(p);
-    return NULL;
-  }
-  p->fres = fopen(tmp,"w");
-  
   nThreads = p->nThreads;
   if(p->init!=-1)
     for(int i=0;i<p->par->n+1;i++)
@@ -442,7 +445,7 @@ int main_psmc(int argc, char **argv){
   timer t = starttimer();
   //we loop over the single chromosomes
 
-  args *pars = getArgs(argc,argv);
+  args *pars = getArgs(argc,argv,0);
   if(!pars)
     return 0;
   for(int i=0;0&&i<pars->par->n+1;i++)
