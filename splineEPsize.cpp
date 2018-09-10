@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cassert>
 #include <cstdio>
+#include <cstdlib>
 
 class splineEPSize{
 public:
@@ -45,6 +46,7 @@ double splineEPSize::Poly(int degree, double *coef, double x){
 }
 
 void splineEPSize::printAll(FILE *fp,double *epsize){
+  fprintf(fp,"(tk_l,numInt,degree)\t%d %d %d\n",tk_l,intNum,degree);
   for(int i=0;i<intNum;i++){
     fprintf(fp,"sp\t%f\t%f",tk[Tk[i]],tk[Tk[i+1]]);
     for(int j=0;j<degree+1;j++)
@@ -125,6 +127,7 @@ int main(){
   obj.Tk[0]=0;
   obj.Tk[1]=3;
   obj.Tk[2]=7;
+  
   obj.fv[0] = 4.4;
   obj.fv[1] = 0.1;
   obj.fv[2] = 10.7;
@@ -132,6 +135,7 @@ int main(){
   obj.dv[1] = -3;
   obj.dv[2] = 6;
 
+  
   obj.computeSpline();
   double epsize[8];
   obj.computeEPSize(epsize);
