@@ -102,17 +102,17 @@ void splineEPSize::computeEPSize(double *epsize){//FIXME epsize should be of len
   double t0,t1;
   int si;
   si = 0;
-  for (int i = 0; i < tk_l - 2; i++){//FIXME is tk[0] == 0.0?
+  for (int i = 0; i < tk_l-1 ; i++){//FIXME is tk[0] == 0.0?
     t0 = tk[i];
     t1 = tk[i+1];
-    if (t0 > tk[Tk[si + 1]]){
+    if (t0 >= tk[Tk[si + 1]]){
       si += 1;
     }
+    fprintf(stderr,"i:%d si:%d \n",i,si);
     double tmp1[5]={spline[si][0]/4, spline[si][1]/3, spline[si][2]/2, spline[si][3], 0};//check
-    double tmp2[5]={spline[si][0]/4, spline[si][1]/3, spline[si][2]/2, spline[si][3], 0};
-    epsize[i] = (Poly(4,tmp1, t1) - Poly(4,tmp2, t0))/(t1-t0);
+    epsize[i] = (Poly(4,tmp1, t1) - Poly(4,tmp1, t0))/(t1-t0);
   }
-  epsize[tk_l-1] = fv[intNum + 1];
+  epsize[tk_l-1] = fv[intNum];
 }
 
 
@@ -137,7 +137,7 @@ int main(){
 
   
   obj.computeSpline();
-  double epsize[8];
+  double epsize[8+1];
   obj.computeEPSize(epsize);
   obj.printAll(stdout,epsize);
   return 0;
