@@ -1,36 +1,40 @@
 
 
 read.psmc1 <- function(x,rd=-1){
-    v<-system(paste0("grep -n RD ",x,"|grep -v C|tr \":\" \"\t\"|cut -f2 --complement"),intern=T)
-    rdsplit <-  matrix(as.numeric(unlist(strsplit(v,"\t"))),ncol=2,byrow=T)[,2:1]
-    rdsplit <- rbind(rdsplit,c(-1,as.numeric(system(paste0("wc -l ",x,"| cut -f1 -d\" \""),intern=T))))
+    d<-readLines(x)
+    if(length(d)<10)
+        stop("file looks empty")
+    rds <- grep("RD",d)
+    rds <- c(rds,length(d))
+
+    ofs<-rds[1:2]
+    for(i in 2:(length(rds)-1))
+        ofs<-rbind(ofs,rds[i:(i+1)])
     if(rd==-1)
-        rd <- tail(rdsplit,2)[1,1]
-##    cat("\t-> Numaber of RD from file: ",x," is ",nrow(rdsplit)-2,"\n")
-    wh <-which(rdsplit[,1]==rd)
-    until <- rdsplit[wh+1,2]
-    howMany <- until-rdsplit[wh,2]
-    cmd <- paste("head -n",until,x ,"|tail -n",howMany)
-    TR <-c(NA,NA);
-    LK <- as.numeric(system(paste0(cmd,"|grep LK|cut -f2"),intern=T))
-    TR[1] <- as.numeric(system(paste0(cmd,"|grep TR|cut -f2"),intern=T))
-    TR[2] <- as.numeric(system(paste0(cmd,"|grep TR|cut -f3"),intern=T))
-    MT <- as.numeric(system(paste0(cmd,"|grep MT|cut -f2"),intern=T))
-    RS <- t(matrix(as.numeric(unlist(strsplit(system(paste0(cmd,"|grep RS|cut -f2,3,4"),intern=T),"\t"))),3))
-    PAT <- system(paste0(cmd,"|grep PA|cut -f2|cut -f1 -d\" \""),intern=T)
-    PA <-  as.numeric(unlist(strsplit(system(paste0(cmd,"|grep PA|cut -f2|cut -f1 -d\" \" --complement"),intern=T)," ")))
+        rd=nrow(ofs)
+    if(rd>nrow(ofs))
+        stop("rd is out of bounds")
+    sd <- d[ofs[rd,1]:ofs[rd,2]]
+    
+  
+    TR <-as.numeric(unlist(strsplit(grep("TR",sd,val=T),"\t"))[-1])
+    LK <-as.numeric(unlist(strsplit(grep("LK",sd,val=T),"\t"))[-1])
+    MT <- as.numeric(unlist(strsplit(grep("MT",sd,val=T),"\t"))[-1])
+    nrs <- length(grep("RS",sd))
+    RS <- matrix(as.numeric(matrix(unlist(strsplit(grep("RS",sd,val=T),"\t")),nrow=nrs,byrow=T)[,-1]),nrow=nrs,byrow=F)
+    RS[,2]<-log(RS[,2])
+    PAT <-unlist(strsplit(unlist(strsplit(grep("PA",sd,val=T),"\t"))," "))[[2]] 
+    PA <-  as.numeric(unlist(strsplit(unlist(strsplit(grep("PA",sd,val=T),"\t"))," "))[-c(1,2)])
     ret <- list(TR=TR,MT=MT,RS=RS,PAT=PAT,PA=PA,LK=LK)
     return(ret)
     
 }
 
 read.psmc <- function(x){
-   v<-system(paste0("grep -n RD ",x,"|grep -v C|tr \":\" \"\t\"|cut -f2 --complement"),intern=T)
-    rdsplit <-  matrix(as.numeric(unlist(strsplit(v,"\t"))),ncol=2,byrow=T)[,2:1]
-    rdsplit <- rbind(rdsplit,c(-1,as.numeric(system(paste0("wc -l ",x,"| cut -f1 -d\" \""),intern=T))))
-   cat("\t-> Number of RD from file: ",x," is ",nrow(rdsplit)-2,"\n")
-   ret <- lapply(0:(nrow(rdsplit)-2),function(rd) read.psmc1(x,rd))
-   return(ret)
+    nrd <- length(grep("RD",readLines("ngs.run2.stdout")))
+    cat("\t-> Number of RD from file: ",x," is ",nrd,"\n")
+    ret <- lapply(1:nrd,function(rd) read.psmc1(x,rd))
+    return(ret)
 }
 
 
@@ -97,4 +101,115 @@ if(FALSE){
     lines(d1$RS[,2],d1$RS[,3],type='l',lwd=3,col=2)
     legend("topright",paste0(c("init.llh","optim1.llh"),"=",c(d0$LK,d1$LK)),fill=1:2)
     dev.off()
+}
+
+
+if(FALSE){
+	   pdf("forvlad4.pdf")
+    d0 <- read.psmc1("test27/ngs.ms.stdout",rd=0)
+    d1 <- read.psmc1("test27/ngs.ms.stdout",rd=1)
+    plot(d0$RS[,2],d0$RS[,3],type='l',lwd=6,col=1,main="fasta input,psmc pars,win=1",ylim=c(0,max(rbind(d0$RS,d1$RS)[,3])) )
+    lines(d1$RS[,2],d1$RS[,3],type='l',lwd=3,col=2)
+    legend("topright",paste0(c("init.llh","optim1.llh"),"=",c(d0$LK,d1$LK)),fill=1:2)
+
+    d0 <- read.psmc1("test27/ngs.ms2.stdout",rd=0)
+    d1 <- read.psmc1("test27/ngs.ms2.stdout",rd=1)
+    plot(d0$RS[,2],d0$RS[,3],type='l',lwd=6,col=1,main="fasta input psmc pars, win=100",ylim=c(0,max(rbind(d0$RS,d1$RS)[,3])))
+    lines(d1$RS[,2],d1$RS[,3],type='l',lwd=3,col=2)
+    legend("topright",paste0(c("init.llh","optim1.llh"),"=",c(d0$LK,d1$LK)),fill=1:2)
+
+    d0 <- read.psmc1("test27/ngs2.gl.stdout",rd=0)
+    d1 <- read.psmc1("test27/ngs2.gl.stdout",rd=1)
+    plot(d0$RS[,2],d0$RS[,3],type='l',lwd=6,col=1,main="gl input psmc pars win=1",ylim=c(0,max(rbind(d0$RS,d1$RS)[,3])))
+    lines(d1$RS[,2],d1$RS[,3],type='l',lwd=3,col=2)
+    legend("topright",paste0(c("init.llh","optim1.llh"),"=",c(d0$LK,d1$LK)),fill=1:2)
+
+    d0 <- read.psmc1("test27/ngs3.ms.stdout",rd=0)
+    d1 <- read.psmc1("test27/ngs3.ms.stdout",rd=1)
+    plot(d0$RS[,2],d0$RS[,3],type='l',lwd=6,col=1,main="gl input psmc pars win=100 ",ylim=c(0,max(rbind(d0$RS,d1$RS)[,3])))
+    lines(d1$RS[,2],d1$RS[,3],type='l',lwd=3,col=2)
+    legend("topright",paste0(c("init.llh","optim1.llh"),"=",c(d0$LK,d1$LK)),fill=1:2)
+
+    d0 <- read.psmc1("test27/ngs4.fa.ms.stdout",rd=0)
+    d1 <- read.psmc1("test27/ngs4.fa.ms.stdout",rd=1)
+    plot(d0$RS[,2],d0$RS[,3],type='l',lwd=6,col=1,main="fa input ms pars win=1 (4x5) ",ylim=c(0,max(rbind(d0$RS,d1$RS)[,3])))
+    lines(d1$RS[,2],d1$RS[,3],type='l',lwd=3,col=2)
+    legend("topright",paste0(c("init.llh","optim1.llh"),"=",c(d0$LK,d1$LK)),fill=1:2)
+
+
+       d0 <- read.psmc1("test27/ngs5.fa.ms.stdout",rd=0)
+    d1 <- read.psmc1("test27/ngs5.fa.ms.stdout",rd=1)
+    plot(d0$RS[,2],d0$RS[,3],type='l',lwd=6,col=1,main="fa input ms pars win=100 (4x5) ",ylim=c(0,max(rbind(d0$RS,d1$RS)[,3])))
+    lines(d1$RS[,2],d1$RS[,3],type='l',lwd=3,col=2)
+    legend("topright",paste0(c("init.llh","optim1.llh"),"=",c(d0$LK,d1$LK)),fill=1:2)
+
+
+    
+
+
+    dev.off()	
+
+
+}
+
+
+plot_chain<-function(x,...){
+  plot(x[[1]]$RS[,2],x[[1]]$RS[,3],type='l',ylim=c(0,max(sapply(x,function(x) x$RS[,3]))),...)
+  for(d in x[-1])
+      lines(d$RS[,2],d$RS[,3])
+
+}
+
+plot_ngs <-function(x,...){
+	 d0<-x[[1]]
+	 d1<-x[[2]]
+  plot(d0$RS[,2],d0$RS[,3],type='l',lwd=6,col=1,ylim=c(0,max(rbind(d0$RS,d1$RS)[,3])),...)
+ lines(d1$RS[,2],d1$RS[,3],type='l',lwd=3,col=2)
+}
+
+
+if(FALSE){
+    #   pdf("forvlad4.pdf")
+    lh3.w100.fa <- read.psmc("test28/lh3.w100.fa.gz.psmc")
+    tsk.w100.fa <- read.psmc("test28/tsk.w100.fa.gz.psmc")	
+    lh3.w1.fa <- read.psmc("test28/lh3.w1.fa.gz.psmc")
+     tsk.w1.fa <- read.psmc("test28/tsk.w1.fa.gz.psmc")	
+
+    
+
+  plot_chain(lh3.w100.fa)  
+  plot_chain(tsk.w100.fa)				
+   plot_chain(lh3.w1.fa)
+    plot_chain(lh3.w1.fa)
+    
+#    plot_ngs(ngs.tsk.w100.fa)
+   
+    plot(lh3.w1.fa[[26]]$RS[,2],lh3.w1.fa[[26]]$RS[,3],type='l',lwd=3,col=1,main='fasta (win1 vs win100)(lh3)')
+    lines(lh3.w100.fa[[26]]$RS[,2],lh3.w100.fa[[26]]$RS[,3],lwd=1,col=2)	
+
+    plot(tsk.w1.fa[[26]]$RS[,2],tsk.w1.fa[[26]]$RS[,3],type='l',lwd=4,col=1,main='fasta (win1 vs win100)(tsk)')
+    lines(tsk.w100.fa[[26]]$RS[,2],tsk.w100.fa[[26]]$RS[,3],lwd=2,col=2)	
+
+    plot(lh3.w1.fa[[26]]$PA,tsk.w1.fa[[26]]$PA,main='win1, lh3fasta vs tskfasta')
+    plot(lh3.w100.fa[[26]]$PA,tsk.w100.fa[[26]]$PA,main='win100, lh3fasta vs tskfasta')
+
+    ngs.tsk.w100.fa <- read.psmc("test28/ngs.tsk.w100.fa.gz.stdout")
+
+
+    #fa
+    pdf("ngsPSMC1.pdf",width=21,height=21)
+    par(mfrow=c(2,2))
+    plot_ngs(read.psmc("test28/ngs.tsk.w1.fa.gz.stdout"),main="Fasta w1 for one optim")
+    plot_ngs(read.psmc("test28/ngs.lh3.w100.fa.gz.stdout"),main="Fasta w100 for one optim")	
+#gl
+  plot_ngs(read.psmc("test28/ngs.tsk.w1.gl.gz.stdout"),main="gl w1 for one optim(based on psmcfasta)")	
+  plot_ngs(read.psmc("test28/ngs.tsk.w100.gl.gz.stdout"),main="gl w100 for one optim(based on psmcfasta)")	
+  dev.off()
+}
+
+
+
+if(FALSE){
+plot_chain(read.psmc("ngs.run2.stdout"))
+
 }
