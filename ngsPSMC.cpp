@@ -42,9 +42,6 @@ void handler(int s) {
 
 }
 
-
-
-
 int print_header(int argc,char **argv){
 
   if(argc<1){
@@ -56,8 +53,7 @@ int print_header(int argc,char **argv){
   if(!pars)
     return 1;
   
-  writepsmc_header(stdout,pars->perc);
-  
+  writepsmc_header(stdout,pars->perc,0);
   destroy_args(pars);
   return 0;
 }
@@ -75,7 +71,7 @@ int print_main(int argc,char **argv){
   args *pars = getArgs(argc,argv,1);
   if(!pars)
     return 0;
-  writepsmc_header(stderr,pars->perc);
+  writepsmc_header(stderr,pars->perc,0);
   
   for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){
     
@@ -169,7 +165,7 @@ int makeold(int argc,char **argv){
   args *pars = getArgs(argc,argv,1);
   if(!pars)
     return 0;
-  writepsmc_header(stderr,pars->perc);
+  writepsmc_header(stderr,pars->perc,1);
   
   fprintf(stderr,"nSize: %lu\n",pars->perc->nSites);
   double *gls = new double[2*pars->perc->nSites];

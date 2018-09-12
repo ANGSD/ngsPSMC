@@ -426,7 +426,7 @@ void destroy_args(args *p){
   delete p;
 }
 
-
+ 
 //simple function 
 int main_psmc(int argc, char **argv){
   fprintf(stderr,"\t-> we are in file: %s function: %s line:%d\n",__FILE__,__FUNCTION__,__LINE__);
@@ -442,7 +442,7 @@ int main_psmc(int argc, char **argv){
   if(!pars)
     return 0;
   //this will printout the header
-  writepsmc_header(stderr,pars->perc);
+  writepsmc_header(stderr,pars->perc,1);
 
   assert(pars->flog!=NULL);
   psmc_wrapper(pars,pars->blocksize);

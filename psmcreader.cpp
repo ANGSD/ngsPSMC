@@ -35,14 +35,14 @@ void perpsmc_destroy(perpsmc *pp){
 
 
 
-void writepsmc_header(FILE *fp,perpsmc *pp){
+void writepsmc_header(FILE *fp,perpsmc *pp,int onlysubset){
   fprintf(fp,"\t\tInformation from index file: nSites(total):%lu nChr:%lu\n",pp->nSites,pp->mm.size());
   
   int i=0;
   for(myMap::const_iterator it=pp->mm.begin();it!=pp->mm.end();++it){
     datum d = it->second;
     fprintf(fp,"\t\t%d\t%s\t%zu\t%ld\t%ld\n",i++,it->first,d.nSites,(long int)d.pos,(long int)d.saf);
-    if(i>9){
+    if(onlysubset && i>9){
       fprintf(stderr,"\t\t Breaking printing of header\n");
       break;
     }
@@ -213,7 +213,7 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
    pp->pos = new int[it->second.nSites];
    pp->gls = new double[2*it->second.nSites];//<-valgrind complains about large somthing
    
-   if(pp->pf==NULL){
+   if(pp->version==1){
      my_bgzf_read(pp->bgzf_pos,pp->pos,sizeof(int)*it->second.nSites);
      my_bgzf_read(pp->bgzf_gls,pp->gls,2*sizeof(double)*it->second.nSites);
      //   fprintf(stderr," end: %f %f\n",pp->gls[0],pp->gls[1]);
