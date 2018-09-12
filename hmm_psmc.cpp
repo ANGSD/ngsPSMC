@@ -744,7 +744,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
 
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
   BGZF *tmp_bg =NULL;
-  if(1){
+  if(0){
     char tmpnam[1024];
     snprintf(tmpnam,1024,"%s_emisfull_%d",outnames,index);
     fprintf(stderr,"\t-> tmpnam:%s\n",tmpnam);
