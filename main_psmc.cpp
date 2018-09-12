@@ -279,7 +279,6 @@ int doGlStyle =0;
 args * getArgs(int argc,char **argv,int dontprint){
   args *p = new args;
   p->flog = NULL;
-  p->fres = NULL;
   p->chooseChr=NULL;
   p->start=p->stop=-1;
   p->maxIter=1e2;
@@ -297,7 +296,7 @@ args * getArgs(int argc,char **argv,int dontprint){
   p->doQuad =0;
   p->smartsize =0;
   p->outname = strdup("output");
-  p->fres = p->flog = NULL;
+  p->flog = NULL;
   p->init = -1;
   p->msstr = NULL;
   char *inffilename=NULL;
@@ -373,13 +372,13 @@ args * getArgs(int argc,char **argv,int dontprint){
   if(p->seed==0)
     p->seed = time(NULL);
   srand48(p->seed);
-  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d fname:%s seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d -nChr:%d -ms:\'%s\'\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doQuad,doGlStyle,p->nChr,p->msstr);
+  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d\n\t-> fname:\'%s\' seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d -nChr:%d -ms:\'%s\'\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doQuad,doGlStyle,p->nChr,p->msstr);
   //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
   if(p->tkfile)
     readtkfile(p->par,p->tkfile);
   if(p->par->pattern==NULL)
     p->par->pattern = strdup(DEFAULT_PATTERN);
-  //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
+
   if(p->par->pattern!=NULL){
     if(p->par->par_map)
       free(p->par->par_map);
@@ -389,21 +388,13 @@ args * getArgs(int argc,char **argv,int dontprint){
     char tmp[1024];
     snprintf(tmp,1024,"%s.log",p->outname);
     fprintf(stderr,"\t-> Writing file: \'%s\'\n",tmp);
-    if(fexists(tmp)){
+    if(0&&fexists(tmp)){
       fprintf(stderr,"\t-> File exists, will exit\n");
       destroy_args(p);
       return NULL;
     }
     p->flog = fopen(tmp,"w");
     assert(p->flog!=NULL);
-    snprintf(tmp,1024,"%s.res",p->outname);
-    fprintf(stderr,"\t-> Writing file: \'%s\'\n",tmp);
-    if(fexists(tmp)){
-      fprintf(stderr,"\t-> File exists, will exit\n");
-      destroy_args(p);
-      return NULL;
-    }
-    p->fres = fopen(tmp,"w");
   }
   nThreads = p->nThreads;
   if(p->init!=-1)
@@ -420,8 +411,6 @@ void destroy_args(args *p){
   perpsmc_destroy(p->perc);
   if(p->flog)
     fclose(p->flog);
-  if(p->fres)
-    fclose(p->fres);
   if(p->outname)
     free(p->outname);
   if(p->par->par_map)

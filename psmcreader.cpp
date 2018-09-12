@@ -36,12 +36,16 @@ void perpsmc_destroy(perpsmc *pp){
 
 
 void writepsmc_header(FILE *fp,perpsmc *pp){
-  fprintf(fp,"\t\tInformation from index file: nSites:%lu\n",pp->nSites);
+  fprintf(fp,"\t\tInformation from index file: nSites(total):%lu nChr:%lu\n",pp->nSites,pp->mm.size());
   
   int i=0;
   for(myMap::const_iterator it=pp->mm.begin();it!=pp->mm.end();++it){
     datum d = it->second;
     fprintf(fp,"\t\t%d\t%s\t%zu\t%ld\t%ld\n",i++,it->first,d.nSites,(long int)d.pos,(long int)d.saf);
+    if(i>9){
+      fprintf(stderr,"\t\t Breaking printing of header\n");
+      break;
+    }
   }
 
 }
@@ -158,7 +162,7 @@ perpsmc * perpsmc_init(char *fname,int nChr){
   
   char *tmp2 = (char*)calloc(strlen(fname)+100,1);//that should do it
   snprintf(tmp2,strlen(fname)+100,"%sgz",tmp);
-  fprintf(stderr,"\t-> Assuming .psmc.gz file: %s\n",tmp2);
+  fprintf(stderr,"\t-> Assuming .psmc.gz file: \'%s\'\n",tmp2);
   ret->bgzf_gls = bgzf_open(tmp2,"r");
   if(ret->bgzf_gls)
     my_bgzf_seek(ret->bgzf_gls,8,SEEK_SET);
@@ -168,7 +172,7 @@ perpsmc * perpsmc_init(char *fname,int nChr){
   }
 
   snprintf(tmp2,strlen(fname)+100,"%spos.gz",tmp);
-  fprintf(stderr,"\t-> Assuming .psmc.pos.gz: %s\n",tmp2);
+  fprintf(stderr,"\t-> Assuming .psmc.pos.gz: \'%s\'o\n",tmp2);
   ret->bgzf_pos = bgzf_open(tmp2,"r");
   if(ret->pos)
     my_bgzf_seek(ret->bgzf_pos,8,SEEK_SET);

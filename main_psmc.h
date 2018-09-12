@@ -47,7 +47,6 @@ typedef struct {
   int nIter;
   int doQuad;
   char *outname;
-  FILE *fres;
   FILE *flog;
   double init;
   char *msstr;

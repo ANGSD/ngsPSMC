@@ -141,7 +141,7 @@ double qFunction_wrapper(const double *pars,const void *){
 
 
 void make_remapper(psmc_par *pp){
-  fprintf(stderr,"\t->[%s] pp->n_free:%d\n",__FUNCTION__,pp->n_free);
+  fprintf(stderr,"\t-> [%s] pp->n_free:%d\n",__FUNCTION__,pp->n_free);
   int at=0;
   remap = new int[pp->n_free];
   remap_l=pp->n_free;
@@ -441,7 +441,7 @@ void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
 
 
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize);
-void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter,int doSmartsize,FILE *FRES,FILE *FLOG){
+void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter,int doSmartsize,FILE *FLOG){
   assert(FLOG!=NULL);
 
   //test fix:
@@ -585,10 +585,8 @@ int psmc_wrapper(args *pars,int blocksize) {
   }
   objs[0]->outnames = strdup(pars->outname);
   assert(pars->flog!=NULL);
-  main_analysis(tk,tk_l,epsize,pars->par->TR[0],pars->par->TR[1],pars->par,pars->nIter,pars->smartsize,pars->fres,pars->flog);
-  fprintf(pars->fres,"%f\t%f\n",pars->par->TR[0],pars->par->TR[1]);
-  for(int i=0;i<tk_l;i++)
-    fprintf(pars->fres,"%f\t%f\n",tk[i],epsize[i]);
+  main_analysis(tk,tk_l,epsize,pars->par->TR[0],pars->par->TR[1],pars->par,pars->nIter,pars->smartsize,pars->flog);
+
   free(objs[0]->outnames);
   for (int i=0;i<nChr;i++)
     delete objs[i];
