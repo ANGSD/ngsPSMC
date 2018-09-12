@@ -38,9 +38,6 @@ typedef struct {
   long seed;//<-seed=-1 old version;seed=0 means time; othervise it will be used as seed
   int blocksize; //in bp
   psmc_par *par;
-  char *tkfile;
-  // double *tk;
-  //  double *lambda;
   perFasta *pf;
   int RD;
   int nThreads;

@@ -518,9 +518,9 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
 
 int psmc_wrapper(args *pars,int blocksize) {
   fprintf(stderr,"\t-> we are in file: %s function: %s line:%d blocksize:%d\n",__FILE__,__FUNCTION__,__LINE__,blocksize);
-  psmc_par *p=pars->par;
+
 #if 1 //print pars
-  fprintf(stderr,"\t-> par->n:%d\tpar->n_free:%d\tpar_map:%p\tpar->pattern:%s\tpar->times:%p\tpar->params:%p\n",p->n,p->n_free,p->par_map,p->pattern,p->times,p->params);
+  fprintf(stderr,"\t-> par->n:%d\tpar->n_free:%d\tpar_map:%p\tpar->pattern:%s\tpar->times:%p\tpar->params:%p\n",pars->par->n,pars->par->n_free,pars->par->par_map,pars->par->pattern,pars->par->times,pars->par->params);
   for(int i=0;0&&i<pars->par->n+1;i++)
     fprintf(stderr,"[psmc_wrapper]:%i)\t%f\t%f\n",i,pars->par->times[i],pars->par->params[i]);
   //  exit(0);
@@ -545,15 +545,15 @@ int psmc_wrapper(args *pars,int blocksize) {
 
   
   int tk_l = pars->par->n+1;
-  fprintf(stderr,"\t-> tk_l in psmc_wrapper pars->par->n+1 tk_l:%d p->times:%p\n",tk_l,p->times);
+  fprintf(stderr,"\t-> tk_l in psmc_wrapper pars->par->n+1 tk_l:%d p->times:%p\n",tk_l,pars->par->times);
   double *tk = new double [tk_l];
   double *epsize = new double [tk_l];
-  fprintf(stderr,"p->times:%p p->params:%p\n",p->times,p->params);
+  fprintf(stderr,"p->times:%p p->params:%p\n",pars->par->times,pars->par->params);
   //  if(p->params)
-    setEPSize(epsize,tk_l,p->params);
+    setEPSize(epsize,tk_l,pars->par->params);
   //(nelems,array,max_t,alpha,array with values from file, can be NULL)
   // if(p->times)
-  setTk(tk_l,tk,15,0.01,p->times);//<- last position will be infinity
+  setTk(tk_l,tk,15,0.01,pars->par->times);//<- last position will be infinity
   //  fprintf(stderr,"[%s] tk=(%f,%f)\n",__FUNCTION__,tk[0],tk[1]);//exit(0);
 #if 0
   for(int i=0;i<tk_l;i++)

@@ -200,80 +200,6 @@ void setpars( char *fname,psmc_par *pp,int which) {
 }
 
 
-void readtkfile(psmc_par *pp,const char *fname){
-  fprintf(stderr,"\t[%s]\n",__FUNCTION__);
-  FILE *fp = NULL;
-  if(!(fp=fopen(fname,"rb"))){
-    fprintf(stderr,"\t-> Problem writing file: \'%s\'\n",fname);
-    exit(0);
-  }
-  char buf[4096];
-  std::vector<double> tk;
-  std::vector<double> lambda;
-  while(fgets(buf,4096,fp)){
-    if(buf[0]=='#')
-      continue;
-    tk.push_back(atof(strtok(buf,"\n\t ")));
-    lambda.push_back(atof(strtok(NULL,"\n\t ")));
-  }
-  fprintf(stderr,"\t-> Number of tks read from file:%lu\n",tk.size());
-  pp->TR[0] = -666.0;
-  pp->TR[1] = -666.0;
-  pp->params= new double[tk.size()-1];
-  pp->times = new double[tk.size()-1];
-  for(int i=0;i<tk.size()-1;i++){
-    pp->times[i] = tk[i+1];
-    pp->params[i] = lambda[i+1];
-  }
-  std::vector<int> mult;
-  int at=0;
-  while(at<tk.size()-1){
-    int counter =0;
-    //  fprintf(stderr,"at:%d params[%d]:%f\n",at,at,pp->params[at]);
-    while(counter<tk.size()-1){
-      //  fprintf(stderr,"at:%d counter:%d params[%d]:%f params[%d]:%f\n",at,counter,counter,pp->params[at+counter],at,pp->params[at]);
-      if(pp->params[at+counter]!=pp->params[at])
-	break;
-      counter++;
-    }
-    fprintf(stderr,"counter:%d at:%d\n",counter,at);
-    at+=counter;
-    mult.push_back(counter);
-  }
-  for(int i=0;i<mult.size();i++)
-    fprintf(stderr,"mult: %d %d\n",i,mult[i]); 
-  //  exit(0)  ;
-  std::vector<int> mult2;
-  kstring_t kstr;kstr.s=NULL;kstr.l=0;kstr.m=0;
-  for(int at=0;at<mult.size();at++){
-    int counter =0;
-    //    fprintf(stderr,"at:%d params[%d]:%f\n",at,at,pp->params[at]);
-    while(counter+at<mult.size()){
-      //fprintf(stderr,"params[%d]:%f params[%d]:%f\n",counter,pp->params[at+counter],at,pp->params[at]);
-      if(mult[at+counter]!=mult[at])
-	break;
-      counter++;
-    }
-    assert(counter>0);
-    if(counter>1)
-      ksprintf(&kstr,"%d*%d",counter,mult[at]);
-    else
-      ksprintf(&kstr,"%d",mult[at]);
-    at+=counter-1;
-    mult2.push_back(counter);
-    if(at<mult.size()-1)
-      ksprintf(&kstr,"+");
-  }
-  
-  for(int i=0;0&&i<mult2.size();i++)
-    fprintf(stderr,"mult2: %d %d\n",i,mult2[i]);
-  pp->pattern=strdup(kstr.s);
-  free(kstr.s);
-  //  fprintf(stderr,"buf:%s\n",kstr.s);
-  //exit(0);
-  fprintf(stderr,"\t[%s] done\n",__FUNCTION__);
-}
-
 int doGlStyle =0;
 
 args * getArgs(int argc,char **argv,int dontprint){
@@ -289,7 +215,6 @@ args * getArgs(int argc,char **argv,int dontprint){
   p->seed =1;
   p->blocksize = 100;//default 100bp
   p->par =(psmc_par*) calloc(1,sizeof(psmc_par));
-  p->tkfile = NULL;
   p->RD = -1;
   p->nChr = -1;
   p->nThreads =1;
@@ -328,8 +253,6 @@ args * getArgs(int argc,char **argv,int dontprint){
 	free(p->outname);
       p->outname =  strdup(*(++argv));
     }
-    else  if(!strcasecmp(*argv,"-tkfile"))
-      p->tkfile =  strdup(*(++argv));
     else  if(!strcasecmp(*argv,"-ms"))
       p->msstr =  strdup(*(++argv));
     else  if(!strcasecmp(*argv,"-nSites"))
@@ -374,8 +297,7 @@ args * getArgs(int argc,char **argv,int dontprint){
   srand48(p->seed);
   fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d\n\t-> fname:\'%s\' seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d -nChr:%d -ms:\'%s\'\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doQuad,doGlStyle,p->nChr,p->msstr);
   //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
-  if(p->tkfile)
-    readtkfile(p->par,p->tkfile);
+ 
   if(p->par->pattern==NULL)
     p->par->pattern = strdup(DEFAULT_PATTERN);
 
@@ -437,8 +359,7 @@ int main_psmc(int argc, char **argv){
   args *pars = getArgs(argc,argv,0);
   if(!pars)
     return 0;
-  for(int i=0;0&&i<pars->par->n+1;i++)
-    fprintf(stderr,"%d) tk:%f lambda:%f\n",i,pars->par->times[i],pars->par->params[i]);
+
   if(!pars)
     return 0;
   //this will printout the header
