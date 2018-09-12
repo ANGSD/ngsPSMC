@@ -807,7 +807,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
 }
 
 fastPSMC::~fastPSMC(){
-  fprintf(stderr,"\t-> calling destructor\n");
+  //  fprintf(stderr,"\t-> calling destructor\n");
   delete [] gls;
   delete [] R1;
   delete [] R2;

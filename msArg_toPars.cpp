@@ -7,7 +7,7 @@
 #define MSARG "./ms 2 100 -t 8196 -r 1355 3000000 -l -eN 0.01 0.05 -eN 0.0375 0.5 -eN 1.25 1.0 "
 
 //simple fucntion that only READS msatyle input similar to MSARG
-msarg function(char *str){
+msarg parse_msStr(char *str){
   std::vector<double> eN1; //times
   std::vector<double> eN2; //sizes
   double theta=-1.0;
@@ -56,7 +56,7 @@ msarg function(char *str){
 //plug ms into par. 
 //parstruct is in main_psmc.h
 //msarg struct is in main_psmc.h
-void transform(msarg &ms,psmc_par *par,int winsize){
+void msarg_toPars(msarg &ms,psmc_par *par,int winsize){
   fprintf(stderr,"\t->[%s] theta: %f rho:(%f,%f) eN: par->pattern:%s par->par_map:%p winsize:%d\n",__FUNCTION__,ms.theta,ms.rho[0],ms.rho[1],par->pattern,par->par_map,winsize);
   for(int i=0;0&&i<ms.eN1.size();i++)
     fprintf(stderr,"(%.3f,%.3f)\n",ms.eN1[i],ms.eN2[i]);

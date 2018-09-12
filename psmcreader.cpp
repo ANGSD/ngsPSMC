@@ -72,7 +72,7 @@ int psmcversion(const char *fname){
 
 
 perpsmc * perpsmc_init(char *fname,int nChr){
-
+  assert(fname);
   perpsmc *ret = new perpsmc ;
   ret->fname = strdup(fname);
   ret->gls =NULL;
@@ -108,7 +108,7 @@ perpsmc * perpsmc_init(char *fname,int nChr){
       if(nChr!=-1&&at++>=nChr)
 	break;
       char *chr = strdup(faidx_iseq(ret->pf->fai,i));
-      fprintf(stderr,"\t-> [%s] %d) chr: %s\n",__FUNCTION__,i,chr);
+      // fprintf(stderr,"\t-> [%s] %d) chr: %s\n",__FUNCTION__,i,chr);
       datum d;
       d.nSites = faidx_seq_len(ret->pf->fai,chr);
       ret->nSites += d.nSites;
@@ -200,7 +200,7 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
      exit(0);
      return it;
    }
-   fprintf(stderr,"%s->%lu,%lu,%lu\n",it->first,it->second.nSites,it->second.saf,it->second.pos);
+   //   fprintf(stderr,"%s->%lu,%lu,%lu\n",it->first,it->second.nSites,it->second.saf,it->second.pos);
    if(pp->version==1){
      my_bgzf_seek(pp->bgzf_gls,it->second.saf,SEEK_SET);
      my_bgzf_seek(pp->bgzf_pos,it->second.pos,SEEK_SET);

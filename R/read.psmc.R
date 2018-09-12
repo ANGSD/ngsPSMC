@@ -31,7 +31,7 @@ read.psmc1 <- function(x,rd=-1){
 }
 
 read.psmc <- function(x){
-    nrd <- length(grep("RD",readLines("ngs.run2.stdout")))
+    nrd <- length(grep("RD",readLines(x)))
     cat("\t-> Number of RD from file: ",x," is ",nrd,"\n")
     ret <- lapply(1:nrd,function(rd) read.psmc1(x,rd))
     return(ret)
@@ -154,10 +154,14 @@ if(FALSE){
 
 
 plot_chain<-function(x,...){
-  plot(x[[1]]$RS[,2],x[[1]]$RS[,3],type='l',ylim=c(0,max(sapply(x,function(x) x$RS[,3]))),...)
-  for(d in x[-1])
-      lines(d$RS[,2],d$RS[,3])
-
+    colfunc<-colorRampPalette(c("black","red"))
+    colo=colfunc(length(x))
+    plot(x[[1]]$RS[,2],x[[1]]$RS[,3],type='l',ylim=c(0,max(sapply(x,function(x) x$RS[,3]))),col=colo[1],lwd=6,...)
+    for (i in 2:length(x)){
+        d<-x[[i]]
+        lines(d$RS[,2],d$RS[,3],col=colo[i],lwd=2)
+    }
+    legend("topright",paste0(c("init.llh","optim.llh"),"=",c(x[[1]]$LK,tail(x,1)[[1]]$LK)),fill=1:2)
 }
 
 plot_ngs <-function(x,...){

@@ -513,8 +513,6 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
     
 }
 
-  for(int i=0;i<tk_l;i++) 
-    fprintf(stderr,"epsize_after_all_rounds:\t%d\t%f\t%f\n",i,tk[i],epsize[i]);
   
 }
 
@@ -530,8 +528,8 @@ int psmc_wrapper(args *pars,int blocksize) {
   //
 
   if(pars->msstr){
-    pars->msstr_arg = function(pars->msstr); 
-    transform(pars->msstr_arg,pars->par,pars->perc->pf!=NULL?pars->blocksize:1);
+    pars->msstr_arg = parse_msStr(pars->msstr); 
+    msarg_toPars(pars->msstr_arg,pars->par,pars->perc->pf!=NULL?pars->blocksize:1);
   }else
     make_remapper(pars->par);
 

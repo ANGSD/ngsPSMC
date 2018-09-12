@@ -1,5 +1,5 @@
 #pragma once
 #include "main_psmc.h"
 
-msarg function(char *str);
-void transform(msarg &ms,psmc_par *par,int winsize);
+msarg parse_msStr(char *str);
+void msarg_toPars(msarg &ms,psmc_par *par,int winsize);
