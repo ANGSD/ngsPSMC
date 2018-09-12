@@ -94,7 +94,7 @@ perpsmc * perpsmc_init(char *fname,int nChr){
   fprintf(stderr,"\t-> Version of fname: \'%s\' is:%d\n",fname,ret->version);
   int at=0;//incrementer for breaking out of filereading if -nChr has been supplied
 
-  //loop for gl
+  //loop for fasta
   if(ret->version!=1){
     fprintf(stderr,"\t-> Looks like you are trying to use a version of PSMC that does not exists, assuming its a fastafile\n");
     fclose(fp);
@@ -107,6 +107,7 @@ perpsmc * perpsmc_init(char *fname,int nChr){
       fprintf(stderr,"\t-> [%s] %d) chr: %s\n",__FUNCTION__,i,chr);
       datum d;
       d.nSites = faidx_seq_len(ret->pf->fai,chr);
+      ret->nSites += d.nSites;
       d.pos=d.saf=0;
       myMap::iterator it = ret->mm.find(chr);
       if(it==ret->mm.end())
@@ -119,7 +120,7 @@ perpsmc * perpsmc_init(char *fname,int nChr){
     return ret;
   }
 
-  //loop for fasta
+  //loop for gl
   while(fread(&clen,sizeof(size_t),1,fp)){
     if(nChr!=-1&&at++>=nChr)
       break;
@@ -195,8 +196,8 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
      exit(0);
      return it;
    }
-   //   fprintf(stderr,"%s->%lu\n",it->first,it->second.nSites);
-   if(pp->pf==NULL){
+   fprintf(stderr,"%s->%lu,%lu,%lu\n",it->first,it->second.nSites,it->second.saf,it->second.pos);
+   if(pp->version==1){
      my_bgzf_seek(pp->bgzf_gls,it->second.saf,SEEK_SET);
      my_bgzf_seek(pp->bgzf_pos,it->second.pos,SEEK_SET);
    }

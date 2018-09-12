@@ -93,14 +93,14 @@ int print_main(int argc,char **argv){
   
   destroy_args(pars);
 }
-double em(double &x,double *gls,int nSites,double tol){
+double em(double &x,double *gls,int nSites,double tol,int nIter){
   fprintf(stderr,"[%s] x:%f gls:%p nSites:%d\n",__FUNCTION__,x,gls,nSites);
   double llh = 0;
   double est = 0;
   double start = x;
   double lastllh =0;
-  for(int iter=0;iter<20;iter++){
-    fprintf(stderr,"\r %d/%d     ",iter,20);fflush(stderr);
+  for(int iter=0;iter<nIter;iter++){
+    fprintf(stderr,"\r %d/%d     ",iter,nIter);fflush(stderr);
     for(int i=0;i<nSites;i++) {
       //  fprintf(stderr,"gls=(%f,%f)\n",gls[2*i],gls[2*i+1]);
       double tmp[2];
@@ -171,7 +171,7 @@ int makeold(int argc,char **argv){
     return 0;
   writepsmc_header(stderr,pars->perc);
   
-
+  fprintf(stderr,"nSize: %lu\n",pars->perc->nSites);
   double *gls = new double[2*pars->perc->nSites];
   size_t at=0;
   //first pull all the data
@@ -188,7 +188,7 @@ int makeold(int argc,char **argv){
       break;
   }
   double opt = 0.01;
-  double llh = em(opt,gls,at,1e-8);
+  double llh = em(opt,gls,at,1e-12,50);
   fprintf(stderr,"estimated het:%f with llh:%f\n",opt,llh);
   delete [] gls;
 
