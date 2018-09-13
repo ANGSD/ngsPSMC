@@ -2,6 +2,32 @@
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#define PSMC_T_INF 1000.0
+//from psmc github 
+
+#ifdef __WITH_MAIN__
+/*
+  This functions either set the tk, NOT the intervals.
+  n, is the true length of tk. First entry zero, last entry INF
+ */
+void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
+  //  assert(inp_ti!=NULL);
+  //  fprintf(stderr,"[%s] (n,tk,max_t,alpha,inp_ti)=(%d,%p,%f,%f,%p)\n",__FUNCTION__,n,t,max_t,alpha,inp_ti);
+  int k;
+  if (inp_ti == 0) {
+    double beta;
+    beta = log(1.0 + max_t / alpha) / n; // beta controls the sizes of intervals
+    for (k = 0; k < n; ++k)
+      t[k] = alpha * (exp(beta * k) - 1);
+    t[n-1] = max_t;
+    t[n] = PSMC_T_INF; // the infinity: exp(PSMC_T_INF) > 1e310 = inf
+  } else {
+    memcpy(t, inp_ti, n * sizeof(double));
+  }
+}
+#endif
+
 
 class splineEPSize{
 public:
@@ -118,30 +144,41 @@ void splineEPSize::computeEPSize(double *epsize){//FIXME epsize should be of len
 #ifdef __WITH_MAIN__
 
 int main(){
-  splineEPSize obj(8,2);
+  int tk_l =63;
+  double *tk=new double[tk_l+1];
   
-  obj.tk[0]=0.0;
-  for(int i=1;i<8;i++)
-    obj.tk[i]=i+drand48();
-  obj.spline[1][0] = 888;
 
-  obj.Tk[0]=0;
-  obj.Tk[1]=3;
-  obj.Tk[2]=7;
+  setTk(tk_l,tk,15,0.01,NULL);//<- last position will be infinity
   
-  obj.fv[0] = 4.4;
-  obj.fv[1] = 0.1;
-  obj.fv[2] = 10.7;
-  obj.dv[0] = 2.1;
-  obj.dv[1] = -3;
-  obj.dv[2] = 6;
-
+  for(int i=0;i<tk_l;i++)
+    fprintf(stderr,"[%d]:%f\n",i,tk[i]);
   
-  obj.computeSpline();
-  double epsize[8+1];
-  obj.computeEPSize(epsize);
-  obj.printAll(stdout,epsize);
-  return 0;
+  /*  
+      splineEPSize obj(8,2);
+      
+      obj.tk[0]=0.0;
+      for(int i=1;i<8;i++)
+      obj.tk[i]=i+drand48();
+      obj.spline[1][0] = 888;
+      
+      obj.Tk[0]=0;
+      obj.Tk[1]=3;
+      obj.Tk[2]=7;
+      
+      obj.fv[0] = 4.4;
+      obj.fv[1] = 0.1;
+      obj.fv[2] = 10.7;
+      obj.dv[0] = 2.1;
+      obj.dv[1] = -3;
+      obj.dv[2] = 6;
+      
+      
+      obj.computeSpline();
+      double epsize[8+1];
+      obj.computeEPSize(epsize);
+      obj.printAll(stdout,epsize);
+      return 0;
+  */
 }
 
 #endif
