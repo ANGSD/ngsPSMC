@@ -17,9 +17,10 @@ struct wins{
 class fastPSMC {
 public:
   //shared between all threads
-  double **trans;
-  double **P;
-
+  static double **trans;// tk_l x tk_l
+  static double **P;//8xtk_l
+  static double *stationary;//tk_l
+  static double **nP;//8xtk_l
   int index;
   static int tot_index;
   static char *outnames;
@@ -27,9 +28,9 @@ public:
   int tk_l;
   double max_t;
  
-  double **PP;
-  double **nP;
-  double *stationary,*R1,*R2;//tk_l long
+  double **PP;//8xtk_l
+  
+  double *R1,*R2;//tk_l long
   double **fw;//tk_l x nWindows+1
   double **bw;//tk_l x nWindows+1
   double **emis;//tk_l x nWindows+1
@@ -42,7 +43,6 @@ public:
   double **baumwelch;
   double qval;
   fastPSMC(){
-    trans = NULL;
     pix = -666;
     max_t = 15;
     index=tot_index++;
@@ -55,7 +55,7 @@ public:
   }
   void allocate(int tk_l);
   void calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double rho);
-
+  double make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,double rho);
   double make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho);
   
 private:

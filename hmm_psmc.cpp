@@ -10,7 +10,10 @@
 
 int fastPSMC::tot_index=0;
 char *fastPSMC::outnames = NULL;
-
+double **fastPSMC::trans=NULL;
+double **fastPSMC::P=NULL;
+double *fastPSMC::stationary=NULL;
+double **fastPSMC::nP = NULL;
 //#define __SHOW_TIME__
 
 extern int doQuadratic;
@@ -132,6 +135,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
 }
 //linear
 double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **PP){
+  assert(0!=1);
   ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
   double Q = 0;
   double esum =0;
@@ -147,12 +151,6 @@ double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,doubl
 
 //quadratic
 double qFunction_inner2(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **baumwelch,double **trans){
-  
-  ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
-  double calc_trans(int,int,double**);
-  for(int i=0;i<tk_l;i++)
-    for(int j=0;j<tk_l;j++)
-      trans[i][j] = calc_trans(i,j,nP);
   
   double newstationary[tk_l];
   calculate_stationary(tk_l,newstationary,nP);
@@ -248,7 +246,8 @@ void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double r
 void fastPSMC::allocate(int tk_l_arg){
   int numWindows = windows.size();
   tk_l = tk_l_arg;
-    stationary = new double[tk_l];
+  if(index==0)
+    stationary  = new double[tk_l];
   R1 = new double[tk_l];
   R2 = new double[tk_l];
   fw = new double *[tk_l];
@@ -266,10 +265,12 @@ void fastPSMC::allocate(int tk_l_arg){
   for(int i=0;i<tk_l+1;i++)
     for(int j=0;j<tk_l;j++)
       baumwelch[i][j] = -777;
+  if(index==0)
   P = new double *[8];
   PP= new double *[8];
   nP = new double*[8];
   for(int i=0;i<8;i++){
+    if(index==0)
     P[i] = new double[tk_l];
     PP[i]= new double[tk_l];
     nP[i]= new double[tk_l];
@@ -277,7 +278,8 @@ void fastPSMC::allocate(int tk_l_arg){
   for(int i=0;i<tk_l;i++)
     PP[0][i] = -666;
   workspace = new double[windows.size()];
-  if(DOTRANS){
+  if(DOTRANS&&index==0){
+    fprintf(stderr,"allocating\n");
     trans = new double *[tk_l];
     for(int i=0;i<tk_l;i++){
       trans[i] = new double[tk_l];
@@ -444,21 +446,29 @@ void ComputeBaumWelch(unsigned numWind,int tk_l,double **fw,double **bw,double *
 
 }
 
+//should only be run once, since calculates 
+double fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,double rho){
+  assert(trans);
+  assert(index==0);
+  ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
+  calculate_stationary(tk_l,stationary,P);
+  if(DOTRANS){
+    for(int i=0;i<tk_l;i++)
+      for(int j=0;j<tk_l;j++){
+	//	fprintf(stderr,"trans:%p\n",trans);
+	trans[i][j] = calc_trans(i,j,P);
+      }
+  }
+
+}
+
 
 double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho){
   //prepare probs
 
-  ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
   calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize);
-  calculate_stationary(tk_l,stationary,P);
   calculate_FW_BW_Probs(tk,tk_l,epsize,rho);
 
-  if(DOTRANS){
-    for(int i=0;i<tk_l;i++)
-      for(int j=0;j<tk_l;j++){
-	trans[i][j] = calc_trans(i,j,P);
-      }
-  }
 
   if(doQuadratic==0)
     ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis,workspace);
@@ -485,22 +495,27 @@ fastPSMC::~fastPSMC(){
   }
   delete [] baumwelch[tk_l];
   for(int i=0;i<8;i++){
-    delete [] P[i];
+    if(index==0)
+      delete [] P[i];
     delete [] PP[i];
+    if(index==0)
     delete [] nP[i];
   }
   delete [] emis;
   delete [] fw;
   delete [] bw;
   delete [] baumwelch;
+  if(index==0)
   delete [] P;
   delete [] PP;
+  if(index==0)
   delete [] nP;
-  if(DOTRANS){
+  if(DOTRANS&&index==0){
     for(int i=0;i<tk_l;i++)
       delete [] trans[i];
     delete [] trans;
   }
   delete [] workspace;
+  if(index==0)
   delete [] stationary;
 }

@@ -116,62 +116,36 @@ double qFunction2(const double *params ,const void *d){
 
 extern int SIG_COND;//<- used for killing program
 static int ncals=0;
-void *qFunction2_thd(void *ptr);
-void *qFunction_thd(void *ptr);
-double qFunction_wrapper(const double *pars,const void *){
+void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *epsize,double rho);
+double qFunction_wrapper(const double *pars,const void *d){
   ncals++;
-  //fprintf(stderr,"\t-> calling objective function: remap_l:%d [%d]\n",remap_l,ncals);
   double pars2[ops[0].tk_l];
   int at=0;
   for(int i=0;i<remap_l;i++)
-    for(int j=0;j<remap[i];j++){
+    for(int j=0;j<remap[i];j++)
       pars2[at++] = pars[i]; 
-      //      fprintf(stderr,"\t-> pars2: %e\n",pars2[at-1]);
-    }
-  double ret =0;
-  if(nThreads==1){
-    for(int i=0;SIG_COND&&i<nChr;i++)
-      if(doQuadratic)
-	ret += qFunction2(pars2,&ops[i]);
-      else
-	ret += qFunction(pars2,&ops[i]);
-  }else {
-    pthread_t thread[nThreads];
-    for(int i=0;i<nChr;i++)
-      ops[i].parsIn = pars2;
-    int at=0;
-    while(SIG_COND&&at<nChr){
-      int thisround = std::min(nChr-at,nThreads);
-      for(int t=0;t<thisround;t++){
-	size_t index = at+t;
-	if(doQuadratic){
-	  if(pthread_create( &thread[t], NULL, qFunction2_thd, (void*) index)){
-	    fprintf(stderr,"[%s] Problem spawning thread\n%s\n",__FUNCTION__,strerror(errno));
-	    exit(0);
-	  }
-	}else{
-	   if(pthread_create( &thread[t], NULL, qFunction_thd, (void*) index)){
-	    fprintf(stderr,"[%s] Problem spawning thread\n%s\n",__FUNCTION__,strerror(errno));
-	    exit(0);
-	  }
-	}
-      }
-      for(int t=0;t<thisround;t++){
-	if(pthread_join( thread[t], NULL)){
-	  fprintf(stderr,"[%s] Problem joining thread\n%s\n",__FUNCTION__,strerror(errno));
-	  exit(0);
-	}
-      }
-      at+=thisround;
-    }
-    for(int i=0;i<nChr;i++)
-      ret += ops[i].llh;
 
-  }    
+
+  if(doQuadratic){
+    oPars *data = (oPars*) d;
+    ComputeGlobalProbabilities(ops[0].tk,ops[0].tk_l,ops[0].nP,pars2,ops[0].rho);
+    double calc_trans(int,int,double**);
+    for(int i=0;i<ops[0].tk_l;i++)
+      for(int j=0;j<ops[0].tk_l;j++)
+	objs[0]->trans[i][j] = calc_trans(i,j,ops[0].nP);
+  }
+  //fprintf(stderr,"\t-> calling objective function: remap_l:%d [%d]\n",remap_l,ncals);
+  double ret =0;
+  
+  for(int i=0;SIG_COND&&i<nChr;i++)
+    if(doQuadratic)
+      ret += qFunction2(pars2,&ops[i]);
+    else
+      ret += qFunction(pars2,&ops[i]);
+  
   if(std::isinf(ret)||SIG_COND==0)
     ret= -1000000000;
   
-  //  fprintf(stderr,"qfun:%e\n",ret);
   return -ret;
 }
 
@@ -291,28 +265,19 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
 
 void *run_a_hmm(void *ptr){
   size_t at =(size_t) ptr;
-  //  fprintf(stderr,"at:%lu\n",at);
-  //  sleep(drand48()*10);
   objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
   pthread_exit(NULL);
 }
 
 void *qFunction2_thd(void *ptr){
   size_t at =(size_t) ptr;
-  //  fprintf(stderr,"at:%lu\n",at);
-  //  sleep(drand48()*10);
-  ops[at].llh = qFunction2(ops[at].parsIn,&ops[at]);
-  //  objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
   pthread_exit(NULL);
 }
 
 
 void *qFunction_thd(void *ptr){
   size_t at =(size_t) ptr;
-  //  fprintf(stderr,"at:%lu\n",at);
-  //  sleep(drand48()*10);
   ops[at].llh = qFunction(ops[at].parsIn,&ops[at]);
-  //  objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
   pthread_exit(NULL);
 }
 
@@ -328,6 +293,7 @@ void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double theta,doub
   shmm.epsize=epsize;
 
   pthread_t thread[nThreads];
+  objs[0]->make_hmm_pre(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
   //  double qval =0;
   if(nThreads==1)
     for(int i=0;i<nChr;i++){
@@ -387,17 +353,6 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
   //test fix:
   double ret_llh,ret_qval,ret_qval2;
   ret_qval=ret_qval2=0;
-#if 1
-  fprintf(FLOG,"FLOGS:%p\n",FLOG);
-  fprintf(FLOG,"ninter:%d\n",nIter);
-  fprintf(FLOG,"domartsiez:%d\n",doSmartsize);
-  fprintf(FLOG,"theta:%f\n",theta);
-  fprintf(FLOG,"rho:%f\n",rho);
-  fprintf(FLOG,"\t-> [%s]\t-> nIter:%d dosmartsize:%d theta:%f rho:%f\n",__FUNCTION__,nIter,doSmartsize,theta,rho);
-  for(int i=0;i<tk_l;i++)
-    fprintf(FLOG,"\t-> [%s]\t->\t%f\t%f\n",__FUNCTION__,tk[i],epsize[i]);
-#endif
-  //first make_hmm for all chrs;
   fprintf(FLOG,"[%s]\t-> nIter:%d dosmartsize:%d theta:%f rho:%f\n",__FUNCTION__,nIter,doSmartsize,theta,rho);
   
   int at_it=0;
@@ -510,8 +465,9 @@ int psmc_wrapper(args *pars,int blocksize) {
     //    fprintf(stderr,"gls1:%f %f %f %f\n",pars->perc->gls[0],pars->perc->gls[1],pars->perc->gls[2],pars->perc->gls[3]);
     obj->setWindows(pars->perc->gls,pars->perc->pos,pars->perc->last,pars->blocksize);
     //fprintf(stderr,"gls2:%f %f %f %f\n",pars->perc->gls[0],pars->perc->gls[1],pars->perc->gls[2],pars->perc->gls[3]);
-    //  obj->printWindows(stdout);exit(0);
+
     obj->allocate(tk_l);
+    //    fprintf(stderr,"transer:%p\n",obj[0].trans);
     if(pars->chooseChr!=NULL)
       break;
   }
