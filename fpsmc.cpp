@@ -369,50 +369,6 @@ void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double theta,doub
 }
 
 
-void main_analysis_optim(double *tk,int tk_l,double *epsize,double theta,double rho){
-
-  shmm.tk=tk;
-  shmm.tk_l=tk_l;
-  shmm.theta=theta;
-  shmm.rho=rho;
-  shmm.epsize=epsize;
-
-  pthread_t thread[nThreads];
-  if(nThreads==1)
-    for(int i=0;i<nChr;i++)
-      objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
-  else {
-    int at=0;
-    while(at<nChr){
-      int thisround = std::min(nChr-at,nThreads);
-      for(int t=0;t<thisround;t++){
-	size_t index = at+t;
-	if(pthread_create( &thread[t], NULL, run_a_hmm, (void*) index)){
-	  fprintf(stderr,"[%s] Problem spawning thread\n%s\n",__FUNCTION__,strerror(errno));
-	  exit(0);
-	}
-      }
-      for(int t=0;t<thisround;t++){
-	if(pthread_join( thread[t], NULL)){
-	  fprintf(stderr,"[%s] Problem joining thread\n%s\n",__FUNCTION__,strerror(errno));
-	  exit(0);
-	}
-      }
-      at+=thisround;
-    }
-  }
-  double fwllh,bwllh,qval;
-  fwllh=bwllh=qval=0;
-  for(int i=0;i<nChr;i++){
-    //    fprintf(stderr,"\t-> hmm.fwllh for chr:%d\n",i);
-    fwllh += objs[i]->fwllh;
-    bwllh += objs[i]->bwllh;
-    qval += objs[i]->qval;
-  }
-  fprintf(stderr,"\t[total llh]  fwllh:%f\n\t[total llh]  bwllh:%f\n\t[total qval] qval:%f\n",fwllh,bwllh,qval);
-
-}
-
 void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
   fprintf(stderr,"[smartsize] start;\n");
   double **newepsize = new double*[nChr];

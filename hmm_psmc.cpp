@@ -149,14 +149,14 @@ double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,doubl
 double qFunction_inner2(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **baumwelch,double **trans){
   
   ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
-  double newstationary[tk_l];
-  calculate_stationary(tk_l,newstationary,nP);
-
-  
   double calc_trans(int,int,double**);
   for(int i=0;i<tk_l;i++)
     for(int j=0;j<tk_l;j++)
       trans[i][j] = calc_trans(i,j,nP);
+  
+  double newstationary[tk_l];
+  calculate_stationary(tk_l,newstationary,nP);
+
   
   double Q = 0;
   for (unsigned i = 0; i < tk_l; i++){
@@ -191,7 +191,7 @@ double qFunction_inner2(double *tk,int tk_l,const double *epsize,double rho,doub
   
 }
 
-void fastPSMC::calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,double rho){
+void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double rho){
     //we first set the initial fwprobs to stationary distribution
   for(int i=0;i<tk_l;i++)
       fw[i][0] = stationary[i];
@@ -357,16 +357,16 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
     for (int i = 0; i < tk_l; i++)
       nontmpdir[i] = -2*theta*expectCoalT[i];
   }
-  else{
-     fprintf(stderr,"\tAborted in hmm_psmc.cpp, line 587.\n");
-     exit(0);
-  }  
+  else
+    assert(0!=0);
+
 
  for(int v=0;v<windows.size();v++){//for each window
    assert(windows[v].from<=windows[v].to);
    //   fprintf(stderr,"v:%d from:%d to:%d\n",v,windows[v].from,windows[v].to);
     for(int j=0;j<tk_l;j++){//for each interval/state
       emis[j][v+1] = 0;
+
       double inner = exp(nontmpdir[j]);///exp(-2.0*tk[j]*theta); // this part relates to issue #1
 #if 0
       //      double inner;
@@ -384,13 +384,15 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
 	    fprintf(stderr,"div 4.0 6.0 YES\n");
 	    verber=0;
 	  }
-	  emis[j][v+1] += log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6.0)*(1.0-inner));//<- check
+	  if(gls[i*2]!=gls[2*i+1])
+	    emis[j][v+1] += log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6.0)*(1.0-inner));//<- check
 	}else{
 	  if(verber){
 	    fprintf(stderr,"div 4.0 6.0 NO\n");
 	    verber = 0;
 	  }
-	  emis[j][v+1] += log((exp(gls[i*2])/1.0) *inner + (exp(gls[2*i+1])/1.0)*(1.0-inner));//<- check
+	  if(gls[i*2]!=gls[2*i+1])
+	    emis[j][v+1] += log((exp(gls[i*2])/1.0) *inner + (exp(gls[2*i+1])/1.0)*(1.0-inner));//<- check
 	}
 
 	if(isinf(emis[j][v+1])){
@@ -449,7 +451,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
   calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize);
   calculate_stationary(tk_l,stationary,P);
-  calculate_FW_BW_PP_Probs(tk,tk_l,epsize,rho);
+  calculate_FW_BW_Probs(tk,tk_l,epsize,rho);
 
   if(DOTRANS){
     for(int i=0;i<tk_l;i++)

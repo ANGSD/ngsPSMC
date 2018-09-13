@@ -172,7 +172,7 @@ perpsmc * perpsmc_init(char *fname,int nChr){
   }
 
   snprintf(tmp2,strlen(fname)+100,"%spos.gz",tmp);
-  fprintf(stderr,"\t-> Assuming .psmc.pos.gz: \'%s\'o\n",tmp2);
+  fprintf(stderr,"\t-> Assuming .psmc.pos.gz: \'%s\'\n",tmp2);
   ret->bgzf_pos = bgzf_open(tmp2,"r");
   if(ret->pos)
     my_bgzf_seek(ret->bgzf_pos,8,SEEK_SET);

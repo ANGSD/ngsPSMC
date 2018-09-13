@@ -6,39 +6,39 @@ double lprod(double a,double b,double c,double d);
 #define DOTRANS 1
 
 #define PSMC_T_INF 1000.0
-
 struct wins{
   int from;//inclusive
   int to;//inclusive
 };
-
 /*
   baumwelch,PP is not in logspace
 
  */
 class fastPSMC {
 public:
+  //shared between all threads
+  double **trans;
+  double **P;
+
   int index;
   static int tot_index;
   static char *outnames;
   double pix;
   int tk_l;
   double max_t;
-  double **P;
+ 
   double **PP;
   double **nP;
   double *stationary,*R1,*R2;//tk_l long
   double **fw;//tk_l x nWindows+1
   double **bw;//tk_l x nWindows+1
-  //  double **pp;//tk_l x nWindows+1
   double **emis;//tk_l x nWindows+1
   double *gls;//deep copy of the gls for a chr
   std::vector<wins> windows;
-  double **trans;
+
   double *workspace;
   double fwllh;
   double bwllh;
-
   double **baumwelch;
   double qval;
   fastPSMC(){
@@ -50,14 +50,11 @@ public:
   ~fastPSMC();
   void setWindows(double *gls_a,int *pos,int last,int block);
   void printWindows(FILE *fp){
-    //print indices for endpoint of windows
     for(int w=0;w<windows.size();w++)
-      fprintf(stdout,"win[%d]=(%d,%d)\n",w,windows[w].from,windows[w].to);
-  //print out data:
-
+      fprintf(fp,"win[%d]=(%d,%d)\n",w,windows[w].from,windows[w].to);
   }
   void allocate(int tk_l);
-  void calculate_FW_BW_PP_Probs(double *tk,int tk_l,double *epsize,double rho);
+  void calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double rho);
 
   double make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho);
   
