@@ -129,7 +129,7 @@ double qFunction_wrapper(const double *pars,const void *){
       //      fprintf(stderr,"\t-> pars2: %e\n",pars2[at-1]);
     }
   double ret =0;
-  if(0&&nThreads==1){
+  if(nThreads==1){
     for(int i=0;SIG_COND&&i<nChr;i++)
       if(doQuadratic)
 	ret += qFunction2(pars2,&ops[i]);
