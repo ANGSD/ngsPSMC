@@ -218,7 +218,7 @@ args * getArgs(int argc,char **argv,int dontprint){
   p->RD = -1;
   p->nChr = -1;
   p->nThreads =1;
-  p->doQuad =0;
+  p->doLinear =0;
   p->smartsize =0;
   p->outname = strdup("output");
   p->flog = NULL;
@@ -266,11 +266,7 @@ args * getArgs(int argc,char **argv,int dontprint){
    else  if(!strcasecmp(*argv,"-nChr"))
       p->nChr = atoi(*++argv);
     else  if(!strcasecmp(*argv,"-doLinear")){
-      int mytmp = atoi(*++argv);
-      if(mytmp ==1)
-	p->doQuad = 0;
-      else
-	p->doQuad =1;
+      p->doLinear = atoi(*++argv);
     }else  if(!strcasecmp(*argv,"-r")){
       p->chooseChr = get_region(*(++argv),p->start,p->stop);
       if(!p->chooseChr)
@@ -285,8 +281,7 @@ args * getArgs(int argc,char **argv,int dontprint){
   }
 
   p->perc = perpsmc_init(p->fname,p->nChr);
-  extern int doQuadratic;
-  doQuadratic = p->doQuad;
+  
   if(inffilename){
     setpars(inffilename,p->par,p->RD);
     free(inffilename);
@@ -295,7 +290,7 @@ args * getArgs(int argc,char **argv,int dontprint){
   if(p->seed==0)
     p->seed = time(NULL);
   srand48(p->seed);
-  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d\n\t-> fname:\'%s\' seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d -nChr:%d -ms:\'%s\'\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doQuad,doGlStyle,p->nChr,p->msstr);
+  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d\n\t-> fname:\'%s\' seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d -nChr:%d -ms:\'%s\'\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doLinear,doGlStyle,p->nChr,p->msstr);
   //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
  
   if(p->par->pattern==NULL)

@@ -170,11 +170,8 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
   ComputeP5(tk,tk_l,P[5],epsize);
   ComputeP6(tk,tk_l,P[6],epsize,rho);
   ComputeP2(tk_l,P[2],P[5]);
-
   ComputeP3(tk,tk_l,P[3],epsize,rho);
-
   ComputeP4(tk,tk_l,P[4],epsize,rho);
-
   ComputeP7(tk,tk_l,P[7],P[3],epsize,rho);
   ComputeP0(tk_l,P[0],P[5]);
 
@@ -193,7 +190,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
     fprintf(stderr, "\t[Time] walltime used =  %.2f sec for computeglobalprobablibies\n", (float)(time(NULL) - t2));  
 #endif
 }
-
+//linear
 double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **PP){
 #ifdef __SHOW_TIME__
   clock_t t=clock();
@@ -224,10 +221,7 @@ double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,doubl
   
 }
 
-
-
- 
-
+//quadratic
 double qFunction_inner2(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **baumwelch,double **trans){
 #ifdef __SHOW_TIME__
   clock_t t=clock();
@@ -802,9 +796,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   //  exit(0);
 
   return qval;
-  exit(0);
-  
-}
+ }
 
 fastPSMC::~fastPSMC(){
   //  fprintf(stderr,"\t-> calling destructor\n");

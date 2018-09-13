@@ -42,7 +42,7 @@ typedef struct {
   int RD;
   int nThreads;
   int nIter;
-  int doQuad;
+  int doLinear;
   char *outname;
   FILE *flog;
   double init;

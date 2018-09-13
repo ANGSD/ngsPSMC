@@ -16,7 +16,7 @@ extern int nThreads;
 int nChr = 0;
 
 
-int doQuadratic = 0; //<-only used in qFunction_wrapper
+int doQuadratic = 1; //<-only used in qFunction_wrapper
 
 
 typedef struct{
@@ -177,19 +177,12 @@ void stoptimer(timer &t){
   t.tids[1]= ((float)(time(NULL) - t.t2))/60.0;
 }
 
-void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,FILE *FLOG,double &ret_qval){
+void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int ndim,FILE *FLOG,double &ret_qval){
   clock_t t=clock();
   time_t t2=time(NULL);
   fprintf(stderr,"\t-> Starting Optimization\n");
   fflush(stderr);
-#if 0
-  fprintf(stderr,"pp->n:%d\n",pp->n);
-  fprintf(stderr,"pp->n_free:%d\n",pp->n_free);
-  for(int i=0;i<pp->n+1;i++)
-    fprintf(stderr,"pars_map[%d]\t%d\n",i,pp->par_map[i]);
-#endif
 
-  int ndim = pp->n_free;
   fprintf(stderr,"\t-> ndim:%d\n",ndim);
 
   double pars[ndim];
@@ -274,14 +267,6 @@ void printmatrixf(char *fname,double **m,int x,int y){
   }
   printmatrix(fp,m,x,y);
   fclose(fp);
-}
-
-void printmatrixf2(char *fname,int index,double **m,int x,int y){
-  //  return ;
-  char tmpnam[1024];
-  snprintf(tmpnam,1024,"%s_%d",fname,index);
-  fprintf(stderr,"\t-> tmpnam:%s\n",tmpnam);
-  printmatrixf(tmpnam,m,x,y);
 }
 
 
@@ -459,10 +444,6 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
 #endif
   //first make_hmm for all chrs;
   fprintf(FLOG,"[%s]\t-> nIter:%d dosmartsize:%d theta:%f rho:%f\n",__FUNCTION__,nIter,doSmartsize,theta,rho);
-  //  rho=0.1;
-  double dummyepsize[tk_l];
-  for(int i=0;i<tk_l;i++)
-    dummyepsize[i] = 1.0;
   
   int at_it=0;
   extern int SIG_COND;
@@ -475,48 +456,51 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
 #endif
   fflush(FLOG);
   timer hmm_t = starttimer();
-  fprintf(stderr,"\t-> calling main_analysis_make_hmm\n");fflush(stderr);
   main_analysis_make_hmm(tk,tk_l,epsize,theta,rho,ret_llh,ret_qval);
-  fprintf(stderr," done\t-> calling main_analysis_make_hmm\n");fflush(stderr);
   stoptimer(hmm_t);
   
-    if(ncals>0)
-      fprintf(stdout,"IT\t%d\n",ncals);
-    fprintf(stdout,"RD\t%d\n",at_it);
-    fprintf(stdout,"LK\t%f\n",ret_llh);
-    fprintf(stdout,"QD\t%f -> %f\n",ret_qval,ret_qval2);
-    //    exit(0);
-    fprintf(stdout,"RI\t?\n");
-    fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
-    fprintf(stdout,"MT\t1000000.0\n");
-    fprintf(stdout,"MM\tbuildhmm(wall(min),cpu(min)):(%f,%f) \n",hmm_t.tids[1],hmm_t.tids[0]);
-    for(int i=0;i<tk_l;i++)
-      fprintf(stdout,"RS\t%d\t%f\t%f\t1000000.0\t1000000.0\t1000000.0\n",i,tk[i],epsize[i]);
-    fprintf(stdout,"PA\t%s %.9f %.9f 666.666666666",pp->pattern,theta,rho);
-    int at=0;
-    for(int i=0;i<remap_l;i++){
-      fprintf(stdout," %.9f",epsize[at+remap[i]-1]);
-      at+=remap[i];
-    }
-    fprintf(stdout,"\n//\n");
-    fflush(stdout);
-
-    if(at_it++>=nIter){
-      fprintf(stderr,"\t-> Breaking since i>nIter\n");
-      break;
-    }
-    if(doSmartsize==0)
-      runoptim3(tk,tk_l,epsize,theta,rho,pp,FLOG,ret_qval2);
-    else
-      smartsize(objs,tk,tk_l,rho);
-
-    
+  if(ncals>0)
+    fprintf(stdout,"IT\t%d\n",ncals);
+  fprintf(stdout,"RD\t%d\n",at_it);
+  fprintf(stdout,"LK\t%f\n",ret_llh);
+  fprintf(stdout,"QD\t%f -> %f\n",ret_qval,ret_qval2);
+  //    exit(0);
+  fprintf(stdout,"RI\t?\n");
+  fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
+  fprintf(stdout,"MT\t1000000.0\n");
+  fprintf(stdout,"MM\tbuildhmm(wall(min),cpu(min)):(%f,%f) \n",hmm_t.tids[1],hmm_t.tids[0]);
+  for(int i=0;i<tk_l;i++)
+    fprintf(stdout,"RS\t%d\t%f\t%f\t1000000.0\t1000000.0\t1000000.0\n",i,tk[i],epsize[i]);
+  fprintf(stdout,"PA\t%s %.9f %.9f 666.666666666",pp->pattern,theta,rho);
+  int at=0;
+  for(int i=0;i<remap_l;i++){
+    fprintf(stdout," %.9f",epsize[at+remap[i]-1]);
+    at+=remap[i];
+  }
+  fprintf(stdout,"\n//\n");
+  fflush(stdout);
+  
+  if(at_it++>=nIter){
+    fprintf(stderr,"\t-> Breaking since i>nIter\n");
+    break;
+  }
+  if(doSmartsize==0)
+    runoptim3(tk,tk_l,epsize,theta,rho,pp->n_free,FLOG,ret_qval2);
+  else
+    smartsize(objs,tk,tk_l,rho);
+  
+  
 }
 
   
 }
 
 int psmc_wrapper(args *pars,int blocksize) {
+  extern int doQuadratic;
+  if(pars->doLinear==0)
+    doQuadratic=1;
+  else
+    doQuadratic=0;
   fprintf(stderr,"\t-> we are in file: %s function: %s line:%d blocksize:%d\n",__FILE__,__FUNCTION__,__LINE__,blocksize);
 
 #if 1 //print pars
@@ -529,7 +513,7 @@ int psmc_wrapper(args *pars,int blocksize) {
 
   if(pars->msstr){
     pars->msstr_arg = parse_msStr(pars->msstr); 
-    msarg_toPars(pars->msstr_arg,pars->par,pars->perc->pf!=NULL?pars->blocksize:1);
+    msarg_toPars(pars->msstr_arg,pars->par,pars->perc->version==0?pars->blocksize:1);
   }else
     make_remapper(pars->par);
 
@@ -548,19 +532,14 @@ int psmc_wrapper(args *pars,int blocksize) {
   fprintf(stderr,"\t-> tk_l in psmc_wrapper pars->par->n+1 tk_l:%d p->times:%p\n",tk_l,pars->par->times);
   double *tk = new double [tk_l];
   double *epsize = new double [tk_l];
-  fprintf(stderr,"p->times:%p p->params:%p\n",pars->par->times,pars->par->params);
-  //  if(p->params)
-    setEPSize(epsize,tk_l,pars->par->params);
-  //(nelems,array,max_t,alpha,array with values from file, can be NULL)
-  // if(p->times)
+
+  setEPSize(epsize,tk_l,pars->par->params);
   setTk(tk_l,tk,15,0.01,pars->par->times);//<- last position will be infinity
-  //  fprintf(stderr,"[%s] tk=(%f,%f)\n",__FUNCTION__,tk[0],tk[1]);//exit(0);
 #if 0
   for(int i=0;i<tk_l;i++)
     fprintf(stderr,"psmc_wrapper: (tk,epsize)[%d]:(%f,%f)\n",i,tk[i],epsize[i]);
 #endif
   
-  //initialize all hmm (one for each chr), for now just a single
   int nobs = pars->chooseChr?1:pars->perc->mm.size();
   fprintf(stderr,"\t-> nobs/nchr: %d\n",nobs);
   objs = new fastPSMC*[nobs];
