@@ -354,7 +354,7 @@ double ComputeXXX(int i,int j,double **P){
   for(int l=i+1;l<=j-1;l++)
     sum += P[5][l];
   double returnVal = P[7][i]+P[2][j]+sum;
-//  fprintf(stderr,"ComputeXXX(%d,%d):%f\n",i,j,exp(returnVal));
+
   return returnVal;
 }
 

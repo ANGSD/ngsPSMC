@@ -5,9 +5,6 @@ double lprod(double a,double b);
 double lprod(double a,double b,double c,double d);
 #define DOTRANS 1
 
-double qkFunction(unsigned i, double pix, unsigned numWind,double **nP,double **PP,int);
-void setTk(int n, double *t, double max_t, double alpha, double *inp_ti);
-void setEPSize(double *ary,int l,double *from_infile);
 #define PSMC_T_INF 1000.0
 
 struct wins{

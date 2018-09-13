@@ -53,6 +53,44 @@ shared_forhmm shmm;
 fastPSMC **objs = NULL;
 oPars *ops = NULL;
 
+
+
+/*
+  This functions either set the tk, NOT the intervals.
+  n, is the true length of tk. First entry zero, last entry INF
+ */
+void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
+  assert(inp_ti!=NULL);
+  //  fprintf(stderr,"[%s] (n,tk,max_t,alpha,inp_ti)=(%d,%p,%f,%f,%p)\n",__FUNCTION__,n,t,max_t,alpha,inp_ti);
+  int k;
+  if (inp_ti == 0) {
+    double beta;
+    beta = log(1.0 + max_t / alpha) / n; // beta controls the sizes of intervals
+    for (k = 0; k < n; ++k)
+      t[k] = alpha * (exp(beta * k) - 1);
+    t[n-1] = max_t;
+    t[n] = PSMC_T_INF; // the infinity: exp(PSMC_T_INF) > 1e310 = inf
+  } else {
+    memcpy(t, inp_ti, n * sizeof(double));
+  }
+}
+
+
+void setEPSize(double *ary,int tk_l,double *from_infile){
+  fprintf(stderr,"tk_l:%d\n",tk_l);
+  if(!from_infile)
+    for (int i = 0; i <tk_l; i++)
+      ary[i]=1;
+  else{
+    memcpy(ary,from_infile,tk_l*sizeof(double));
+  }
+  for(int i=0;0&&i<tk_l;i++)
+    fprintf(stderr,"%d) %f\n",i,from_infile[i]);
+  //  exit(0);
+}
+
+
+
 /*
   objective function. Function to be optimized, for each chromo
 */
@@ -62,9 +100,7 @@ double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,doubl
 
 double qFunction(const double *params ,const void *d){
   oPars *data = (oPars*) d;
-  //  fprintf(stderr,"pix:%f\n",data->pix);
   return qFunction_inner(data->tk,data->tk_l,params,data->rho,data->pix,data->numWind,data->nP,data->PP);
-
 }
 
 
@@ -425,7 +461,6 @@ void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
 }
 
 
-void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize);
 void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter,int doSmartsize,FILE *FLOG){
   assert(FLOG!=NULL);
 
