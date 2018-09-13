@@ -10,8 +10,9 @@ read.psmc1 <- function(x,rd=-1){
     ofs<-rds[1:2]
     for(i in 2:(length(rds)-1))
         ofs<-rbind(ofs,rds[i:(i+1)])
-    if(rd==-1)
-        rd=nrow(ofs)
+    if(rd==-1){
+		rd=nrow(ofs)
+}
     if(rd>nrow(ofs))
         stop("rd is out of bounds")
     sd <- d[ofs[rd,1]:ofs[rd,2]]
