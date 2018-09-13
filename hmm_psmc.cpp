@@ -341,9 +341,7 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
  */
 int verber =1;
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize){
-  //  fprintf(stderr,"\t->calculate_emissions: ding:%p\n",ding);
 
-  //  fprintf(stderr,"\t-> [Calculating emissions with tk_l:%d and windows.size():%lu:%s ] theta:%f gls:(%f,%f,%f,%f) start\n",tk_l,windows.size(),__TIME__,theta,gls[0],gls[1],gls[2],gls[3]);
   //initialize the first:
   for(int j=0;j<tk_l;j++)
     emis[j][0] = log(0);
@@ -353,7 +351,7 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
   double expectCoalT[tk_l];
   int emis_approx = 0;
   if (emis_approx == 0)
-  	ComputeP1(tk,tk_l,nontmpdir,epsize,theta);
+    ComputeP1(tk,tk_l,nontmpdir,epsize,theta);
   else if (emis_approx == 1){
     ComputeExpectedCoalTime(tk, tk_l, expectCoalT, epsize);
     for (int i = 0; i < tk_l; i++)
