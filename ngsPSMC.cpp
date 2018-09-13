@@ -15,11 +15,13 @@
 #include <cassert>
 #include <pthread.h>
 #include <unistd.h>
+#include <htslib/hts.h>
 #include <htslib/kstring.h>
 #include <libgen.h>
 #include "psmcreader.h"
 #include "header.h"
 #include "main_psmc.h"
+#include "version.h"
 
 int SIG_COND =1;
 double ttol = 1e-16; 
@@ -215,7 +217,7 @@ int makeold(int argc,char **argv){
 }
 
 int main(int argc,char **argv){
-  
+  fprintf(stderr,"\t-> ngsPSMC version: %s (htslib: %s) build(%s %s)\n",ngsPSMC_VERSION,hts_version(),__DATE__,__TIME__); 
   int argc_orig=argc;
   char **argv_orig=argv;
   //start of signal handling
@@ -248,7 +250,8 @@ int main(int argc,char **argv){
     for(int i=0;i<argc_orig;i++)
       fprintf(stdout," %s",argv_orig[i]);
     fprintf(stdout,"\n");
-
+    fprintf(stdout,"MM\t");
+    fprintf(stdout,"\t-> ngsPSMC version: %s (htslib: %s) build(%s %s)\n",ngsPSMC_VERSION,hts_version(),__DATE__,__TIME__); 
     if(isatty(fileno(stdout))){
       fprintf(stderr,"\t-> You are printing results to the terminal consider dumping into a file\n");
       fprintf(stderr,"\t-> E.g.: \'./ngsPSMC ");

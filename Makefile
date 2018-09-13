@@ -8,7 +8,19 @@ CSRC = $(wildcard *.c)
 CXXSRC = $(wildcard *.cpp)
 OBJ = $(CSRC:.c=.o) $(CXXSRC:.cpp=.o)
 
+
 all: ngsPSMC
+
+PACKAGE_VERSION  = 0.01
+
+ifneq "$(wildcard .git)" ""
+PACKAGE_VERSION := $(shell git describe --always --dirty)
+version.h: $(if $(wildcard version.h),$(if $(findstring "$(PACKAGE_VERSION)",$(shell cat version.h)),,force))
+endif
+
+version.h:
+	echo '#define ngsPSMC_VERSION "$(PACKAGE_VERSION)"' > $@
+
 
 # Adjust $(HTSSRC) to point to your top-level htslib directory
 ifdef HTSSRC
@@ -32,7 +44,7 @@ ifdef HTSSRC
 	$(CXX) -c  $(CXXFLAGS)  -I$(HTS_INCDIR) $*.cpp
 	$(CXX) -MM $(CXXFLAGS)  -I$(HTS_INCDIR) $*.cpp >$*.d
 
-ngsPSMC: $(OBJ)
+ngsPSMC: version.h $(OBJ)
 	$(CXX) $(FLAGS)  -o ngsPSMC *.o $(HTS_LIBDIR) -lz -lm -lbz2 -llzma -lpthread
 else
 %.o: %.c
@@ -43,7 +55,7 @@ else
 	$(CXX) -c  $(CXXFLAGS)  $*.cpp
 	$(CXX) -MM $(CXXFLAGS)  $*.cpp >$*.d
 
-ngsPSMC: $(OBJ)
+ngsPSMC: version.h $(OBJ)
 	$(CXX) $(FLAGS)  -o ngsPSMC *.o -lz -lpthread -lhts  -lbz2 -llzma
 endif
 
