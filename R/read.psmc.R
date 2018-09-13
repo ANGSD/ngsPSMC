@@ -4,6 +4,7 @@ read.psmc1 <- function(x,rd=-1){
     d<-readLines(x)
     if(length(d)<10)
         stop("file looks empty")
+    d <- grep("CC",val=T,invert=T,d)
     rds <- grep("RD",d)
     rds <- c(rds,length(d))
 
@@ -11,8 +12,8 @@ read.psmc1 <- function(x,rd=-1){
     for(i in 2:(length(rds)-1))
         ofs<-rbind(ofs,rds[i:(i+1)])
     if(rd==-1){
-		rd=nrow(ofs)
-}
+        rd=nrow(ofs)
+    }
     if(rd>nrow(ofs))
         stop("rd is out of bounds")
     sd <- d[ofs[rd,1]:ofs[rd,2]]
@@ -32,7 +33,8 @@ read.psmc1 <- function(x,rd=-1){
 }
 
 read.psmc <- function(x){
-    nrd <- length(grep("RD",readLines(x)))
+    d <- grep("CC",val=T,invert=T,readLines(x))
+    nrd <- length(grep("RD",d))
     cat("\t-> Number of RD from file: ",x," is ",nrd,"\n")
     ret <- lapply(1:nrd,function(rd) read.psmc1(x,rd))
     return(ret)

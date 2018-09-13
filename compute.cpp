@@ -413,7 +413,7 @@ double calc_trans(int k, int j,double **P){
     ret=0;//<- is never set, just to silence compiler
   }
 
-  assert(!std::isnan(ret));
+  assert(!isnan(ret));
 
   return ret;
 }
