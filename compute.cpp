@@ -400,9 +400,7 @@ double calc_trans(int k, int j,double **P){
     for(int i=0;i<k;i++){
       sum += exp(ComputeXXX(i,k,P));//underflow stuff
     }
-    //    fprintf(stderr,"sum:%f P1[1][k]:%f P[4][k]:%f\n",sum,exp(P[1][k]),exp(P[4][k]));
-    //  sum = log(sum);
-    //    ret = addProtect3(P[1][k],P[4][k],sum);
+
     ret = log(exp(P[1][k])+exp(P[4][k])+sum);
   }else if(k>j){
     double sum =0;
@@ -414,11 +412,9 @@ double calc_trans(int k, int j,double **P){
     assert(0==1);
     ret=0;//<- is never set, just to silence compiler
   }
-  //  fprintf(stderr," %d %d :%f\n",k,j,exp(ret));
-  if(isnan(ret)){
-    fprintf(stderr,"exiting\n");
-    exit(0);
-  }
+
+  assert(!std::isnan(ret));
+
   return ret;
 }
 

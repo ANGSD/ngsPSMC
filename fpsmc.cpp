@@ -129,7 +129,7 @@ double qFunction_wrapper(const double *pars,const void *){
       //      fprintf(stderr,"\t-> pars2: %e\n",pars2[at-1]);
     }
   double ret =0;
-  if(nThreads==1){
+  if(0&&nThreads==1){
     for(int i=0;SIG_COND&&i<nChr;i++)
       if(doQuadratic)
 	ret += qFunction2(pars2,&ops[i]);
@@ -287,42 +287,6 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
  
   fflush(stdout);
   fflush(stderr);
-}
-
-void printarray(FILE *fp,double *ary,int l);
-void printmatrix(FILE *fp,double **mat,int x,int y);
-
-
-
-void printmatrixf(char *fname,double **m,int x,int y){
-  //  return ;
-  FILE *fp = NULL;
-  if(!(fp=fopen(fname,"wb"))){
-    fprintf(stderr,"\t-> Problem writing file: \'%s\'\n",fname);
-    exit(0);
-  }
-  printmatrix(fp,m,x,y);
-  fclose(fp);
-}
-
-
-void printmatrixf3(char *fname,char *fname2,int index,double **m,int x,int y){
-  //  return ;
-  char tmpnam[1024];
-  snprintf(tmpnam,1024,"%s_%s_%d",fname,fname2,index);
-  fprintf(stderr,"\t-> tmpnam:%s\n",tmpnam);
-  printmatrixf(tmpnam,m,x,y);
-}
-
-void printarrayf(char *fname,double *m,int x){
-  //  return;
-  FILE *fp = NULL;
-  if(!(fp=fopen(fname,"wb"))){
-    fprintf(stderr,"\t-> Problem writing file: \'%s\'\n",fname);
-    exit(0);
-  }
-  printarray(fp,m,x);
-  fclose(fp);
 }
 
 void *run_a_hmm(void *ptr){
