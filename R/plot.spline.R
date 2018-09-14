@@ -1,7 +1,7 @@
 fun<-function(x){
 d<-readLines(x)
 sps<-	grep("sp",d,val=T)
-splinevals<-matrix(as.numeric(matrix(unlist(strsplit(grep("sp",d,val=T),"\t")),nrow=length(sps),byrow=T)[,-1]),nrow=2,byrow=F)
+splinevals<-matrix(as.numeric(matrix(unlist(strsplit(grep("sp",d,val=T),"\t")),nrow=length(sps),byrow=T)[,-1]),nrow=length(sps),byrow=F)
 	d2<-strsplit(grep("fd",d,val=T),"\t")
 fd<-matrix(as.numeric(sapply(d2,function(x) x[-1])),byrow=F,ncol=length(d2))
 		return(list(sp=splinevals,fd=t(fd)))
@@ -19,7 +19,7 @@ plot.spline<-function(x,step=0.1){
 	ys<-sapply(xs,function(x) spline(x,splinevals))
 	plot(xs,ys,type='l',lwd=3,col=3)
 	points(d$fd[,1],d$fd[,2])
-	return(list(xs=xs,ys=ys))
+	return(list(xs=xs,ys=ys,d=d))
 }
 
 plot.spline(x)

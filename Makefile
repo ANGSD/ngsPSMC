@@ -60,5 +60,5 @@ ngsPSMC: version.h $(OBJ)
 endif
 
 clean:
-	rm  -f *.o *.d ngsPSMC *~
+	rm  -f *.o *.d ngsPSMC version.h *~
 

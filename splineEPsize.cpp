@@ -21,7 +21,7 @@ void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
     for (k = 0; k < n; ++k)
       t[k] = alpha * (exp(beta * k) - 1);
     t[n-1] = max_t;
-    t[n] = PSMC_T_INF; // the infinity: exp(PSMC_T_INF) > 1e310 = inf
+    //    t[n] = PSMC_T_INF; // the infinity: exp(PSMC_T_INF) > 1e310 = inf
   } else {
     memcpy(t, inp_ti, n * sizeof(double));
   }
@@ -32,32 +32,54 @@ void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
 class splineEPSize{
 public:
   int tk_l;//number of time points in *tk
-  int intNum;//number of intervals
+  int nsplines;//number of splines
   int degree;//spline degree
   double *tk;//time points
   int *Tk;//time points in *tk where spline values are set
   double *fv, *dv;//time points, splineepsize value, derivative value of slpineepsize value
   double **spline;//cubic spline: four coefficients for each interval
-  splineEPSize(int tk_l_arg,int intNum_arg){
-    fprintf(stderr,"tk:%d intNum:%d\n",tk_l_arg,intNum_arg);
-    tk_l=tk_l_arg;
-    intNum=intNum_arg;
+  double alpha;
+  double max_t;
+  splineEPSize(int nsplines_arg,int pointsperinterval,  int ppl_arg){
+    //    fprintf(stderr,"tk:%d intNum:%d nlast:%d\n",tk_l_arg,intNum_arg,nlast_arg);
+    //constructor
+    alpha=0.01;
+    max_t=22;
+    nsplines=nsplines_arg;
+
+    tk_l = ppl_arg+nsplines*pointsperinterval+nsplines+1;
     degree=3;
     tk = new double[tk_l];
-    Tk = new int[intNum+1];
-    fv = new double[intNum+1];
-    dv = new double[intNum+1];
-    spline = new double *[intNum];
-    for(int i = 0; i < intNum; i++){
-      fprintf(stderr,"allcing spline[%d][%d]\n",i,degree+1);
+    Tk = new int[nsplines+1];
+    fv = new double[nsplines+1];
+    dv = new double[nsplines+1];
+    spline = new double *[nsplines];
+    for(int i = 0; i < nsplines; i++){
+      //      fprintf(stderr,"allcing spline[%d][%d]\n",i,degree+1);
       spline[i] = new double[degree + 1];
     }
-   
+    setTk(tk_l,tk,max_t,alpha,NULL);
+    for(int i=0;0&&i<tk_l;i++)
+      fprintf(stderr,"%d %f\n",i,tk[i]);
+    int at=0;
+    for(int i=0;i<nsplines+1;i++){
+      Tk[i]=i*(pointsperinterval+1);
+    }
+    for(int i=0;i<nsplines+1;i++)
+      fprintf(stderr,"%d %d %f\n",i,Tk[i],tk[Tk[i]]);
   }
   void printAll(FILE *fp,double *epsize);
   double Poly(int degree, double *coef, double x);
   void computeEPSize(double *epsize);
-  void computeSpline();  
+  void computeSpline();
+  void fillit(){
+    srand48(100);
+    for(int i=0;i<nsplines+1;i++){
+      fv[i]=drand48()*1+1;
+      dv[i]=drand48()*1-0.5;
+    }
+
+  }
 private:
 };
 
@@ -72,8 +94,8 @@ double splineEPSize::Poly(int degree, double *coef, double x){
 }
 
 void splineEPSize::printAll(FILE *fp,double *epsize){
-  fprintf(fp,"(tk_l,numInt,degree)\t%d %d %d\n",tk_l,intNum,degree);
-  for(int i=0;i<intNum;i++){
+  fprintf(fp,"(tk_l,numInt,degree)\t%d %d %d\n",tk_l,nsplines,degree);
+  for(int i=0;i<nsplines;i++){
     fprintf(fp,"sp\t%f\t%f",tk[Tk[i]],tk[Tk[i+1]]);
     for(int j=0;j<degree+1;j++)
       fprintf(fp,"\t%f",spline[i][j]);
@@ -81,12 +103,14 @@ void splineEPSize::printAll(FILE *fp,double *epsize){
   }
   for(int i=0;i<tk_l;i++)
     fprintf(fp,"xy\t%f\t%f\n",tk[i],epsize[i]);
+  for(int i=0;i<nsplines+1;i++)
+    fprintf(fp,"fd\t%f\t%f\t%f\n",tk[Tk[i]],fv[i],dv[i]);
 }
 
 void splineEPSize::computeSpline(){
    fprintf(stderr,"[%s]\n",__FUNCTION__);fflush(stderr);
-  for(int i = 0; i < intNum; i++){
-    fprintf(stderr,"%d/%d\n",i,intNum);
+  for(int i = 0; i < nsplines; i++){
+    fprintf(stderr,"%d/%d\n",i,nsplines);
     double t0 = tk[Tk[i]];
     //    fprintf(stderr,"t0:%f Tk[i]:%d\n",t0,Tk[i]);
     double t1 = tk[Tk[i+1]];
@@ -125,34 +149,36 @@ void splineEPSize::computeSpline(){
 
 void splineEPSize::computeEPSize(double *epsize){//FIXME epsize should be of length tk_l+1?
   fprintf(stderr,"[%s]\n",__FUNCTION__);fflush(stderr);
-  double t0,t1;
-  int si;
+  double t0,t1; //start and end of integration interval
+  int si;//<-  splinenumber
   si = 0;
-  for (int i = 0; i < tk_l-1 ; i++){//FIXME is tk[0] == 0.0?
+  for (int i = 0; i < tk_l-1 ; i++){
     t0 = tk[i];
     t1 = tk[i+1];
     if (t0 >= tk[Tk[si + 1]]){
       si += 1;
+      if(si==nsplines)
+	break;
     }
     fprintf(stderr,"i:%d si:%d \n",i,si);
     double tmp1[5]={spline[si][0]/4, spline[si][1]/3, spline[si][2]/2, spline[si][3], 0};//check
     epsize[i] = (Poly(4,tmp1, t1) - Poly(4,tmp1, t0))/(t1-t0);
+    
   }
-  epsize[tk_l-1] = fv[intNum];
+  for(int i=Tk[nsplines];i<tk_l;i++)
+    epsize[i] = fv[nsplines];
 }
 
 #ifdef __WITH_MAIN__
 
 int main(){
-  int tk_l =63;
-  double *tk=new double[tk_l+1];
+  splineEPSize obj(14,3,6);
+  obj.fillit();
+  obj.computeSpline();
   
-
-  setTk(tk_l,tk,15,0.01,NULL);//<- last position will be infinity
-  
-  for(int i=0;i<tk_l;i++)
-    fprintf(stderr,"[%d]:%f\n",i,tk[i]);
-  
+  double *epsize= new double[obj.tk_l];
+  obj.computeEPSize(epsize);
+  obj.printAll(stdout,epsize);
   /*  
       splineEPSize obj(8,2);
       
