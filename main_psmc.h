@@ -23,7 +23,6 @@ typedef struct{
 
 
 typedef struct {
-  int isFasta;//<- not used
   int nChr;
   int smartsize;
   char *chooseChr;

@@ -408,20 +408,10 @@ int psmc_wrapper(args *pars,int blocksize) {
     for(int i=0;i<pars->par->n+1;i++)
       pars->par->params[i] = pars->init;
 
-  extern int doQuadratic;
-  if(pars->doLinear==0)
-    doQuadratic=1;
-  else
-    doQuadratic=0;
+ 
   fprintf(stderr,"\t-> we are in file: %s function: %s line:%d blocksize:%d\n",__FILE__,__FUNCTION__,__LINE__,blocksize);
 
-#if 1 //print pars
   fprintf(stderr,"\t-> par->n:%d\tpar->n_free:%d\tpar_map:%p\tpar->pattern:%s\tpar->times:%p\tpar->params:%p\n",pars->par->n,pars->par->n_free,pars->par->par_map,pars->par->pattern,pars->par->times,pars->par->params);
-  for(int i=0;0&&i<pars->par->n+1;i++)
-    fprintf(stderr,"[psmc_wrapper]:%i)\t%f\t%f\n",i,pars->par->times[i],pars->par->params[i]);
-  //  exit(0);
-#endif
-  //
 
   if(pars->msstr){
     pars->msstr_arg = parse_msStr(pars->msstr); 

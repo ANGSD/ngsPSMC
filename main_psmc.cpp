@@ -57,38 +57,38 @@ double lprod(double a,double b,double c){
 int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars)
 {
   fprintf(stderr,"\t-> parsing pattern :\"%s\"\n",pattern);
-	char *q, *p, *tmp;
-	int top = 0, *stack = (int*)malloc(sizeof(int) * 0x100);
-	int *pars_map, k, l, i;
-	p = q = tmp = strdup(pattern);
-	k = 1;
-	while (1) {
-		assert(isdigit(*p) || *p == '*' || *p == '+' || *p == '\0'); // allowed characters
-		if (*p == '+' || *p == '\0') {
-			int is_end = (*p == 0)? 1 : 0;
-			*p++ = '\0';
-			l = atoi(q); q = p;
-			for (i = 0; i < k; ++i) {
-				stack[top++] = l;
-				assert(top <= 0xff);
-			}
-			k = 1;
-			if (is_end) break;
-		} else if (*p == '*') {
-			*p = '\0';
-			k = atoi(q); // number of repeats
-			*p++ = '*'; q = p;
-		} else ++p;
-	}
-	for (k = l = 0; k != top; ++k) l += stack[k];
-	*n_pars = l - 1; *n_free = top;
-	//	fprintf(stderr,"psmc_parse_pattern: n_pars:%d\n",*n_pars);
-	pars_map = (int*)malloc(sizeof(int) * (*n_pars + 1));//<-bug
-	for (k = i = 0; k != top; ++k)
-		for (l = 0; l < stack[k]; ++l)
-			pars_map[i++] = k;
-	free(tmp); free(stack);
-	return pars_map;
+  char *q, *p, *tmp;
+  int top = 0, *stack = (int*)malloc(sizeof(int) * 0x100);
+  int *pars_map, k, l, i;
+  p = q = tmp = strdup(pattern);
+  k = 1;
+  while (1) {
+    assert(isdigit(*p) || *p == '*' || *p == '+' || *p == '\0'); // allowed characters
+    if (*p == '+' || *p == '\0') {
+      int is_end = (*p == 0)? 1 : 0;
+      *p++ = '\0';
+      l = atoi(q); q = p;
+      for (i = 0; i < k; ++i) {
+	stack[top++] = l;
+	assert(top <= 0xff);
+      }
+      k = 1;
+      if (is_end) break;
+    } else if (*p == '*') {
+      *p = '\0';
+      k = atoi(q); // number of repeats
+      *p++ = '*'; q = p;
+    } else ++p;
+  }
+  for (k = l = 0; k != top; ++k) l += stack[k];
+  *n_pars = l - 1; *n_free = top;
+  //	fprintf(stderr,"psmc_parse_pattern: n_pars:%d\n",*n_pars);
+  pars_map = (int*)malloc(sizeof(int) * (*n_pars + 1));//<-bug
+  for (k = i = 0; k != top; ++k)
+    for (l = 0; l < stack[k]; ++l)
+      pars_map[i++] = k;
+  free(tmp); free(stack);
+  return pars_map;
 }
 
 void setpars( char *fname,psmc_par *pp,int which) {
@@ -285,7 +285,11 @@ args * getArgs(int argc,char **argv,int dontprint){
   srand48(p->seed);
   
   fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d\n\t-> fname:\'%s\' seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d -nChr:%d -ms:\'%s\'\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doLinear,doGlStyle,p->nChr,p->msstr);
-      
+  extern int doQuadratic;
+  if(p->doLinear==0)
+    doQuadratic=1;
+  else
+    doQuadratic=0;
   return p;
 }
 
