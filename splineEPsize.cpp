@@ -175,7 +175,7 @@ int main(){
     if(i<obj.nsplines+1)
       pars[i] = i+drand48()*5;
     else
-      pars[i] = i+drand48()*5-10;
+      pars[i] = drand48()*5-2.5;
   obj.setfd(pars);
   obj.computeSpline();
   

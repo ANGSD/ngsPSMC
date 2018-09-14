@@ -73,7 +73,7 @@ int print_main(int argc,char **argv){
   args *pars = getArgs(argc,argv,1);
   if(!pars)
     return 0;
-  writepsmc_header(stderr,pars->perc,0);
+  //  writepsmc_header(stderr,pars->perc,0);
   
   for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){
     
@@ -92,24 +92,31 @@ int print_main(int argc,char **argv){
   destroy_args(pars);
   return 0;
 }
-double em(double &x,double *gls,int nSites,double tol,int nIter){
-  fprintf(stderr,"[%s] x:%f gls:%p nSites:%d\n",__FUNCTION__,x,gls,nSites);
+double em(double &x,double *gls,size_t nSites,double tol,int nIter){
+  fprintf(stderr,"[%s] x:%f gls:%p nSites:%lu\n",__FUNCTION__,x,gls,nSites);
+  fflush(stderr);
   double llh = 0;
   double est = 0;
   double start = x;
   double lastllh =0;
+
   for(int iter=0;iter<nIter;iter++){
+    int efsize=0;
     fprintf(stderr,"\r %d/%d     ",iter,nIter);fflush(stderr);
-    for(int i=0;i<nSites;i++) {
+    for(size_t i=0;i<nSites;i++) {
       //  fprintf(stderr,"gls=(%f,%f)\n",gls[2*i],gls[2*i+1]);
       double tmp[2];
+      if(gls[2*i]==gls[2*i+1])
+	continue;
+      assert(gls[2*i]!=gls[2*i+1]);
       tmp[0] = exp(gls[2*i])*(1-start);
       tmp[1] = exp(gls[2*i+1])*(start);
       est += tmp[1]/(tmp[0]+tmp[1]);
       llh -= log(tmp[0]+tmp[1]);
+      efsize++;
     }
-    est = est/((double) nSites);
-    fprintf(stderr,"iter:%d est: %f llh: %f diffInLlh:%e diffInPars:%e\n",iter,est,llh,llh-lastllh,est-start);
+    est = est/((double) efsize);
+    fprintf(stderr,"iter:%d est: %f llh: %f diffInLlh:%e diffInPars:%e efsize:%d\n",iter,est,llh,llh-lastllh,est-start,efsize);
     if(llh<lastllh){
       fprintf(stderr,"\t-> Problem with EM newllh is larger than lastllh, will break\n");
       break;
@@ -170,7 +177,7 @@ int makeold(int argc,char **argv){
     return 0;
   writepsmc_header(stderr,pars->perc,1);
   
-  fprintf(stderr,"nSize: %lu\n",pars->perc->nSites);
+  //  fprintf(stderr,"nSize: %lu\n",pars->perc->nSites);
   double *gls = new double[2*pars->perc->nSites];
   size_t at=0;
   //first pull all the data
@@ -186,6 +193,7 @@ int makeold(int argc,char **argv){
     if(pars->chooseChr!=NULL)
       break;
   }
+  fprintf(stderr,"\t-> at: %lu\n",at);
   double opt = 0.01;
   double llh = em(opt,gls,at,1e-12,50);
   fprintf(stderr,"estimated het:%f with llh:%f\n",opt,llh);
