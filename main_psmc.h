@@ -44,10 +44,10 @@ typedef struct {
   int nIter;
   int doLinear;
   char *outname;
-  FILE *flog;
   double init;
   char *msstr;
   msarg msstr_arg;
+  char *psmc_infile;
 }args;
 args * getArgs(int argc,char **argv,int dontprint);
 void destroy_args(args *p);

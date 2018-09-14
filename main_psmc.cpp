@@ -49,7 +49,7 @@ double lprod(double a,double b,double c){
 }
 
 
-#define DEFAULT_PATTERN "4+5*3+4"
+
 // parse a pattern like "4+5*3+4"
 // the returned array holds which parameters are linked together
 // number of parameters and number of free parameters will be also returned
@@ -204,7 +204,6 @@ int doGlStyle =0;
 
 args * getArgs(int argc,char **argv,int dontprint){
   args *p = new args;
-  p->flog = NULL;
   p->chooseChr=NULL;
   p->start=p->stop=-1;
   p->maxIter=1e2;
@@ -221,10 +220,10 @@ args * getArgs(int argc,char **argv,int dontprint){
   p->doLinear =0;
   p->smartsize =0;
   p->outname = strdup("output");
-  p->flog = NULL;
+  p->psmc_infile=NULL;
   p->init = -1;
   p->msstr = NULL;
-  char *inffilename=NULL;
+  
   if(argc==0)
     return p;
 
@@ -260,7 +259,7 @@ args * getArgs(int argc,char **argv,int dontprint){
     else  if(!strcasecmp(*argv,"-seed"))
       p->seed = atol(*(++argv));
     else  if(!strcasecmp(*argv,"-infile"))
-      inffilename = strdup(*++argv);
+      p->psmc_infile = strdup(*++argv);
     else  if(!strcasecmp(*argv,"-init"))
       p->init = atof(*++argv);
    else  if(!strcasecmp(*argv,"-nChr"))
@@ -279,44 +278,13 @@ args * getArgs(int argc,char **argv,int dontprint){
     }
     argv++;
   }
-
+  nThreads = p->nThreads;
   p->perc = perpsmc_init(p->fname,p->nChr);
-  
-  if(inffilename){
-    setpars(inffilename,p->par,p->RD);
-    free(inffilename);
-  }
-  
   if(p->seed==0)
     p->seed = time(NULL);
   srand48(p->seed);
+  
   fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d\n\t-> fname:\'%s\' seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d -nChr:%d -ms:\'%s\'\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doLinear,doGlStyle,p->nChr,p->msstr);
-  //  fprintf(stderr,"par:%p par->pattern:%p DEFAULT_PATTERN:%s\n",p->par,p->par->pattern,DEFAULT_PATTERN);
- 
-  if(p->par->pattern==NULL)
-    p->par->pattern = strdup(DEFAULT_PATTERN);
-
-  if(p->par->pattern!=NULL){
-    if(p->par->par_map)
-      free(p->par->par_map);
-    p->par->par_map = psmc_parse_pattern(p->par->pattern, &p->par->n_free, &p->par->n);
-  }
-  if(dontprint!=1){
-    char tmp[1024];
-    snprintf(tmp,1024,"%s.log",p->outname);
-    fprintf(stderr,"\t-> Writing file: \'%s\'\n",tmp);
-    if(0&&fexists(tmp)){
-      fprintf(stderr,"\t-> File exists, will exit\n");
-      destroy_args(p);
-      return NULL;
-    }
-    p->flog = fopen(tmp,"w");
-    assert(p->flog!=NULL);
-  }
-  nThreads = p->nThreads;
-  if(p->init!=-1)
-    for(int i=0;i<p->par->n+1;i++)
-      p->par->params[i] = p->init;
       
   return p;
 }
@@ -326,8 +294,6 @@ void destroy_args(args *p){
   if(p->msstr)
     free(p->msstr);
   perpsmc_destroy(p->perc);
-  if(p->flog)
-    fclose(p->flog);
   if(p->outname)
     free(p->outname);
   if(p->par->par_map)
@@ -340,6 +306,8 @@ void destroy_args(args *p){
     delete [] p->par->times;
   if(p->par)
     free(p->par);
+  if(p->psmc_infile)
+    free(p->psmc_infile);
   delete p;
 }
 
@@ -360,7 +328,6 @@ int main_psmc(int argc, char **argv){
   //this will printout the header
   writepsmc_header(stderr,pars->perc,1);
 
-  assert(pars->flog!=NULL);
   psmc_wrapper(pars,pars->blocksize);
 #if 0
     //below is old printout, keeping for reference

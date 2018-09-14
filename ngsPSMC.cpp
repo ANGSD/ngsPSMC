@@ -90,6 +90,7 @@ int print_main(int argc,char **argv){
   }
   
   destroy_args(pars);
+  return 0;
 }
 double em(double &x,double *gls,int nSites,double tol,int nIter){
   fprintf(stderr,"[%s] x:%f gls:%p nSites:%d\n",__FUNCTION__,x,gls,nSites);

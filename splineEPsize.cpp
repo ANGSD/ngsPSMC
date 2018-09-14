@@ -3,36 +3,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#define PSMC_T_INF 1000.0
-//from psmc github 
-
-#ifdef __WITH_MAIN__
-/*
-  This functions either set the tk, NOT the intervals.
-  n, is the true length of tk. First entry zero, last entry INF
- */
-void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
-  //  assert(inp_ti!=NULL);
-  //  fprintf(stderr,"[%s] (n,tk,max_t,alpha,inp_ti)=(%d,%p,%f,%f,%p)\n",__FUNCTION__,n,t,max_t,alpha,inp_ti);
-  int k;
-  if (inp_ti == 0) {
-    double beta;
-    beta = log(1.0 + max_t / alpha) / n; // beta controls the sizes of intervals
-    for (k = 0; k < n; ++k)
-      t[k] = alpha * (exp(beta * k) - 1);
-    t[n-1] = max_t;
-    //    t[n] = PSMC_T_INF; // the infinity: exp(PSMC_T_INF) > 1e310 = inf
-  } else {
-    memcpy(t, inp_ti, n * sizeof(double));
-  }
-}
-#endif
-
-
 class splineEPSize{
 public:
   int tk_l;//number of time points in *tk
   int nsplines;//number of splines
+  int n_free;
   int degree;//spline degree
   double *tk;//time points
   int *Tk;//time points in *tk where spline values are set
@@ -54,10 +29,12 @@ public:
     fv = new double[nsplines+1];
     dv = new double[nsplines+1];
     spline = new double *[nsplines];
+    n_free = 2*(nsplines+1);
     for(int i = 0; i < nsplines; i++){
       //      fprintf(stderr,"allcing spline[%d][%d]\n",i,degree+1);
       spline[i] = new double[degree + 1];
     }
+    void setTk(int n, double *t, double max_t, double alpha, double *inp_ti);
     setTk(tk_l,tk,max_t,alpha,NULL);
     for(int i=0;0&&i<tk_l;i++)
       fprintf(stderr,"%d %f\n",i,tk[i]);
@@ -72,6 +49,12 @@ public:
   double Poly(int degree, double *coef, double x);
   void computeEPSize(double *epsize);
   void computeSpline();
+  void setfd(double *ary){
+    for(int i=0;i<nsplines+1;i++)
+      fv[i]=ary[i];
+    for(int i=0;i<nsplines+1;i++)
+      dv[i]=ary[nsplines+1+i];
+  }
   void fillit(){
     srand48(100);
     for(int i=0;i<nsplines+1;i++){
@@ -173,7 +156,11 @@ void splineEPSize::computeEPSize(double *epsize){//FIXME epsize should be of len
 
 int main(){
   splineEPSize obj(14,3,6);
-  obj.fillit();
+  //  obj.fillit();
+  double pars[obj.n_free];
+  for(int i=0;i<obj.n_free;i++)
+    pars[i] = i+0.5;
+  obj.setfd(pars);
   obj.computeSpline();
   
   double *epsize= new double[obj.tk_l];

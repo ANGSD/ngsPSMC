@@ -55,7 +55,7 @@ public:
   }
   void allocate(int tk_l);
   void calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double rho);
-  double make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,double rho);
+  void make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,double rho);
   double make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho);
   
 private:

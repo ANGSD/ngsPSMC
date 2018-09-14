@@ -447,7 +447,7 @@ void ComputeBaumWelch(unsigned numWind,int tk_l,double **fw,double **bw,double *
 }
 
 //should only be run once, since calculates 
-double fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,double rho){
+void fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,double rho){
   assert(trans);
   assert(index==0);
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
