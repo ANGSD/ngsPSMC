@@ -13,12 +13,13 @@ spline<-function(x, spl){
    return(   sum(x^(3:0)*sp))
 }
 
-plot.spline<-function(x,step=0.1){
+plot.spline<-function(x,step=0.01){
 	d<-fun(x)
 	xs<-seq(0.00002,max(d$sp[,2]),step)
-	ys<-sapply(xs,function(x) spline(x,splinevals))
+	ys<-sapply(xs,function(x) spline(x,d$sp))
 	plot(xs,ys,type='l',lwd=3,col=3)
 	points(d$fd[,1],d$fd[,2])
+        grid(col='blue')
 	return(list(xs=xs,ys=ys,d=d))
 }
 
