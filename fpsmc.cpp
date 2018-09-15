@@ -18,6 +18,8 @@ int nChr = 0;
 
 int doQuadratic = 1; //<-only used in qFunction_wrapper
 
+#define DOSPLINE 0
+
 
 typedef struct{
   double *tk;
@@ -75,7 +77,7 @@ void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
   }
 }
 void setEPSize(double *ary,int tk_l,double *from_infile){
-  fprintf(stderr,"tk_l:%d\n",tk_l);
+  //  fprintf(stderr,"tk_l:%d\n",tk_l);
   if(!from_infile)
     for (int i = 0; i <tk_l; i++)
       ary[i]=1;
@@ -112,16 +114,30 @@ double qFunction2(const double *params ,const void *d){
 
 }
 
-extern int SIG_COND;//<- used for killing program
+void convert_pattern(const double *pars,double *pars2,int tofull){
+  if(tofull==0){
+    int at=0;
+    for(int i=0;i<remap_l;i++)
+      for(int j=0;j<remap[i];j++)
+	pars2[at++] = pars[i]; 
+  }else{
+    int at=0;
+    for(int i=0;i<remap_l;i++){
+      pars2[i] = pars[at+remap[i]-1];
+      at+=remap[i];
+    }
+  }
+}
+
+
+
+
 static int ncals=0;
-void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *epsize,double rho);
 double qFunction_wrapper(const double *pars,const void *d){
   ncals++;
   double pars2[ops[0].tk_l];
-  int at=0;
-  for(int i=0;i<remap_l;i++)
-    for(int j=0;j<remap[i];j++)
-      pars2[at++] = pars[i]; 
+  if(DOSPLINE==0)
+    convert_pattern(pars,pars2,0);
 
 
   if(doQuadratic){
@@ -135,13 +151,13 @@ double qFunction_wrapper(const double *pars,const void *d){
   //fprintf(stderr,"\t-> calling objective function: remap_l:%d [%d]\n",remap_l,ncals);
   double ret =0;
   
-  for(int i=0;SIG_COND&&i<nChr;i++)
+  for(int i=0;i<nChr;i++)
     if(doQuadratic)
       ret += qFunction2(pars2,&ops[i]);
     else
       ret += qFunction(pars2,&ops[i]);
   
-  if(std::isinf(ret)||SIG_COND==0)
+  if(std::isinf(ret))
     ret= -1000000000;
   
   return -ret;
@@ -171,8 +187,6 @@ void make_remapper(psmc_par *pp){
   
 }
 
-static int  mysupercounter =0;
-
 timer starttimer(){
   timer t;
   t.t=clock();
@@ -185,22 +199,16 @@ void stoptimer(timer &t){
   t.tids[1]= ((float)(time(NULL) - t.t2))/60.0;
 }
 
+//tk is full
 void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int ndim,double &ret_qval){
   clock_t t=clock();
   time_t t2=time(NULL);
-  fprintf(stderr,"\t-> Starting Optimization\n");
-  fflush(stderr);
-
-  fprintf(stderr,"\t-> ndim:%d\n",ndim);
+  fprintf(stderr,"\t-> Starting Optimization ndim:%d\n",ndim);
 
   double pars[ndim];
- 
-
-  int at=0;
-  for(int i=0;i<remap_l;i++){
-    pars[i] = epsize[at+remap[i]-1];
-    at+=remap[i];
-  }
+  if(DOSPLINE==0)
+    convert_pattern(epsize,pars,1);
+  
 
   //set bounds
   int nbd[ndim];
@@ -231,20 +239,9 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
   double max_qval = findmax_bfgs(ndim,pars,NULL,qFunction_wrapper,NULL,lbd,ubd,nbd,-1);
   ret_qval=max_qval;
 
-  for(int i=0;0&&(i<ndim);i++)
-    fprintf(stderr,"newpars after optim[%d]: %f\n",mysupercounter, pars[i]);
-  fflush(stderr);
-  mysupercounter++;
-  at=0;
-  for(int i=0;i<remap_l;i++){
-    for(int j=0;j<remap[i];j++){
-      //      fprintf(stderr,"epsize[%d]: %f\n",at,epsize[at]);
-      epsize[at++] = pars[i];
-    }
-  }
-  for(int i=0;0&&i<at;i++)
-    fprintf(stderr,"[%d]: %f\n",i,epsize[i]);
-
+  if(DOSPLINE==0)
+    convert_pattern(pars,epsize,0);
+  
   fprintf(stderr, "\t-> [RUNOPTIM3 TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
   fprintf(stderr, "\t-> [RUNOPTIM3 Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2));
  
@@ -347,45 +344,42 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
   while(SIG_COND) {
     fprintf(stderr,"----------------------------------------\n");
 
-  timer hmm_t = starttimer();
-  main_analysis_make_hmm(tk,tk_l,epsize,theta,rho,ret_llh,ret_qval);
-  stoptimer(hmm_t);
-  
-  if(ncals>0)
-    fprintf(stdout,"IT\t%d\n",ncals);
-  fprintf(stdout,"RD\t%d\n",at_it);
-  fprintf(stdout,"LK\t%f\n",ret_llh);
-  fprintf(stdout,"QD\t%f -> %f\n",ret_qval,ret_qval2);
-  //    exit(0);
-  fprintf(stdout,"RI\t?\n");
-  fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
-  fprintf(stdout,"MT\t1000000.0\n");
-  fprintf(stdout,"MM\tbuildhmm(wall(min),cpu(min)):(%f,%f) \n",hmm_t.tids[1],hmm_t.tids[0]);
-  for(int i=0;i<tk_l;i++)
-    fprintf(stdout,"RS\t%d\t%f\t%f\t1000000.0\t1000000.0\t1000000.0\n",i,tk[i],epsize[i]);
-  fprintf(stdout,"PA\t%s %.9f %.9f 666.666666666",pp->pattern,theta,rho);
-  int at=0;
-  for(int i=0;i<remap_l;i++){
-    fprintf(stdout," %.9f",epsize[at+remap[i]-1]);
-    at+=remap[i];
+    timer hmm_t = starttimer();
+    main_analysis_make_hmm(tk,tk_l,epsize,theta,rho,ret_llh,ret_qval);
+    stoptimer(hmm_t);
+    
+    if(ncals>0)
+      fprintf(stdout,"IT\t%d\n",ncals);
+    fprintf(stdout,"RD\t%d\n",at_it);
+    fprintf(stdout,"LK\t%f\n",ret_llh);
+    fprintf(stdout,"QD\t%f -> %f\n",ret_qval,ret_qval2);
+    //    exit(0);
+    fprintf(stdout,"RI\t?\n");
+    fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
+    fprintf(stdout,"MT\t1000000.0\n");
+    fprintf(stdout,"MM\tbuildhmm(wall(min),cpu(min)):(%f,%f) \n",hmm_t.tids[1],hmm_t.tids[0]);
+    for(int i=0;i<tk_l;i++)
+      fprintf(stdout,"RS\t%d\t%f\t%f\t1000000.0\t1000000.0\t1000000.0\n",i,tk[i],epsize[i]);
+    fprintf(stdout,"PA\t%s %.9f %.9f 666.666666666",pp->pattern,theta,rho);
+    int at=0;
+    for(int i=0;i<remap_l;i++){
+      fprintf(stdout," %.9f",epsize[at+remap[i]-1]);
+      at+=remap[i];
+    }
+    fprintf(stdout,"\n//\n");
+    fflush(stdout);
+    
+    if(at_it++>=nIter){
+      fprintf(stderr,"\t-> Breaking since i>nIter\n");
+      break;
+    }
+    if(doSmartsize==0)
+      runoptim3(tk,tk_l,epsize,theta,rho,pp->n_free,ret_qval2);
+    else
+      smartsize(objs,tk,tk_l,rho);
   }
-  fprintf(stdout,"\n//\n");
-  fflush(stdout);
-  
-  if(at_it++>=nIter){
-    fprintf(stderr,"\t-> Breaking since i>nIter\n");
-    break;
-  }
-  if(doSmartsize==0)
-    runoptim3(tk,tk_l,epsize,theta,rho,pp->n_free,ret_qval2);
-  else
-    smartsize(objs,tk,tk_l,rho);
-  
-  
 }
 
-  
-}
 #define DEFAULT_PATTERN "4+5*3+4"
 void setpars( char *fname,psmc_par *pp,int which) ;
 int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars);
@@ -403,12 +397,6 @@ int psmc_wrapper(args *pars,int blocksize) {
     pars->par->par_map = psmc_parse_pattern(pars->par->pattern, &pars->par->n_free, &pars->par->n);
   }
 
-
-  if(pars->init!=-1)
-    for(int i=0;i<pars->par->n+1;i++)
-      pars->par->params[i] = pars->init;
-
- 
   fprintf(stderr,"\t-> we are in file: %s function: %s line:%d blocksize:%d\n",__FILE__,__FUNCTION__,__LINE__,blocksize);
 
   fprintf(stderr,"\t-> par->n:%d\tpar->n_free:%d\tpar_map:%p\tpar->pattern:%s\tpar->times:%p\tpar->params:%p\n",pars->par->n,pars->par->n_free,pars->par->par_map,pars->par->pattern,pars->par->times,pars->par->params);
@@ -426,7 +414,10 @@ int psmc_wrapper(args *pars,int blocksize) {
     fprintf(stderr,"\t-> Adjusing theta with blocksize: %d\n",pars->blocksize);
     pars->par->TR[0] = pars->par->TR[0]/(1.0*pars->blocksize);
   }
+
   
+
+
 
 
   
@@ -434,9 +425,21 @@ int psmc_wrapper(args *pars,int blocksize) {
   fprintf(stderr,"\t-> tk_l in psmc_wrapper pars->par->n+1 tk_l:%d p->times:%p\n",tk_l,pars->par->times);
   double *tk = new double [tk_l];
   double *epsize = new double [tk_l];
-
+  double theta=pars->par->TR[0];
+  double rho=pars->par->TR[1];
   setEPSize(epsize,tk_l,pars->par->params);
   setTk(tk_l,tk,15,0.01,pars->par->times);//<- last position will be infinity
+
+  if(pars->init!=-1)
+    for(int i=0;i<tk_l;i++)
+      epsize[i] = pars->init;
+  if(pars->init_theta!=-1)
+    theta=pars->init_theta;
+  if(pars->init_rho!=-1)
+    rho=pars->init_rho;
+
+  assert(theta!=-1&&rho!=-1&&tk_l>0);
+  
 #if 0
   for(int i=0;i<tk_l;i++)
     fprintf(stderr,"psmc_wrapper: (tk,epsize)[%d]:(%f,%f)\n",i,tk[i],epsize[i]);
@@ -464,7 +467,7 @@ int psmc_wrapper(args *pars,int blocksize) {
       break;
   }
   objs[0]->outnames = strdup(pars->outname);
-  main_analysis(tk,tk_l,epsize,pars->par->TR[0],pars->par->TR[1],pars->par,pars->nIter,pars->smartsize);
+  main_analysis(tk,tk_l,epsize,theta,rho,pars->par,pars->nIter,pars->smartsize);
 
   free(objs[0]->outnames);
   for (int i=0;i<nChr;i++)

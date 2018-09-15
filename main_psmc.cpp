@@ -221,7 +221,7 @@ args * getArgs(int argc,char **argv,int dontprint){
   p->smartsize =0;
   p->outname = strdup("output");
   p->psmc_infile=NULL;
-  p->init = -1;
+  p->init =p->init_theta=p->init_rho= -1;
   p->msstr = NULL;
   
   if(argc==0)
@@ -262,7 +262,11 @@ args * getArgs(int argc,char **argv,int dontprint){
       p->psmc_infile = strdup(*++argv);
     else  if(!strcasecmp(*argv,"-init"))
       p->init = atof(*++argv);
-   else  if(!strcasecmp(*argv,"-nChr"))
+    else  if(!strcasecmp(*argv,"-theta"))
+      p->init_theta = atof(*++argv);
+    else  if(!strcasecmp(*argv,"-rho"))
+      p->init_rho = atof(*++argv);
+    else  if(!strcasecmp(*argv,"-nChr"))
       p->nChr = atoi(*++argv);
     else  if(!strcasecmp(*argv,"-doLinear")){
       p->doLinear = atoi(*++argv);
@@ -284,7 +288,7 @@ args * getArgs(int argc,char **argv,int dontprint){
     p->seed = time(NULL);
   srand48(p->seed);
   
-  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d\n\t-> fname:\'%s\' seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d -nChr:%d -ms:\'%s\'\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doLinear,doGlStyle,p->nChr,p->msstr);
+  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d\n\t-> fname:\'%s\' seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d -nChr:%d -ms:\'%s\' -theta: %f -rho: %f\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doLinear,doGlStyle,p->nChr,p->msstr,p->init_theta,p->init_rho);
   extern int doQuadratic;
   if(p->doLinear==0)
     doQuadratic=1;

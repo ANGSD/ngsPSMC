@@ -3,6 +3,9 @@
  */
 double lprod(double a,double b);
 double lprod(double a,double b,double c,double d);
+
+void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *epsize,double rho);
+
 #define DOTRANS 1
 
 #define PSMC_T_INF 1000.0

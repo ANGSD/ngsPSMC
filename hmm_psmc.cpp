@@ -279,7 +279,7 @@ void fastPSMC::allocate(int tk_l_arg){
     PP[0][i] = -666;
   workspace = new double[windows.size()];
   if(DOTRANS&&index==0){
-    fprintf(stderr,"allocating\n");
+    //    fprintf(stderr,"allocating\n");
     trans = new double *[tk_l];
     for(int i=0;i<tk_l;i++){
       trans[i] = new double[tk_l];
