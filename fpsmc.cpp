@@ -132,7 +132,7 @@ void convert_pattern(const double *pars,double *pars2,int tofull){
 
 
 static int ncals=0;
-double qFunction_wrapper(const double *pars,const void *d){
+double qFunction_wrapper( double *pars,const void *d){
   ncals++;
   double pars2[ops[0].tk_l];
   if(DOSPLINE==0)
@@ -216,11 +216,27 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
   int nbd[ndim];
   double lbd[ndim];
   double ubd[ndim];
-  for(int i=0;i<ndim;i++){
-    nbd[i]=2;
-    lbd[i]=0.000001;
-    ubd[i]=1000;//PSMC_T_INF;
+  if(DOSPLINE==0){
+    for(int i=0;i<ndim;i++){
+      nbd[i]=2;
+      lbd[i]=0.000001;
+      ubd[i]=1000;//PSMC_T_INF;
+    }
+  }else{
+    for(int i=0;i<ndim/2;i++){
+      fprintf(stderr,"fv[%d/%d]\n",i,ndim/2);
+      nbd[i]=2;
+      lbd[i]=0.000001;
+      ubd[i]=1000;//PSMC_T_INF;
+    }
+    for(int i=ndim/2;i<ndim;i++){
+      fprintf(stderr,"dv[%d/%d]\n",i,ndim);
+      nbd[i]=0;
+      lbd[i]=-1000;
+      ubd[i]=1000;//PSMC_T_INF;
+    }
   }
+  
 
   for(int i=0;i<nChr;i++){
     ops[i].nP = objs[i]->nP;
@@ -243,6 +259,7 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
 
   if(DOSPLINE==0)
     convert_pattern(pars,epsize,0);
+  else
   
   fprintf(stderr, "\t-> [RUNOPTIM3 TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
   fprintf(stderr, "\t-> [RUNOPTIM3 Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2));

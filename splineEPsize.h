@@ -40,7 +40,7 @@ public:
   }
   void printAll(FILE *fp,double *epsize);
   double Poly(int degree, double *coef, double x);
-  void convert(const double *,double *,int);
+  void convert( double *,double *,int);
   void computeEPSize(double *epsize);
   void computeSpline();
   void setfd(const double *ary){
@@ -49,6 +49,13 @@ public:
     for(int i=0;i<nsplines+1;i++)
       dv[i]=ary[nsplines+1+i];
   }
+  void getfd( double *ary){
+    for(int i=0;i<nsplines+1;i++)
+      ary[i]=fv[i];
+    for(int i=0;i<nsplines+1;i++)
+      ary[nsplines+1+i]=dv[i];
+  }
+  
   ~splineEPSize(){
     for(int i=0;i<nsplines;i++)
       delete [] spline[i];
