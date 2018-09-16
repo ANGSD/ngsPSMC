@@ -18,7 +18,8 @@ int nChr = 0;
 
 int doQuadratic = 1; //<-only used in qFunction_wrapper
 
-#define DOSPLINE 1
+int DOSPLINE=0;
+
 splineEPSize *spl=NULL;
 
 typedef struct{
@@ -41,7 +42,6 @@ typedef struct{
   double theta;
   double rho;
   double **trans;
-  //  double *epsize;
   double llh;
   double *parsIn;
 }oPars;
@@ -62,7 +62,7 @@ oPars *ops = NULL;
  */
 void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
   //  assert(inp_ti!=NULL);
-  //  fprintf(stderr,"[%s] (n,tk,max_t,alpha,inp_ti)=(%d,%p,%f,%f,%p)\n",__FUNCTION__,n,t,max_t,alpha,inp_ti);
+  fprintf(stderr,"[%s] (n,tk,max_t,alpha,inp_ti)=(%d,%p,%f,%f,%p)\n",__FUNCTION__,n,t,max_t,alpha,inp_ti);
   int k;
   if (inp_ti == 0) {
     double beta;
@@ -137,7 +137,8 @@ double qFunction_wrapper(const double *pars,const void *d){
   double pars2[ops[0].tk_l];
   if(DOSPLINE==0)
     convert_pattern(pars,pars2,0);
-  
+  else
+    spl->convert(pars,pars2,0);
 
   if(doQuadratic){
     oPars *data = (oPars*) d;
@@ -207,7 +208,9 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
   double pars[ndim];
   if(DOSPLINE==0)
     convert_pattern(epsize,pars,1);
-  
+  else{
+    spl->convert(epsize,pars,1);
+  }
 
   //set bounds
   int nbd[ndim];
@@ -356,7 +359,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ch
     fprintf(stdout,"RI\t?\n");
     fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
     fprintf(stdout,"MT\t1000000.0\n");
-    fprintf(stdout,"MM\tbuildhmm(wall(min),cpu(min)):(%f,%f) \n",hmm_t.tids[1],hmm_t.tids[0]);
+    fprintf(stdout,"MM\tbuildhmm(wall(min),cpu(min)):(%f,%f) tk_l:%d\n",hmm_t.tids[1],hmm_t.tids[0],tk_l);
     for(int i=0;i<tk_l;i++)
       fprintf(stdout,"RS\t%d\t%f\t%f\t1000000.0\t1000000.0\t1000000.0\n",i,tk[i],epsize[i]);
     fprintf(stdout,"PA\t%s %.9f %.9f 666.666666666",pattern,theta,rho);
@@ -387,7 +390,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ch
 void setpars( char *fname,psmc_par *pp,int which) ;
 int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars);
 int psmc_wrapper(args *pars,int blocksize) {
-  
+  DOSPLINE=pars->dospline;
   if(pars->psmc_infile)
     setpars(pars->psmc_infile,pars->par,pars->RD);
 
@@ -424,7 +427,7 @@ int psmc_wrapper(args *pars,int blocksize) {
   int ndim=-1;
   char *pattern = NULL;
   if(DOSPLINE!=0){
-    spl = new splineEPSize(14,3,6,pars->init_max_t);
+    spl = new splineEPSize(14,3,7,pars->init_max_t);
     fprintf(stderr,"\t-> spl.tk_l:%d spl->ndim:%d\n",spl->tk_l,spl->ndim);
     tk_l = spl->tk_l;
     tk=spl->tk;
@@ -432,7 +435,7 @@ int psmc_wrapper(args *pars,int blocksize) {
     ndim=spl->ndim;
   }else{
     tk = new double [tk_l];
-    setTk(tk_l,tk,15,0.01,pars->par->times);//<- last position will be infinity
+    setTk(tk_l,tk,15,0.1,pars->par->times);//<- last position will be infinity
     pattern=pars->par->pattern;
     ndim=pars->par->n_free;
   }

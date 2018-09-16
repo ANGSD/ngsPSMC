@@ -204,6 +204,7 @@ int doGlStyle =0;
 
 args * getArgs(int argc,char **argv,int dontprint){
   args *p = new args;
+  p->dospline =0;
   p->chooseChr=NULL;
   p->start=p->stop=-1;
   p->maxIter=1e2;
@@ -241,7 +242,9 @@ args * getArgs(int argc,char **argv,int dontprint){
       p->RD = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-nThreads"))
       p->nThreads = atoi(*(++argv));
-    else  if(!strcasecmp(*argv,"-doGlStyle"))
+   else  if(!strcasecmp(*argv,"-dospline"))
+      p->dospline = atoi(*(++argv));
+   else  if(!strcasecmp(*argv,"-doGlStyle"))
       doGlStyle = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-nIter"))
       p->nIter = atoi(*(++argv));

@@ -15,7 +15,7 @@ public:
   splineEPSize(int nsplines_arg,int pointsperinterval,  int ppl_arg,double maxt_arg){
     //    fprintf(stderr,"tk:%d intNum:%d nlast:%d\n",tk_l_arg,intNum_arg,nlast_arg);
     //constructor
-    alpha=0.01;
+    alpha=0.1;
     max_t=maxt_arg;
     nsplines=nsplines_arg;
 
@@ -40,9 +40,10 @@ public:
   }
   void printAll(FILE *fp,double *epsize);
   double Poly(int degree, double *coef, double x);
+  void convert(const double *,double *,int);
   void computeEPSize(double *epsize);
   void computeSpline();
-  void setfd(double *ary){
+  void setfd(const double *ary){
     for(int i=0;i<nsplines+1;i++)
       fv[i]=ary[i];
     for(int i=0;i<nsplines+1;i++)
