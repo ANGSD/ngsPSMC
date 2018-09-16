@@ -132,7 +132,7 @@ void convert_pattern(const double *pars,double *pars2,int tofull){
 
 
 static int ncals=0;
-double qFunction_wrapper( double *pars,const void *d){
+double qFunction_wrapper(const double *pars,const void *d){
   ncals++;
   double pars2[ops[0].tk_l];
   if(DOSPLINE==0)

@@ -40,7 +40,7 @@ public:
   }
   void printAll(FILE *fp,double *epsize);
   double Poly(int degree, double *coef, double x);
-  void convert( double *,double *,int);
+  void convert(const double *,double *,int);
   void computeEPSize(double *epsize);
   void computeSpline();
   void setfd(const double *ary){

@@ -106,14 +106,13 @@ void splineEPSize::computeEPSize(double *epsize){//FIXME epsize should be of len
     epsize[i] = fv[nsplines];
 }
 
-void splineEPSize::convert( double *pars,double *pars2,int tofull){
+void splineEPSize::convert(const double *pars,double *pars2,int tofull){
   if(tofull==0){
     setfd(pars);
     computeSpline();
     computeEPSize(pars2);
   }else{
-    pars[0]=0;
-    getfd(pars);
+    getfd(pars2);
   }
 }
 
