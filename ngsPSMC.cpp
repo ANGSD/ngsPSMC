@@ -101,13 +101,15 @@ double em(double &x,double *gls,size_t nSites,double tol,int nIter){
   double lastllh =0;
 
   for(int iter=0;iter<nIter;iter++){
-    int efsize=0;
+    size_t efsize=0;
     fprintf(stderr,"\r %d/%d     ",iter,nIter);fflush(stderr);
     for(size_t i=0;i<nSites;i++) {
       //  fprintf(stderr,"gls=(%f,%f)\n",gls[2*i],gls[2*i+1]);
       double tmp[2];
-      if(gls[2*i]==gls[2*i+1])
+      if(gls[2*i]==gls[2*i+1]){
+	//	fprintf(stderr,"gls[%lu]=(%f,%f)\n",i,gls[2*i],gls[2*i+1]);
 	continue;
+      }
       assert(gls[2*i]!=gls[2*i+1]);
       tmp[0] = exp(gls[2*i])*(1-start);
       tmp[1] = exp(gls[2*i+1])*(start);
@@ -116,7 +118,7 @@ double em(double &x,double *gls,size_t nSites,double tol,int nIter){
       efsize++;
     }
     est = est/((double) efsize);
-    fprintf(stderr,"iter:%d est: %f llh: %f diffInLlh:%e diffInPars:%e efsize:%d\n",iter,est,llh,llh-lastllh,est-start,efsize);
+    fprintf(stderr,"iter:%d est: %f llh: %f diffInLlh:%e diffInPars:%e efsize:%lu nsites:%lu\n",iter,est,llh,llh-lastllh,est-start,efsize,nSites);
     if(llh<lastllh){
       fprintf(stderr,"\t-> Problem with EM newllh is larger than lastllh, will break\n");
       break;
@@ -181,14 +183,14 @@ int makeold(int argc,char **argv){
   double *gls = new double[2*pars->perc->nSites];
   size_t at=0;
   //first pull all the data
-  for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){
+  for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){//loop over chrs
     if(pars->chooseChr!=NULL)
-      it = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop,pars->blocksize);
+      it = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop,pars->blocksize);//fetch chooseChr
     else
-      it = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);
+      it = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);//fetcht it->first
     
     //    fprintf(stderr,"it->first:%s\tlast:%lu\n",it->first,pars->perc->last);
-    memcpy(gls+at,pars->perc->gls,sizeof(double)*2*pars->perc->last);
+    memcpy(gls+2*at,pars->perc->gls,sizeof(double)*2*pars->perc->last);
     at += pars->perc->last;
     if(pars->chooseChr!=NULL)
       break;
