@@ -217,9 +217,11 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
      my_bgzf_read(pp->bgzf_pos,pp->pos,sizeof(int)*it->second.nSites);
      my_bgzf_read(pp->bgzf_gls,pp->gls,2*sizeof(double)*it->second.nSites);
      for(int i=0;i<it->second.nSites;i++){
-       double mmax = std::max(pp->gls[2*i],pp->gls[2*i+1]);
-       pp->gls[2*i] -= mmax;
-       pp->gls[2*i+1] -= mmax;
+       if(pp->gls[2*i]!=pp->gls[2*i+1]){
+	 double mmax = std::max(pp->gls[2*i],pp->gls[2*i+1]);
+	 pp->gls[2*i] -= mmax;
+	 pp->gls[2*i+1] -= mmax;
+       }
      }
      //   fprintf(stderr," end: %f %f\n",pp->gls[0],pp->gls[1]);
      pp->first=0;
