@@ -280,7 +280,8 @@ void ComputeP4(double *tk,int tk_l,double *P4,const double *epsize,double rho){
   //  fprintf(stderr,"\t->[%s] epsizes=(%f,%f) \n",__FUNCTION__,epsize[0],epsize[1]);
   for (unsigned i = 0; i < tk_l-1; i++){
 
-    double fact1 = (exp(-(2.0*rho*tk[i])))/(1.0 - exp(-(tk[i+1]-tk[i])/epsize[i]) );
+    //    double fact1 = (exp(-(2.0*rho*tk[i])))/(1.0 - exp(-(tk[i+1]-tk[i])/epsize[i]) );
+    double fact1 =(exp(-(2.0*rho*tk[i])))/(addProtect2(1.0, - exp(-(tk[i+1]-tk[i])/epsize[i]) ));
 
     double part1 = 2.0/(1-2.0*epsize[i]*rho)/(1+2.0*epsize[i]*rho);
     //    fprintf(stderr,"part1:%f epszie:%f\n",part1,epsize[i]);
