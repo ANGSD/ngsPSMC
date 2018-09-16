@@ -6,6 +6,7 @@
 #include "splineEPsize.h"
 
 #ifdef __WITH_MAIN__
+//remember to subtract by one
 void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
   //  assert(inp_ti!=NULL);
   fprintf(stderr,"[%s] (n,tk,max_t,alpha,inp_ti)=(%d,%p,%f,%f,%p)\n",__FUNCTION__,n,t,max_t,alpha,inp_ti);
@@ -40,10 +41,11 @@ void splineEPSize::printAll(FILE *fp,double *epsize){
       fprintf(fp,"\t%f",spline[i][j]);
     fprintf(fp,"\n");
   }
+  int at=0;
   for(int i=0;i<tk_l;i++)
-    fprintf(fp,"xy[%d]\t%f\t%f\n",i,tk[i],epsize[i]);
+    fprintf(fp,"xy[%d][%d]\t%f\t%f\n",at++,i,tk[i],epsize[i]);
   for(int i=0;i<nsplines+1;i++)
-    fprintf(fp,"fd\t%f\t%f\t%f\n",tk[Tk[i]],fv[i],dv[i]);
+    fprintf(fp,"fd[%d]\t%f\t%f\t%f\n",at++,tk[Tk[i]],fv[i],dv[i]);
 }
 
 void splineEPSize::computeSpline(){
@@ -120,7 +122,7 @@ void splineEPSize::convert(const double *pars,double *pars2,int tofull){
 #ifdef __WITH_MAIN__
 
 int main(){
-  splineEPSize obj(14,3,7,15);
+  splineEPSize obj(14,3,7,23.889078);
   //  obj.fillit();
   double pars[obj.n_free];
   for(int i=0;i<obj.n_free;i++)

@@ -20,6 +20,7 @@ public:
     nsplines=nsplines_arg;
 
     tk_l = ppl_arg+nsplines*pointsperinterval+nsplines+1;
+    fprintf(stderr,"\t-> Allocating tk with tk_l:%d in spline\n",tk_l);
     degree=3;
     tk = new double[tk_l];
     Tk = new int[nsplines+1];
@@ -31,7 +32,7 @@ public:
       spline[i] = new double[degree + 1];
 
     void setTk(int n, double *t, double max_t, double alpha, double *inp_ti);
-    setTk(tk_l-1,tk,max_t,alpha,NULL);
+    setTk(tk_l-1,tk,max_t,alpha,NULL);//<- rememer to subtract minus
     int at=0;
     for(int i=0;i<nsplines+1;i++){
       Tk[i]=i*(pointsperinterval+1);

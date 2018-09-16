@@ -60,6 +60,7 @@ oPars *ops = NULL;
   This functions either set the tk, NOT the intervals.
   n, is the true length of tk. First entry zero, last entry INF
  */
+//remember to subract by one
 void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
   //  assert(inp_ti!=NULL);
   fprintf(stderr,"[%s] (n,tk,max_t,alpha,inp_ti)=(%d,%p,%f,%f,%p)\n",__FUNCTION__,n,t,max_t,alpha,inp_ti);
@@ -72,7 +73,7 @@ void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
     t[n+1] = max_t;
     //    t[n] = PSMC_T_INF; // the infinity: exp(PSMC_T_INF) > 1e310 = inf
   } else {
-    memcpy(t, inp_ti, n * sizeof(double));
+    memcpy(t, inp_ti, (n+1) * sizeof(double));
   }
 }
 void setEPSize(double *ary,int tk_l,double *from_infile){
@@ -223,17 +224,19 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
       ubd[i]=1000;//PSMC_T_INF;
     }
   }else{
+    int at=0;
     for(int i=0;i<ndim/2;i++){
-      fprintf(stderr,"fv[%d/%d]\n",i,ndim/2);
+
       nbd[i]=2;
       lbd[i]=0.000001;
       ubd[i]=1000;//PSMC_T_INF;
+      fprintf(stderr,"fv[%d][%d/%d] bd[%d]:(%f,%f)\n",at++,i,ndim/2,i,nbd[i],lbd[i],ubd[i]);
     }
     for(int i=ndim/2;i<ndim;i++){
-      fprintf(stderr,"dv[%d/%d]\n",i,ndim);
       nbd[i]=0;
       lbd[i]=-1000;
       ubd[i]=1000;//PSMC_T_INF;
+      fprintf(stderr,"gv[%d][%d/%d] bd[%d]:(%f,%f)\n",at++,i,ndim/2,i,nbd[i],lbd[i],ubd[i]);
     }
   }
   
@@ -451,12 +454,13 @@ int psmc_wrapper(args *pars,int blocksize) {
     pattern=strdup("spline");
     ndim=spl->ndim;
   }else{
+    fprintf(stderr,"tk_l:%d\n",tk_l);
     tk = new double [tk_l];
-    setTk(tk_l,tk,15,0.1,pars->par->times);//<- last position will be infinity
+    setTk(tk_l-1,tk,pars->init_max_t,0.1,pars->par->times);//<- last position will be infinity
     pattern=pars->par->pattern;
     ndim=pars->par->n_free;
   }
-
+  fprintf(stderr,"tk_l:%d\n",tk_l);
   double *epsize = new double [tk_l];
   double theta=pars->par->TR[0];
   double rho=pars->par->TR[1];

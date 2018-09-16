@@ -316,6 +316,12 @@ void ComputeP4(double *tk,int tk_l,double *P4,const double *epsize,double rho){
 #endif
     if(isnan(P4[i])){
       fprintf(stderr,"P[4][%d]: %f never happens cmputep4\n",i,P4[i]);
+      fprintf(stderr,"\t-> fact1: %e fact2: %e fact1*fact2: %f\n",fact1,fact2,fact1*fact2);
+      fprintf(stderr,"\t-> part1: %f part2: %f part3: %f part4: %f\n",part1,part2,part3,part4);
+      fprintf(stderr,"\t-> part1+part2: %f -part3-part4: %f \n",part1+part2,-part3-part4);
+      fprintf(stderr,"\t-> fact2: part1+part2-part3-part4: %f \n",part1+part2-part3-part4);
+      fprintf(stderr,"\t-> P4[%d]: %f \n",i,P4[i]);
+
       for(int i=0;i<tk_l;i++)
 	fprintf(stderr,"epsize[%d]: (%f,%f)\n",i,tk[i],epsize[i]);
       exit(0);
