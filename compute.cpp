@@ -301,7 +301,7 @@ void ComputeP4(double *tk,int tk_l,double *P4,const double *epsize,double rho){
     double part4 = 2*exp(part4exp);
     
     double fact2= part1+part2-part3-part4;
-    if(1&&(fact2<0&fabs(fact2)<1e-12)){
+    if(fact2<0){
       fprintf(stderr,"\t-> This fix shouldnt happen that often: compute.cpp computep4 epsize[%u]:%f\n",i,epsize[i]);
       fact2=fabs(fact2);
     }
