@@ -138,8 +138,18 @@ double qFunction_wrapper(const double *pars,const void *d){
   double pars2[ops[0].tk_l];
   if(DOSPLINE==0)
     convert_pattern(pars,pars2,0);
-  else
+  else{
     spl->convert(pars,pars2,0);
+    for(int i=0;i<ops[0].tk_l;i++){
+      if(pars2[i]<0)
+	 return 1000000000;
+
+    }
+  }
+
+  for(int i=0;0&&i<ops[0].tk_l;i++)
+    fprintf(stderr,"after scaling:%d %f\n",i,pars2[i]);
+  //  exit(0);
 
   if(doQuadratic){
     oPars *data = (oPars*) d;
@@ -230,13 +240,13 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
       nbd[i]=2;
       lbd[i]=0.000001;
       ubd[i]=1000;//PSMC_T_INF;
-      fprintf(stderr,"fv[%d][%d/%d] bd[%d]:(%f,%f)\n",at++,i,ndim/2,i,nbd[i],lbd[i],ubd[i]);
+      //      fprintf(stderr,"fv[%d][%d/%d] bd[%d]:%d:(%f,%f)\n",at++,i,ndim/2,i,nbd[i],lbd[i],ubd[i]);
     }
     for(int i=ndim/2;i<ndim;i++){
       nbd[i]=0;
       lbd[i]=-1000;
       ubd[i]=1000;//PSMC_T_INF;
-      fprintf(stderr,"gv[%d][%d/%d] bd[%d]:(%f,%f)\n",at++,i,ndim/2,i,nbd[i],lbd[i],ubd[i]);
+      //fprintf(stderr,"gv[%d][%d/%d] bd[%d]:%d:(%f,%fd)\n",at++,i,ndim/2,i,nbd[i],lbd[i],ubd[i]);
     }
   }
   
@@ -258,11 +268,15 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
 
   //we are not optimizing llh but qfunction
   double max_qval = findmax_bfgs(ndim,pars,NULL,qFunction_wrapper,NULL,lbd,ubd,nbd,-1);
+  fprintf(stderr,"opt value:%f\n",max_qval);
+ 
   ret_qval=max_qval;
 
   if(DOSPLINE==0)
     convert_pattern(pars,epsize,0);
-  else
+  else{
+    spl->convert(pars,epsize,0);
+  }
   
   fprintf(stderr, "\t-> [RUNOPTIM3 TIME]:%s cpu-time used =  %.2f sec \n",__func__, (float)(clock() - t) / CLOCKS_PER_SEC);
   fprintf(stderr, "\t-> [RUNOPTIM3 Time]:%s walltime used =  %.2f sec \n",__func__, (float)(time(NULL) - t2));
@@ -355,6 +369,8 @@ void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
 }
 
 
+//tk_l is dimension of transistionsspace ndim is size of dimension
+//tk is tk_l long, epsize is tk_l long
 void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,char *pattern,int ndim,int nIter,int doSmartsize){
   fprintf(stderr,"%s\n",pattern);//exit(0);
   //test fix:
@@ -380,18 +396,19 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ch
     fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
     fprintf(stdout,"MT\t1000000.0\n");
     fprintf(stdout,"MM\tbuildhmm(wall(min),cpu(min)):(%f,%f) tk_l:%d\n",hmm_t.tids[1],hmm_t.tids[0],tk_l);
-    for(int i=0;i<tk_l;i++)
+    for(int i=0;i<tk_l;i++)//this prints out all
       fprintf(stdout,"RS\t%d\t%f\t%f\t1000000.0\t1000000.0\t1000000.0\n",i,tk[i],epsize[i]);
     fprintf(stdout,"PA\t%s %.9f %.9f 666.666666666",pattern,theta,rho);
     int at=0;
     //
-    if(strcmp(pattern,"spline")!=0){
+    if(strcmp(pattern,"spline")!=0){//this only prints each from each grouping
       //only when not using splines
       for(int i=0;i<remap_l;i++){
 	fprintf(stdout," %.9f",epsize[at+remap[i]-1]);
 	at+=remap[i];
       }
     }
+    //no need to print more in PA line with using spline
     fprintf(stdout,"\n//\n");
     fflush(stdout);
     
@@ -443,7 +460,8 @@ int psmc_wrapper(args *pars,int blocksize) {
 
   
   int tk_l = pars->par->n+1;
-  double *tk=NULL;
+  double *tk,*epsize;
+  tk=epsize=NULL;
   int ndim=-1;
   char *pattern = NULL;
   if(DOSPLINE!=0){
@@ -453,18 +471,27 @@ int psmc_wrapper(args *pars,int blocksize) {
     tk=spl->tk;
     pattern=strdup("spline");
     ndim=spl->ndim;
+    spl->fillit();
+    spl->computeSpline();
+    epsize = new double [tk_l];
+    assert(pars->init==-1);
+    spl->computeEPSize(epsize);
+    for(int i=0;0&&i<tk_l;i++)
+      fprintf(stderr,"%d %f\n",i,epsize[i]);
   }else{
     fprintf(stderr,"tk_l:%d\n",tk_l);
     tk = new double [tk_l];
     setTk(tk_l-1,tk,pars->init_max_t,0.1,pars->par->times);//<- last position will be infinity
     pattern=pars->par->pattern;
     ndim=pars->par->n_free;
+    epsize = new double [tk_l];
+    setEPSize(epsize,tk_l,pars->par->params);
   }
   fprintf(stderr,"tk_l:%d\n",tk_l);
-  double *epsize = new double [tk_l];
+
   double theta=pars->par->TR[0];
   double rho=pars->par->TR[1];
-  setEPSize(epsize,tk_l,pars->par->params);
+
  
 
   if(pars->init!=-1)
@@ -481,6 +508,7 @@ int psmc_wrapper(args *pars,int blocksize) {
   for(int i=0;i<tk_l;i++)
     fprintf(stderr,"psmc_wrapper: (tk,epsize)[%d]:(%f,%f)\n",i,tk[i],epsize[i]);
 #endif
+  //  exit(0);
   fprintf(stderr,"\t-> tk_l in psmc_wrapper pars->par->n+1 tk_l:%d p->times:%p\n",tk_l,pars->par->times);  
   int nobs = pars->chooseChr?1:pars->perc->mm.size();
   fprintf(stderr,"\t-> nobs/nchr: %d\n",nobs);

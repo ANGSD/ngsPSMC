@@ -106,8 +106,22 @@ void splineEPSize::computeEPSize(double *epsize){//FIXME epsize should be of len
   }
   for(int i=Tk[nsplines];i<tk_l;i++)
     epsize[i] = fv[nsplines];
+
+#if 0
+  for(int i=0;i<tk_l;i++){
+    if(epsize[i]<0){
+      printAll(stderr,epsize);
+      exit(0);
+    }
+  }
+
+#endif
 }
 
+
+
+//tofull zero,moves from pars to pars2 assuming 
+//tofull one, takes the
 void splineEPSize::convert(const double *pars,double *pars2,int tofull){
   if(tofull==0){
     setfd(pars);

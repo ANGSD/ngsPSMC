@@ -95,7 +95,7 @@ int print_main(int argc,char **argv){
 double em(double &x,double *gls,size_t nSites,double tol,int nIter){
   fprintf(stderr,"[%s] x:%f gls:%p nSites:%lu\n",__FUNCTION__,x,gls,nSites);
   fflush(stderr);
-  double llh = 0;
+
   double est = 0;
   double start = x;
   double lastllh =0;
@@ -103,6 +103,7 @@ double em(double &x,double *gls,size_t nSites,double tol,int nIter){
   for(int iter=0;iter<nIter;iter++){
     size_t efsize=0;
     fprintf(stderr,"\r %d/%d     ",iter,nIter);fflush(stderr);
+    double llh = 0;
     for(size_t i=0;i<nSites;i++) {
       //  fprintf(stderr,"gls=(%f,%f)\n",gls[2*i],gls[2*i+1]);
       double tmp[2];
@@ -111,19 +112,19 @@ double em(double &x,double *gls,size_t nSites,double tol,int nIter){
 	continue;
       }
       assert(gls[2*i]!=gls[2*i+1]);
-      tmp[0] = exp(gls[2*i])*(1-start);
-      tmp[1] = exp(gls[2*i+1])*(start);
+      tmp[0] = exp(gls[2*i])/4.0*(1-start);
+      tmp[1] = exp(gls[2*i+1])/6.0*(start);
       est += tmp[1]/(tmp[0]+tmp[1]);
       llh -= log(tmp[0]+tmp[1]);
       efsize++;
     }
     est = est/((double) efsize);
     fprintf(stderr,"iter:%d est: %f llh: %f diffInLlh:%e diffInPars:%e efsize:%lu nsites:%lu\n",iter,est,llh,llh-lastllh,est-start,efsize,nSites);
-    if(llh<lastllh){
+    if(iter>0&&llh>lastllh){
       fprintf(stderr,"\t-> Problem with EM newllh is larger than lastllh, will break\n");
       break;
     }
-    if(fabs(est-start)<tol){
+    if(iter>0&&fabs(est-start)<tol){
       fprintf(stderr,"\t-> Difference in estimated pars is smaller than tol, convergence achieved\n");
       start=est;
       lastllh=llh;
@@ -197,7 +198,7 @@ int makeold(int argc,char **argv){
   }
   fprintf(stderr,"\t-> at: %lu\n",at);
   double opt = 0.01;
-  double llh = em(opt,gls,at,1e-12,50);
+  double llh = em(opt,gls,at,1e-12,500);
   fprintf(stderr,"estimated het:%f with llh:%f\n",opt,llh);
   delete [] gls;
 
