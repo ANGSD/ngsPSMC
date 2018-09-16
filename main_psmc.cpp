@@ -101,7 +101,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
   }
   char *buf = new char[fsize(fname)+10];
   memset(buf,0,fsize(fname)+10);
-  fread(buf,sizeof(char),fsize(fname),fp);
+  assert(fread(buf,sizeof(char),fsize(fname),fp)==fsize(fname));
   fclose(fp);
   char *slashslash[100];
   
@@ -221,7 +221,7 @@ args * getArgs(int argc,char **argv,int dontprint){
   p->smartsize =0;
   p->outname = strdup("output");
   p->psmc_infile=NULL;
-  p->init =p->init_theta=p->init_rho= -1;
+  p->init =p->init_theta=p->init_rho= p->init_max_t=-1;
   p->msstr = NULL;
   
   if(argc==0)
@@ -266,6 +266,8 @@ args * getArgs(int argc,char **argv,int dontprint){
       p->init_theta = atof(*++argv);
     else  if(!strcasecmp(*argv,"-rho"))
       p->init_rho = atof(*++argv);
+    else  if(!strcasecmp(*argv,"-max_t"))
+      p->init_max_t = atof(*++argv);
     else  if(!strcasecmp(*argv,"-nChr"))
       p->nChr = atoi(*++argv);
     else  if(!strcasecmp(*argv,"-doLinear")){
@@ -288,7 +290,7 @@ args * getArgs(int argc,char **argv,int dontprint){
     p->seed = time(NULL);
   srand48(p->seed);
   
-  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d\n\t-> fname:\'%s\' seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d -nChr:%d -ms:\'%s\' -theta: %f -rho: %f\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doLinear,doGlStyle,p->nChr,p->msstr,p->init_theta,p->init_rho);
+  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d\n\t-> fname:\'%s\' seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d -nChr:%d -ms:\'%s\' -theta: %f -rho: %f -max_t:%f\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doLinear,doGlStyle,p->nChr,p->msstr,p->init_theta,p->init_rho,p->init_max_t);
   extern int doQuadratic;
   if(p->doLinear==0)
     doQuadratic=1;

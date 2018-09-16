@@ -10,16 +10,16 @@
 #include "bfgs.h"
 #include "compute.h"
 #include "fpsmc.h"
-
+#include "splineEPsize.h"
+//#include 
 extern int nThreads;
 
 int nChr = 0;
 
-
 int doQuadratic = 1; //<-only used in qFunction_wrapper
 
-#define DOSPLINE 0
-
+#define DOSPLINE 1
+splineEPSize *spl=NULL;
 
 typedef struct{
   double *tk;
@@ -29,7 +29,6 @@ typedef struct{
   double rho;
   double **trans;
 }shared_forhmm;
-
 
 typedef struct{
   double **nP;
@@ -138,7 +137,7 @@ double qFunction_wrapper(const double *pars,const void *d){
   double pars2[ops[0].tk_l];
   if(DOSPLINE==0)
     convert_pattern(pars,pars2,0);
-
+  
 
   if(doQuadratic){
     oPars *data = (oPars*) d;
@@ -333,8 +332,8 @@ void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
 }
 
 
-void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,psmc_par *pp,int nIter,int doSmartsize){
-
+void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,char *pattern,int ndim,int nIter,int doSmartsize){
+  fprintf(stderr,"%s\n",pattern);//exit(0);
   //test fix:
   double ret_llh,ret_qval,ret_qval2;
   ret_qval=ret_qval2=0;
@@ -360,11 +359,15 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
     fprintf(stdout,"MM\tbuildhmm(wall(min),cpu(min)):(%f,%f) \n",hmm_t.tids[1],hmm_t.tids[0]);
     for(int i=0;i<tk_l;i++)
       fprintf(stdout,"RS\t%d\t%f\t%f\t1000000.0\t1000000.0\t1000000.0\n",i,tk[i],epsize[i]);
-    fprintf(stdout,"PA\t%s %.9f %.9f 666.666666666",pp->pattern,theta,rho);
+    fprintf(stdout,"PA\t%s %.9f %.9f 666.666666666",pattern,theta,rho);
     int at=0;
-    for(int i=0;i<remap_l;i++){
-      fprintf(stdout," %.9f",epsize[at+remap[i]-1]);
-      at+=remap[i];
+    //
+    if(strcmp(pattern,"spline")!=0){
+      //only when not using splines
+      for(int i=0;i<remap_l;i++){
+	fprintf(stdout," %.9f",epsize[at+remap[i]-1]);
+	at+=remap[i];
+      }
     }
     fprintf(stdout,"\n//\n");
     fflush(stdout);
@@ -374,7 +377,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ps
       break;
     }
     if(doSmartsize==0)
-      runoptim3(tk,tk_l,epsize,theta,rho,pp->n_free,ret_qval2);
+      runoptim3(tk,tk_l,epsize,theta,rho,ndim,ret_qval2);
     else
       smartsize(objs,tk,tk_l,rho);
   }
@@ -416,19 +419,29 @@ int psmc_wrapper(args *pars,int blocksize) {
   }
 
   
-
-
-
-
-  
   int tk_l = pars->par->n+1;
-  fprintf(stderr,"\t-> tk_l in psmc_wrapper pars->par->n+1 tk_l:%d p->times:%p\n",tk_l,pars->par->times);
-  double *tk = new double [tk_l];
+  double *tk=NULL;
+  int ndim=-1;
+  char *pattern = NULL;
+  if(DOSPLINE!=0){
+    spl = new splineEPSize(14,3,6,pars->init_max_t);
+    fprintf(stderr,"\t-> spl.tk_l:%d spl->ndim:%d\n",spl->tk_l,spl->ndim);
+    tk_l = spl->tk_l;
+    tk=spl->tk;
+    pattern=strdup("spline");
+    ndim=spl->ndim;
+  }else{
+    tk = new double [tk_l];
+    setTk(tk_l,tk,15,0.01,pars->par->times);//<- last position will be infinity
+    pattern=pars->par->pattern;
+    ndim=pars->par->n_free;
+  }
+
   double *epsize = new double [tk_l];
   double theta=pars->par->TR[0];
   double rho=pars->par->TR[1];
   setEPSize(epsize,tk_l,pars->par->params);
-  setTk(tk_l,tk,15,0.01,pars->par->times);//<- last position will be infinity
+ 
 
   if(pars->init!=-1)
     for(int i=0;i<tk_l;i++)
@@ -437,14 +450,14 @@ int psmc_wrapper(args *pars,int blocksize) {
     theta=pars->init_theta;
   if(pars->init_rho!=-1)
     rho=pars->init_rho;
-
+  
   assert(theta!=-1&&rho!=-1&&tk_l>0);
   
 #if 0
   for(int i=0;i<tk_l;i++)
     fprintf(stderr,"psmc_wrapper: (tk,epsize)[%d]:(%f,%f)\n",i,tk[i],epsize[i]);
 #endif
-  
+  fprintf(stderr,"\t-> tk_l in psmc_wrapper pars->par->n+1 tk_l:%d p->times:%p\n",tk_l,pars->par->times);  
   int nobs = pars->chooseChr?1:pars->perc->mm.size();
   fprintf(stderr,"\t-> nobs/nchr: %d\n",nobs);
   objs = new fastPSMC*[nobs];
@@ -467,7 +480,7 @@ int psmc_wrapper(args *pars,int blocksize) {
       break;
   }
   objs[0]->outnames = strdup(pars->outname);
-  main_analysis(tk,tk_l,epsize,theta,rho,pars->par,pars->nIter,pars->smartsize);
+  main_analysis(tk,tk_l,epsize,theta,rho,pattern,ndim,pars->nIter,pars->smartsize);
 
   free(objs[0]->outnames);
   for (int i=0;i<nChr;i++)

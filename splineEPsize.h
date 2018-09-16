@@ -4,6 +4,7 @@ public:
   int tk_l;//number of time points in *tk
   int nsplines;//number of splines
   int n_free;
+  int ndim;
   int degree;//spline degree
   double *tk;//time points
   int *Tk;//time points in *tk where spline values are set
@@ -11,11 +12,11 @@ public:
   double **spline;//cubic spline: four coefficients for each interval
   double alpha;
   double max_t;
-  splineEPSize(int nsplines_arg,int pointsperinterval,  int ppl_arg){
+  splineEPSize(int nsplines_arg,int pointsperinterval,  int ppl_arg,double maxt_arg){
     //    fprintf(stderr,"tk:%d intNum:%d nlast:%d\n",tk_l_arg,intNum_arg,nlast_arg);
     //constructor
     alpha=0.01;
-    max_t=22;
+    max_t=maxt_arg;
     nsplines=nsplines_arg;
 
     tk_l = ppl_arg+nsplines*pointsperinterval+nsplines+1;
@@ -25,17 +26,17 @@ public:
     fv = new double[nsplines+1];
     dv = new double[nsplines+1];
     spline = new double *[nsplines];
-    n_free = 2*(nsplines+1);
-    for(int i = 0; i < nsplines; i++){
-      //      fprintf(stderr,"allcing spline[%d][%d]\n",i,degree+1);
+    ndim=n_free = 2*(nsplines+1);
+    for(int i = 0; i < nsplines; i++)
       spline[i] = new double[degree + 1];
-    }
+
     void setTk(int n, double *t, double max_t, double alpha, double *inp_ti);
     setTk(tk_l,tk,max_t,alpha,NULL);
     int at=0;
     for(int i=0;i<nsplines+1;i++){
       Tk[i]=i*(pointsperinterval+1);
     }
+    fprintf(stderr,"TK_L:%d NDIM:%d\n",tk_l,ndim);
   }
   void printAll(FILE *fp,double *epsize);
   double Poly(int degree, double *coef, double x);

@@ -109,7 +109,7 @@ void splineEPSize::computeEPSize(double *epsize){//FIXME epsize should be of len
 #ifdef __WITH_MAIN__
 
 int main(){
-  splineEPSize obj(14,3,6);
+  splineEPSize obj(14,3,6,23.8);
   //  obj.fillit();
   double pars[obj.n_free];
   for(int i=0;i<obj.n_free;i++)

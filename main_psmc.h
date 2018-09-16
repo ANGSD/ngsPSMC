@@ -49,6 +49,7 @@ typedef struct {
   char *psmc_infile;
   double init_theta;
   double init_rho;
+  double init_max_t;
 }args;
 args * getArgs(int argc,char **argv,int dontprint);
 void destroy_args(args *p);
