@@ -315,6 +315,8 @@ void ComputeP4(double *tk,int tk_l,double *P4,const double *epsize,double rho){
 #endif
     if(isnan(P4[i])){
       fprintf(stderr,"P[4][%d]: %f never happens cmputep4\n",i,P4[i]);
+      for(int i=0;i<tk_l;i++)
+	fprintf(stderr,"epsize[%d]: (%f,%f)\n",i,tk[i],epsize[i]);
       exit(0);
       //exit(0);
       //    assert(P4[i]>=0&&P4[i]<=1);
