@@ -67,9 +67,9 @@ void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
   if (inp_ti == 0) {
     double beta;
     beta = log(1.0 + max_t / alpha) / n; // beta controls the sizes of intervals
-    for (k = 0; k < n; ++k)
+    for (k = 0; k <= n; ++k)
       t[k] = alpha * (exp(beta * k) - 1);
-    t[n-1] = max_t;
+    t[n+1] = max_t;
     //    t[n] = PSMC_T_INF; // the infinity: exp(PSMC_T_INF) > 1e310 = inf
   } else {
     memcpy(t, inp_ti, n * sizeof(double));

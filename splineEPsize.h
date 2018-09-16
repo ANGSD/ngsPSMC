@@ -31,12 +31,12 @@ public:
       spline[i] = new double[degree + 1];
 
     void setTk(int n, double *t, double max_t, double alpha, double *inp_ti);
-    setTk(tk_l,tk,max_t,alpha,NULL);
+    setTk(tk_l-1,tk,max_t,alpha,NULL);
     int at=0;
     for(int i=0;i<nsplines+1;i++){
       Tk[i]=i*(pointsperinterval+1);
     }
-    fprintf(stderr,"TK_L:%d NDIM:%d\n",tk_l,ndim);
+    fprintf(stderr,"TK_L:%d NDIM:%d \n",tk_l,ndim);
   }
   void printAll(FILE *fp,double *epsize);
   double Poly(int degree, double *coef, double x);
