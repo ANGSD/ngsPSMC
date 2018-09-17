@@ -83,7 +83,7 @@ int print_main(int argc,char **argv){
       it = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);
 
     for(size_t s=pars->perc->first;s<pars->perc->last;s++)
-      fprintf(stdout,"%s\t%d(%lu,%lu)\t%e\t%e\n",it->first,pars->perc->pos[s]+1,2*s,2*s+1,pars->perc->gls[2*s],pars->perc->gls[2*s+1]);
+      fprintf(stdout,"%s\t%d\t%e\n",it->first,pars->perc->pos[s]+1,pars->perc->gls[s]);
     
     if(pars->chooseChr!=NULL)
       break;
@@ -92,8 +92,24 @@ int print_main(int argc,char **argv){
   destroy_args(pars);
   return 0;
 }
-double em(double &x,double *gls,size_t nSites,double tol,int nIter){
-  fprintf(stderr,"[%s] x:%f gls:%p nSites:%lu\n",__FUNCTION__,x,gls,nSites);
+
+void toGl(double ingl,double outgl[2]){
+  if(isinf(ingl)){
+    outgl[0]=outgl[1]=log(0);
+  }else{
+    if(ingl<0){
+      outgl[0]=0;
+      outgl[1]=ingl;
+    }else{
+      outgl[0]=-ingl;
+      outgl[1]=0;
+    }
+  }
+}
+
+
+double em(double &x,double *gler,size_t nSites,double tol,int nIter){
+  fprintf(stderr,"[%s] x:%f gls:%p nSites:%lu\n",__FUNCTION__,x,gler,nSites);
   fflush(stderr);
 
   double est = 0;
@@ -105,15 +121,14 @@ double em(double &x,double *gls,size_t nSites,double tol,int nIter){
     fprintf(stderr,"\r %d/%d     ",iter,nIter);fflush(stderr);
     double llh = 0;
     for(size_t i=0;i<nSites;i++) {
-      //  fprintf(stderr,"gls=(%f,%f)\n",gls[2*i],gls[2*i+1]);
       double tmp[2];
-      if(gls[2*i]==gls[2*i+1]){
-	//	fprintf(stderr,"gls[%lu]=(%f,%f)\n",i,gls[2*i],gls[2*i+1]);
+      if(isinf(gler[i]))
 	continue;
-      }
-      assert(gls[2*i]!=gls[2*i+1]);
-      tmp[0] = exp(gls[2*i])/4.0*(1-start);
-      tmp[1] = exp(gls[2*i+1])/6.0*(start);
+      double igl[2];
+      toGl(gler[i],igl);
+      //fprintf(stderr,"igl[%lu]=(%f,%f)\n",i,igl[0],igl[1]);
+      tmp[0] = exp(igl[0])/4.0*(1-start);
+      tmp[1] = exp(igl[1])/6.0*(start);
       est += tmp[1]/(tmp[0]+tmp[1]);
       llh -= log(tmp[0]+tmp[1]);
       efsize++;
@@ -136,13 +151,16 @@ double em(double &x,double *gls,size_t nSites,double tol,int nIter){
   x=start;
   return lastllh;
 }
-void calcpost(double &x,double *gls,int nSites,double *pp){
+
+void calcpost(double &x,double *gler,int nSites,double *pp){
   double start =x;
   for(int i=0;i<nSites;i++) {
     //  fprintf(stderr,"gls=(%f,%f)\n",gls[2*i],gls[2*i+1]);
     double tmp[2];
-    tmp[0] = exp(gls[2*i])*(1-start);
-    tmp[1] = exp(gls[2*i+1])*(start);
+    double gls[2];
+    toGl(gler[i],gls);
+    tmp[0] = exp(gls[0])/4.0*(1-start);
+    tmp[1] = exp(gls[1])/6.0*(start);
     double est = tmp[1]/(tmp[0]+tmp[1]);
     pp[i] = est;
     //    fprintf(stdout,"%f\n",est);
@@ -180,8 +198,8 @@ int makeold(int argc,char **argv){
     return 0;
   writepsmc_header(stderr,pars->perc,1);
   
-  //  fprintf(stderr,"nSize: %lu\n",pars->perc->nSites);
-  double *gls = new double[2*pars->perc->nSites];
+  fprintf(stderr,"nSize: %lu\n",pars->perc->nSites);
+  double *gls = new double[pars->perc->nSites];
   size_t at=0;
   //first pull all the data
   for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){//loop over chrs
@@ -191,7 +209,7 @@ int makeold(int argc,char **argv){
       it = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);//fetcht it->first
     
     //    fprintf(stderr,"it->first:%s\tlast:%lu\n",it->first,pars->perc->last);
-    memcpy(gls+2*at,pars->perc->gls,sizeof(double)*2*pars->perc->last);
+    memcpy(gls+at,pars->perc->gls,sizeof(double)*pars->perc->last);
     at += pars->perc->last;
     if(pars->chooseChr!=NULL)
       break;

@@ -295,8 +295,8 @@ void fastPSMC::allocate(int tk_l_arg){
  */
 //void fastPSMC::setWindows(perpsmc *perc,char *chooseChr,int start,int stop,int block){
 void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
-  gls = new double[last*2];
-  memcpy(gls,gls_a,last*sizeof(double)*2);
+  gls = new double[last];
+  memcpy(gls,gls_a,last*sizeof(double));
   int beginIndex =0;
   int endIndex=0;
   int beginPos = 0;
@@ -379,6 +379,17 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
       //      fprintf(stderr,"\t\t%d from:%d to:%d inner:%f\n",j,windows[v].from,windows[v].to,inner);
 #endif
       for(int i=windows[v].from;i<=windows[v].to;i++) {//for all elements in window
+	double igl[2]={log(0),log(0)};
+	if(gls[i]!=log(0)){
+	  if(gls[i]<0){
+	    igl[0]=0;
+	    igl[1]=gls[i];
+	  }else{
+	    igl[0]=-gls[i];
+	    igl[1]=0;
+	  }
+	  //	  fprintf(stderr,"dims\t%f\t%f\n",igl[0],igl[1]);
+	}
 	//	fprintf(stderr,"never herer\n");
 	extern int doGlStyle;
 	if(doGlStyle){
@@ -386,15 +397,15 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
 	    fprintf(stderr,"div 4.0 6.0 YES\n");
 	    verber=0;
 	  }
-	  if(gls[i*2]!=gls[2*i+1])
-	    emis[j][v+1] += log((exp(gls[i*2])/4.0) *inner + (exp(gls[2*i+1])/6.0)*(1.0-inner));//<- check
+	  if(igl[0]!=igl[1])
+	    emis[j][v+1] += log((exp(igl[0])/4.0) *inner + (exp(igl[1])/6.0)*(1.0-inner));//<- check
 	}else{
 	  if(verber){
 	    fprintf(stderr,"div 4.0 6.0 NO\n");
 	    verber = 0;
 	  }
-	  if(gls[i*2]!=gls[2*i+1])
-	    emis[j][v+1] += log((exp(gls[i*2])/1.0) *inner + (exp(gls[2*i+1])/1.0)*(1.0-inner));//<- check
+	  if(igl[0]!=igl[1])
+	    emis[j][v+1] += log((exp(igl[0])/1.0) *inner + (exp(igl[1])/1.0)*(1.0-inner));//<- check
 	}
 
 	if(isinf(emis[j][v+1])){

@@ -17,7 +17,8 @@ typedef struct{
   char *fname;//input.saf.idx?
   size_t first;//if we have specified a region, then this is the first index to use
   size_t last;//if we have specified a region, then this is the last index to use
-  double *gls;//2*nSites long homogl_1 hetgl_1 homogl_2 hetgl_2
+  //  double *gls;//2*nSites long homogl_1 hetgl_1 homogl_2 hetgl_2
+  double *gls;//one gl. Postive means its the gl for the hom, negative means its th gl for the het. The other gl is zero. This value is therefore very beautiful
   perFasta *pf;
 }perpsmc;
 

@@ -211,17 +211,27 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
    if(pp->gls)
      delete [] pp->gls;
    pp->pos = new int[it->second.nSites];
-   pp->gls = new double[2*it->second.nSites];//<-valgrind complains about large somthing
-   
+   pp->gls = new double[it->second.nSites];//<-valgrind complains about large somthing
+   double *tmpgls = new double[2*it->second.nSites];//<-valgrind complains about large somthing
    if(pp->version==1){
      my_bgzf_read(pp->bgzf_pos,pp->pos,sizeof(int)*it->second.nSites);
-     my_bgzf_read(pp->bgzf_gls,pp->gls,2*sizeof(double)*it->second.nSites);
+     my_bgzf_read(pp->bgzf_gls,tmpgls,2*sizeof(double)*it->second.nSites);
      for(int i=0;i<it->second.nSites;i++){
-       if(pp->gls[2*i]!=pp->gls[2*i+1]){
-	 double mmax = std::max(pp->gls[2*i],pp->gls[2*i+1]);
-	 pp->gls[2*i] -= mmax;
-	 pp->gls[2*i+1] -= mmax;
+       pp->gls[i] = log(0);
+       //       fprintf(stderr,"precal res:%f\t0:%f\t1:%f\n",pp->gls[i],tmpgls[2*i],tmpgls[2*i+1]);
+       if(tmpgls[2*i]!=tmpgls[2*i+1]){
+	 double mmax = std::max(tmpgls[2*i],tmpgls[2*i+1]);
+	 tmpgls[2*i] -= mmax;
+	 tmpgls[2*i+1] -= mmax;
        }
+       // fprintf(stderr,"post scal res:%f\t0:%f\t1:%f\n",pp->gls[i],tmpgls[2*i],tmpgls[2*i+1]);
+       if(tmpgls[2*i]>tmpgls[2*i+1])
+	 pp->gls[i]=tmpgls[2*i+1];
+       else
+	 pp->gls[i]=-tmpgls[2*i];
+       // fprintf(stderr,"res:%f\t0:%f\t1:%f\n",pp->gls[i],tmpgls[2*i],tmpgls[2*i+1]);
+       if(0&&i>50000)
+	 exit(0);
      }
      //   fprintf(stderr," end: %f %f\n",pp->gls[0],pp->gls[1]);
      pp->first=0;
@@ -244,12 +254,16 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
        pp->gls[2*i]=pp->gls[2*i+1]=-500;
        //K=het
        if(tmp[i]=='K')
-	 pp->gls[2*i+1] = 0;//het
+	 pp->gls[2*i+1] = 500;// 0;//het 
        else
-	 pp->gls[2*i] = 0;//hom
+	 pp->gls[2*i] = -500;//;//hom
+
+       //ok let me explain. negative means homozygotic and postive means heteroeo. The otherone is always 0.
+
        //       fprintf(stderr,"%c\n",tmp[i]);
      }
      free(tmp);
+     delete [] tmpgls;
      pp->first=0;
      pp->last=it->second.nSites;
    }
