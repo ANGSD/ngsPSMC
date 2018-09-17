@@ -60,6 +60,21 @@ int print_header(int argc,char **argv){
   return 0;
 }
 
+void toGl(double ingl,double outgl[2]){
+  if(isinf(ingl)){
+    outgl[0]=outgl[1]=log(0);
+  }else{
+    if(ingl<0){
+      outgl[0]=0;
+      outgl[1]=ingl;
+    }else{
+      outgl[0]=-ingl;
+      outgl[1]=0;
+    }
+  }
+}
+
+
 int print_main(int argc,char **argv){
   
   if(argc<1){
@@ -81,10 +96,12 @@ int print_main(int argc,char **argv){
       it = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop,pars->blocksize);
     else
       it = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);
-
-    for(size_t s=pars->perc->first;s<pars->perc->last;s++)
-      fprintf(stdout,"%s\t%d\t%e\n",it->first,pars->perc->pos[s]+1,pars->perc->gls[s]);
+    double tmp[2];
     
+    for(size_t s=pars->perc->first;s<pars->perc->last;s++){
+      toGl(pars->perc->gls[s],tmp);
+      fprintf(stdout,"%s\t%d\t%e\t%e\n",it->first,pars->perc->pos[s]+1,tmp[0],tmp[1]);
+    }
     if(pars->chooseChr!=NULL)
       break;
   }
@@ -93,19 +110,6 @@ int print_main(int argc,char **argv){
   return 0;
 }
 
-void toGl(double ingl,double outgl[2]){
-  if(isinf(ingl)){
-    outgl[0]=outgl[1]=log(0);
-  }else{
-    if(ingl<0){
-      outgl[0]=0;
-      outgl[1]=ingl;
-    }else{
-      outgl[0]=-ingl;
-      outgl[1]=0;
-    }
-  }
-}
 
 
 double em(double &x,double *gler,size_t nSites,double tol,int nIter){

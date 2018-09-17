@@ -362,7 +362,6 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
   else
     assert(0!=0);
 
-
  for(int v=0;v<windows.size();v++){//for each window
    assert(windows[v].from<=windows[v].to);
    //   fprintf(stderr,"v:%d from:%d to:%d\n",v,windows[v].from,windows[v].to);
@@ -380,7 +379,7 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
 #endif
       for(int i=windows[v].from;i<=windows[v].to;i++) {//for all elements in window
 	double igl[2]={log(0),log(0)};
-	if(gls[i]!=log(0)){
+	if(!std::isinf(gls[i])){
 	  if(gls[i]<0){
 	    igl[0]=0;
 	    igl[1]=gls[i];
@@ -390,7 +389,7 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
 	  }
 	  //	  fprintf(stderr,"dims\t%f\t%f\n",igl[0],igl[1]);
 	}
-	//	fprintf(stderr,"never herer\n");
+	
 	extern int doGlStyle;
 	if(doGlStyle){
 	  if(verber){
