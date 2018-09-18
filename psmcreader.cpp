@@ -213,7 +213,7 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
    pp->pos = new int[it->second.nSites];
    pp->gls = new double[it->second.nSites];//<-valgrind complains about large somthing
    double *tmpgls = new double[2*it->second.nSites];//<-valgrind complains about large somthing
-   if(pp->version==1){
+   if(pp->version==1) {
      my_bgzf_read(pp->bgzf_pos,pp->pos,sizeof(int)*it->second.nSites);
      my_bgzf_read(pp->bgzf_gls,tmpgls,2*sizeof(double)*it->second.nSites);
      for(int i=0;i<it->second.nSites;i++){
@@ -263,10 +263,11 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
        //       fprintf(stderr,"%c\n",tmp[i]);
      }
      free(tmp);
-     delete [] tmpgls;
+    
      pp->first=0;
      pp->last=it->second.nSites;
    }
+   delete [] tmpgls;
 #ifdef __SHOW_TIME__
    fprintf(stderr, "\t[TIME] cpu-time used =  %.2f sec for reading data\n", (float)(clock() - t) / CLOCKS_PER_SEC);
    fprintf(stderr, "\t[Time] walltime used =  %.2f sec for reading data\n", (float)(time(NULL) - t2));  

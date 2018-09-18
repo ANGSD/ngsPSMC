@@ -341,7 +341,7 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
   
   stationary(i) = exp(-sum_{j=0}^{i-1}{tau_j/lambda_j}*P2[i])
  */
-int verber =1;
+
 void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize){
 
   //initialize the first:
@@ -389,23 +389,8 @@ void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &wind
 	  }
 	  //	  fprintf(stderr,"dims\t%f\t%f\n",igl[0],igl[1]);
 	}
-	
-	extern int doGlStyle;
-	if(doGlStyle){
-	  if(verber){
-	    fprintf(stderr,"div 4.0 6.0 YES\n");
-	    verber=0;
-	  }
-	  if(igl[0]!=igl[1])
-	    emis[j][v+1] += log((exp(igl[0])/4.0) *inner + (exp(igl[1])/6.0)*(1.0-inner));//<- check
-	}else{
-	  if(verber){
-	    fprintf(stderr,"div 4.0 6.0 NO\n");
-	    verber = 0;
-	  }
-	  if(igl[0]!=igl[1])
-	    emis[j][v+1] += log((exp(igl[0])/1.0) *inner + (exp(igl[1])/1.0)*(1.0-inner));//<- check
-	}
+	if(igl[0]!=igl[1])
+	  emis[j][v+1] += log((exp(igl[0])/4.0) *inner + (exp(igl[1])/6.0)*(1.0-inner));//<- check
 
 	if(isinf(emis[j][v+1])){
 	  fprintf(stderr,"\t-> Huge bug in code contact developer. Emissions evaluates to zero\n");

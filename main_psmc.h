@@ -11,6 +11,7 @@ typedef struct{
   double *times;//<-splittimes
   double *params;//<- effective population sizes
   double TR[2];
+  double MT;
 }psmc_par;
 
 typedef struct{

@@ -182,10 +182,12 @@ void setpars( char *fname,psmc_par *pp,int which) {
     free(pp->par_map);
   pp->par_map= psmc_parse_pattern(pp->pattern,&pp->n_free,&pp->n);
   assert(RS.size()-1==pp->n);
+  fprintf(stderr,"\t-> Numnber of items read from inputfile: %lu\n",RS.size());
   pp->params = new double[RS.size()];
   pp->times = new double[RS.size()];
   pp->TR[0] = TR[0];
   pp->TR[1] = TR[1];
+  pp->MT = MT;
   //  fprintf(stderr,"RS:%lu\n",RS.size());
   for(int i=0;i<RS.size();i++){
     int val;
@@ -200,7 +202,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
 }
 
 
-int doGlStyle =0;
+
 
 args * getArgs(int argc,char **argv,int dontprint){
   args *p = new args;
@@ -244,8 +246,6 @@ args * getArgs(int argc,char **argv,int dontprint){
       p->nThreads = atoi(*(++argv));
    else  if(!strcasecmp(*argv,"-dospline"))
       p->dospline = atoi(*(++argv));
-   else  if(!strcasecmp(*argv,"-doGlStyle"))
-      doGlStyle = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-nIter"))
       p->nIter = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-p"))
@@ -293,7 +293,7 @@ args * getArgs(int argc,char **argv,int dontprint){
     p->seed = time(NULL);
   srand48(p->seed);
   
-  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d\n\t-> fname:\'%s\' seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d doGlStyle:%d -nChr:%d -ms:\'%s\' -theta: %f -rho: %f -max_t:%f\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doLinear,doGlStyle,p->nChr,p->msstr,p->init_theta,p->init_rho,p->init_max_t);
+  fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d\n\t-> fname:\'%s\' seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d -nChr:%d -ms:\'%s\' -theta: %f -rho: %f -max_t:%f\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doLinear,p->nChr,p->msstr,p->init_theta,p->init_rho,p->init_max_t);
   extern int doQuadratic;
   if(p->doLinear==0)
     doQuadratic=1;

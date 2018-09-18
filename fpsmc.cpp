@@ -63,14 +63,15 @@ oPars *ops = NULL;
 //remember to subract by one
 void setTk(int n, double *t, double max_t, double alpha, double *inp_ti){
   //  assert(inp_ti!=NULL);
-  fprintf(stderr,"[%s] (n,tk,max_t,alpha,inp_ti)=(%d,%p,%f,%f,%p)\n",__FUNCTION__,n,t,max_t,alpha,inp_ti);
+  assert(max_t!=-1);
+  fprintf(stderr,"\t[%s] (n,tk,max_t,alpha,inp_ti)=(%d,%p,%f,%f,%p)\n",__FUNCTION__,n,t,max_t,alpha,inp_ti);
   int k;
   if (inp_ti == 0) {
     double beta;
     beta = log(1.0 + max_t / alpha) / n; // beta controls the sizes of intervals
-    for (k = 0; k <= n; ++k)
+    for (k = 0; k < n; ++k)
       t[k] = alpha * (exp(beta * k) - 1);
-    t[n+1] = max_t;
+    t[n] = max_t;
     //    t[n] = PSMC_T_INF; // the infinity: exp(PSMC_T_INF) > 1e310 = inf
   } else {
     memcpy(t, inp_ti, (n+1) * sizeof(double));
@@ -265,11 +266,11 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
     //    fprintf(stderr,"trans[0][0]\n",ops[i].trans[0][0]);exit(0);
   }
   ncals=0;
-
+  timer opt_timer = starttimer();
   //we are not optimizing llh but qfunction
   double max_qval = findmax_bfgs(ndim,pars,NULL,qFunction_wrapper,NULL,lbd,ubd,nbd,-1);
-  fprintf(stderr,"opt value:%f\n",max_qval);
- 
+  stoptimer(opt_timer);
+  fprintf(stdout,"MM\toptimization: (wall(min),cpu(min)):(%f,%f)\n",opt_timer.tids[1],opt_timer.tids[0]);
   ret_qval=max_qval;
 
   if(DOSPLINE==0)
@@ -371,7 +372,7 @@ void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
 
 //tk_l is dimension of transistionsspace ndim is size of dimension
 //tk is tk_l long, epsize is tk_l long
-void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,char *pattern,int ndim,int nIter,int doSmartsize){
+void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,char *pattern,int ndim,int nIter,int doSmartsize,double maxt){
   fprintf(stderr,"%s\n",pattern);//exit(0);
   //test fix:
   double ret_llh,ret_qval,ret_qval2;
@@ -394,7 +395,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ch
     //    exit(0);
     fprintf(stdout,"RI\t?\n");
     fprintf(stdout,"TR\t%f\t%f\n",theta,rho);
-    fprintf(stdout,"MT\t1000000.0\n");
+    fprintf(stdout,"MT\t%f\n",maxt);
     fprintf(stdout,"MM\tbuildhmm(wall(min),cpu(min)):(%f,%f) tk_l:%d\n",hmm_t.tids[1],hmm_t.tids[0],tk_l);
     for(int i=0;i<tk_l;i++)//this prints out all
       fprintf(stdout,"RS\t%d\t%f\t%f\t1000000.0\t1000000.0\t1000000.0\n",i,tk[i],epsize[i]);
@@ -464,6 +465,7 @@ int psmc_wrapper(args *pars,int blocksize) {
   tk=epsize=NULL;
   int ndim=-1;
   char *pattern = NULL;
+  double max_t =pars->psmc_infile?pars->par->MT: pars->init_max_t;
   if(DOSPLINE!=0){
     spl = new splineEPSize(14,3,7,pars->init_max_t);
     fprintf(stderr,"\t-> spl.tk_l:%d spl->ndim:%d\n",spl->tk_l,spl->ndim);
@@ -479,9 +481,9 @@ int psmc_wrapper(args *pars,int blocksize) {
     for(int i=0;0&&i<tk_l;i++)
       fprintf(stderr,"%d %f\n",i,epsize[i]);
   }else{
-    fprintf(stderr,"tk_l:%d\n",tk_l);
+    fprintf(stderr,"\t-> allocating array with length: tk_l:%d\n",tk_l);
     tk = new double [tk_l];
-    setTk(tk_l-1,tk,pars->init_max_t,0.1,pars->par->times);//<- last position will be infinity
+    setTk(tk_l-1,tk,max_t,0.1,pars->par->times);//<- last position will be infinity
     pattern=pars->par->pattern;
     ndim=pars->par->n_free;
     epsize = new double [tk_l];
@@ -507,8 +509,8 @@ int psmc_wrapper(args *pars,int blocksize) {
 #if 0
   for(int i=0;i<tk_l;i++)
     fprintf(stderr,"psmc_wrapper: (tk,epsize)[%d]:(%f,%f)\n",i,tk[i],epsize[i]);
+  exit(0);
 #endif
-  //  exit(0);
   fprintf(stderr,"\t-> tk_l in psmc_wrapper pars->par->n+1 tk_l:%d p->times:%p\n",tk_l,pars->par->times);  
   int nobs = pars->chooseChr?1:pars->perc->mm.size();
   fprintf(stderr,"\t-> nobs/nchr: %d\n",nobs);
@@ -532,7 +534,7 @@ int psmc_wrapper(args *pars,int blocksize) {
       break;
   }
   objs[0]->outnames = strdup(pars->outname);
-  main_analysis(tk,tk_l,epsize,theta,rho,pattern,ndim,pars->nIter,pars->smartsize);
+  main_analysis(tk,tk_l,epsize,theta,rho,pattern,ndim,pars->nIter,pars->smartsize,max_t);
 
   free(objs[0]->outnames);
   for (int i=0;i<nChr;i++)
