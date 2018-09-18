@@ -9,51 +9,30 @@
 
 extern int nThreads;
 
-
 double lprod(double a,double b,double c,double d){
-  if(isinf(a)||isinf(b)||isinf(c)||isinf(d)){
-    //    fprintf(stderr,"Something is inf\n");
+  if(isinf(a)||isinf(b)||isinf(c)||isinf(d))
     return log(0.0);
-  }else{
-    // fprintf(stderr,"Something is not inf\n");
+  else
     return a+b+c+d;
-
-  }
-
 }
-
 
 double lprod(double a,double b){
-  if(isinf(a)||isinf(b)){
-    //    fprintf(stderr,"Something is inf\n");
+  if(isinf(a)||isinf(b))
     return log(0.0);
-  }else{
-    // fprintf(stderr,"Something is not inf\n");
+  else
     return a+b;
-
-  }
-
 }
-
 
 double lprod(double a,double b,double c){
-  if(isinf(a)||isinf(b)||isinf(c)){
-    //    fprintf(stderr,"Something is inf\n");
+  if(isinf(a)||isinf(b)||isinf(c))
     return log(0.0);
-  }else{
-    // fprintf(stderr,"Something is not inf\n");
+  else
     return a+b+c;
-
-  }
-
 }
-
-
 
 // parse a pattern like "4+5*3+4"
 // the returned array holds which parameters are linked together
 // number of parameters and number of free parameters will be also returned
-
 int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars)
 {
   fprintf(stderr,"\t-> parsing pattern :\"%s\"\n",pattern);
