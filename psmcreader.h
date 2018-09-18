@@ -20,6 +20,8 @@ typedef struct{
   //  double *gls;//2*nSites long homogl_1 hetgl_1 homogl_2 hetgl_2
   double *gls;//one gl. Postive means its the gl for the hom, negative means its th gl for the het. The other gl is zero. This value is therefore very beautiful
   perFasta *pf;
+  double *tmpgls;
+  size_t tmpgls_l;
 }perpsmc;
 
 perpsmc* perpsmc_init(char *fname,int nChr);

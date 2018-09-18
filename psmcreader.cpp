@@ -27,6 +27,8 @@ void perpsmc_destroy(perpsmc *pp){
     delete [] pp->pos;
   if(pp->gls)
     delete [] pp->gls;
+  if(pp->tmpgls)
+    delete [] pp->tmpgls;
 
   free(pp->fname);
   
@@ -80,6 +82,8 @@ perpsmc * perpsmc_init(char *fname,int nChr){
   ret->bgzf_pos=ret->bgzf_gls=NULL;
   ret->pos = NULL;
   ret->pf = NULL;
+  ret->tmpgls = NULL;
+  ret->tmpgls_l = 0;
   size_t clen;
   if(!fexists(fname)){
     fprintf(stderr,"\t-> Problem opening file: \'%s\'\n",fname);
@@ -211,8 +215,14 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
    if(pp->gls)
      delete [] pp->gls;
    pp->pos = new int[it->second.nSites];
-   pp->gls = new double[it->second.nSites];//<-valgrind complains about large somthing
-   double *tmpgls = new double[2*it->second.nSites];//<-valgrind complains about large somthing
+   pp->gls = new double[it->second.nSites];
+   
+   if(tmpgls_l<2*it->second.nSites){
+     delete [] tmpgls;
+     tmpgls = new double[2*it->second.nSites];
+     tmpgls_l = 2*it->second.nSites;
+   }
+   
    if(pp->version==1) {
      my_bgzf_read(pp->bgzf_pos,pp->pos,sizeof(int)*it->second.nSites);
      my_bgzf_read(pp->bgzf_gls,tmpgls,2*sizeof(double)*it->second.nSites);
@@ -267,7 +277,7 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
      pp->first=0;
      pp->last=it->second.nSites;
    }
-   delete [] tmpgls;
+
 #ifdef __SHOW_TIME__
    fprintf(stderr, "\t[TIME] cpu-time used =  %.2f sec for reading data\n", (float)(clock() - t) / CLOCKS_PER_SEC);
    fprintf(stderr, "\t[Time] walltime used =  %.2f sec for reading data\n", (float)(time(NULL) - t2));  
