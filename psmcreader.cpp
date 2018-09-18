@@ -7,14 +7,11 @@
 #include "header.h"
 #include "psmcreader.h"
 
-
-
 void destroy(myMap &mm){
   for(myMap::iterator it=mm.begin();it!=mm.end();++it)
     free(it->first);
   mm.clear();
 }
-
 
 void perpsmc_destroy(perpsmc *pp){
   if(pp->pf)
@@ -34,8 +31,6 @@ void perpsmc_destroy(perpsmc *pp){
   
   delete pp;
 }
-
-
 
 void writepsmc_header(FILE *fp,perpsmc *pp,int onlysubset){
   fprintf(fp,"\t\tInformation from index file: nSites(total):%lu nChr:%lu\n",pp->nSites,pp->mm.size());
@@ -217,31 +212,29 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
    pp->pos = new int[it->second.nSites];
    pp->gls = new double[it->second.nSites];
    
-   if(tmpgls_l<2*it->second.nSites){
-     delete [] tmpgls;
-     tmpgls = new double[2*it->second.nSites];
-     tmpgls_l = 2*it->second.nSites;
+   if(pp->tmpgls_l<2*it->second.nSites){
+     delete [] pp->tmpgls;
+     pp->tmpgls = new double[2*it->second.nSites];
+     pp->tmpgls_l = 2*it->second.nSites;
    }
    
    if(pp->version==1) {
      my_bgzf_read(pp->bgzf_pos,pp->pos,sizeof(int)*it->second.nSites);
-     my_bgzf_read(pp->bgzf_gls,tmpgls,2*sizeof(double)*it->second.nSites);
+     my_bgzf_read(pp->bgzf_gls,pp->tmpgls,2*sizeof(double)*it->second.nSites);
      for(int i=0;i<it->second.nSites;i++){
        pp->gls[i] = log(0);
        //       fprintf(stderr,"precal res:%f\t0:%f\t1:%f\n",pp->gls[i],tmpgls[2*i],tmpgls[2*i+1]);
-       if(tmpgls[2*i]!=tmpgls[2*i+1]){
-	 double mmax = std::max(tmpgls[2*i],tmpgls[2*i+1]);
-	 tmpgls[2*i] -= mmax;
-	 tmpgls[2*i+1] -= mmax;
+       if(pp->tmpgls[2*i]!=pp->tmpgls[2*i+1]){
+	 double mmax = std::max(pp->tmpgls[2*i],pp->tmpgls[2*i+1]);
+	 pp->tmpgls[2*i] -= mmax;
+	 pp->tmpgls[2*i+1] -= mmax;
        }
        // fprintf(stderr,"post scal res:%f\t0:%f\t1:%f\n",pp->gls[i],tmpgls[2*i],tmpgls[2*i+1]);
-       if(tmpgls[2*i]>tmpgls[2*i+1])
-	 pp->gls[i]=tmpgls[2*i+1];
+       if(pp->tmpgls[2*i]>pp->tmpgls[2*i+1])
+	 pp->gls[i]=pp->tmpgls[2*i+1];
        else
-	 pp->gls[i]=-tmpgls[2*i];
+	 pp->gls[i]=-pp->tmpgls[2*i];
        // fprintf(stderr,"res:%f\t0:%f\t1:%f\n",pp->gls[i],tmpgls[2*i],tmpgls[2*i+1]);
-       if(0&&i>50000)
-	 exit(0);
      }
      //   fprintf(stderr," end: %f %f\n",pp->gls[0],pp->gls[1]);
      pp->first=0;

@@ -25,7 +25,6 @@ typedef struct{
 
 typedef struct {
   int nChr;
-  int smartsize;
   char *chooseChr;
   int start;
   int stop;

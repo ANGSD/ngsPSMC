@@ -358,21 +358,9 @@ void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double theta,doub
 }
 
 
-void smartsize(fastPSMC **myobjs,double *tk,int tk_l,double rho){
-  fprintf(stderr,"[smartsize] start;\n");
-  double **newepsize = new double*[nChr];
-  for(int i=0;i<nChr;i++){
-    newepsize[i] = new double[tk_l];
-    smartsize1(tk_l,myobjs[i]->windows.size(),myobjs[i]->fw,myobjs[i]->bw,tk,myobjs[i]->P[1],myobjs[i]->emis,myobjs[i]->pix,rho,newepsize[i]);
-  }
-
-  fprintf(stderr,"[smartsize] done;\n");
-}
-
-
 //tk_l is dimension of transistionsspace ndim is size of dimension
 //tk is tk_l long, epsize is tk_l long
-void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,char *pattern,int ndim,int nIter,int doSmartsize,double maxt){
+void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,char *pattern,int ndim,int nIter,double maxt){
   fprintf(stderr,"%s\n",pattern);//exit(0);
   //test fix:
   double ret_llh,ret_qval,ret_qval2;
@@ -417,10 +405,8 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ch
       fprintf(stderr,"\t-> Breaking since i>nIter\n");
       break;
     }
-    if(doSmartsize==0)
-      runoptim3(tk,tk_l,epsize,theta,rho,ndim,ret_qval2);
-    else
-      smartsize(objs,tk,tk_l,rho);
+    runoptim3(tk,tk_l,epsize,theta,rho,ndim,ret_qval2);
+    
   }
 }
 
@@ -534,7 +520,7 @@ int psmc_wrapper(args *pars,int blocksize) {
       break;
   }
   objs[0]->outnames = strdup(pars->outname);
-  main_analysis(tk,tk_l,epsize,theta,rho,pattern,ndim,pars->nIter,pars->smartsize,max_t);
+  main_analysis(tk,tk_l,epsize,theta,rho,pattern,ndim,pars->nIter,max_t);
 
   free(objs[0]->outnames);
   for (int i=0;i<nChr;i++)
