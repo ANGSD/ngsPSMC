@@ -11,6 +11,15 @@ OBJ = $(CSRC:.c=.o) $(CXXSRC:.cpp=.o)
 
 all: ngsPSMC
 
+# Adjust $(HTSSRC) to point to your top-level htslib directory
+ifdef HTSSRC
+$(info HTSSRC defined)
+HTS_INCDIR=$(realpath $(HTSSRC))
+HTS_LIBDIR=$(realpath $(HTSSRC))/libhts.a
+else
+$(info HTSSRC not defined, assuming systemwide installation -lhts)
+endif
+
 PACKAGE_VERSION  = 0.01
 
 ifneq "$(wildcard .git)" ""
@@ -20,16 +29,6 @@ endif
 
 version.h:
 	echo '#define ngsPSMC_VERSION "$(PACKAGE_VERSION)"' > $@
-
-
-# Adjust $(HTSSRC) to point to your top-level htslib directory
-ifdef HTSSRC
-$(info HTSSRC defined)
-HTS_INCDIR=$(realpath $(HTSSRC))
-HTS_LIBDIR=$(realpath $(HTSSRC))/libhts.a
-else
-$(info HTSSRC not defined, assuming systemwide installation -lhts)
-endif
 
 .PHONY: misc clean test
 
@@ -62,3 +61,4 @@ endif
 clean:
 	rm  -f *.o *.d ngsPSMC version.h *~
 
+force:

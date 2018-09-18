@@ -28,7 +28,7 @@ typedef struct{
   double *epsize;
   double theta;
   double rho;
-  double **trans;
+  //  double **trans;
 }shared_forhmm;
 
 typedef struct{
