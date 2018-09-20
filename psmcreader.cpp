@@ -7,6 +7,8 @@
 #include "header.h"
 #include "psmcreader.h"
 
+
+
 void destroy(myMap &mm){
   for(myMap::iterator it=mm.begin();it!=mm.end();++it)
     free(it->first);
@@ -22,8 +24,7 @@ void perpsmc_destroy(perpsmc *pp){
   
   if(pp->pos)
     delete [] pp->pos;
-  if(pp->gls)
-    delete [] pp->gls;
+
   if(pp->tmpgls)
     delete [] pp->tmpgls;
 
@@ -76,6 +77,7 @@ perpsmc * perpsmc_init(char *fname,int nChr){
   ret->pos = NULL;
   ret->bgzf_pos=ret->bgzf_gls=NULL;
   ret->pos = NULL;
+  ret->pos_l = 0;
   ret->pf = NULL;
   ret->tmpgls = NULL;
   ret->tmpgls_l = 0;
@@ -187,12 +189,8 @@ perpsmc * perpsmc_init(char *fname,int nChr){
 
  //chr start stop is given from commandine
 myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize){
-   #ifdef __SHOW_TIME__
-   clock_t t=clock();
-   time_t t2=time(NULL);
-#endif
    assert(chr!=NULL);
-
+   assert(pp->gls==NULL);
    myMap::iterator it = pp->mm.find(chr);
    if(it==pp->mm.end()){
      fprintf(stderr,"\t-> [%s] Problem finding chr: \'%s\'\n",__FUNCTION__,chr);
@@ -205,14 +203,15 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
      my_bgzf_seek(pp->bgzf_pos,it->second.pos,SEEK_SET);
    }
    //fprintf(stderr,"pp->gls:%p\n",pp->gls);
-   if(pp->pos)
+   if(pp->pos_l<it->second.nSites){
      delete [] pp->pos;
-   if(pp->gls)
-     delete [] pp->gls;
-   pp->pos = new int[it->second.nSites];
-   pp->gls = new double[it->second.nSites];
+     pp->pos = new int[it->second.nSites];
+     pp->pos_l = it->second.nSites;
+   }
+   pp->gls = new mygltype[it->second.nSites];
    
    if(pp->tmpgls_l<2*it->second.nSites){
+     //     fprintf(stderr,"reallocing all the time\n");
      delete [] pp->tmpgls;
      pp->tmpgls = new double[2*it->second.nSites];
      pp->tmpgls_l = 2*it->second.nSites;
@@ -254,12 +253,11 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
      for(int i=0;i<it->second.nSites;i++){
        pp->pos[i] = i*blockSize;
        //important relates to problems with divide by zero in compuation of  backward probablity
-       pp->gls[2*i]=pp->gls[2*i+1]=-500;
        //K=het
        if(tmp[i]=='K')
-	 pp->gls[2*i+1] = 500;// 0;//het 
+	 pp->gls[i] = 500;// 0;//het 
        else
-	 pp->gls[2*i] = -500;//;//hom
+	 pp->gls[i] = -500;//;//hom
 
        //ok let me explain. negative means homozygotic and postive means heteroeo. The otherone is always 0.
 

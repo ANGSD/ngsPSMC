@@ -135,6 +135,7 @@ void convert_pattern(const double *pars,double *pars2,int tofull){
 
 static int ncals=0;
 double qFunction_wrapper(const double *pars,const void *d){
+  //  fprintf(stderr,"quad: %d\n",doQuadratic);//exit(0);
   ncals++;
   double pars2[ops[0].tk_l];
   if(DOSPLINE==0)
@@ -153,7 +154,6 @@ double qFunction_wrapper(const double *pars,const void *d){
   //  exit(0);
 
   if(doQuadratic){
-    oPars *data = (oPars*) d;
     ComputeGlobalProbabilities(ops[0].tk,ops[0].tk_l,ops[0].nP,pars2,ops[0].rho);
     double calc_trans(int,int,double**);
     for(int i=0;i<ops[0].tk_l;i++)
@@ -235,7 +235,6 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
       ubd[i]=1000;//PSMC_T_INF;
     }
   }else{
-    int at=0;
     for(int i=0;i<ndim/2;i++){
 
       nbd[i]=2;
@@ -291,20 +290,6 @@ void *run_a_hmm(void *ptr){
   objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
   pthread_exit(NULL);
 }
-
-void *qFunction2_thd(void *ptr){
-  size_t at =(size_t) ptr;
-  pthread_exit(NULL);
-}
-
-
-void *qFunction_thd(void *ptr){
-  size_t at =(size_t) ptr;
-  ops[at].llh = qFunction(ops[at].parsIn,&ops[at]);
-  pthread_exit(NULL);
-}
-
-
 
 void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho,double &ret_llh,double &ret_qval){
 
@@ -510,19 +495,16 @@ int psmc_wrapper(args *pars,int blocksize) {
       it2 = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);
     //    fprintf(stderr,"\t-> Parsing chr:%s \n",it2->first);
     fastPSMC *obj=objs[nChr++]=new fastPSMC;
-    //    fprintf(stderr,"gls1:%f %f %f %f\n",pars->perc->gls[0],pars->perc->gls[1],pars->perc->gls[2],pars->perc->gls[3]);
-    obj->setWindows(pars->perc->gls,pars->perc->pos,pars->perc->last,pars->blocksize);
-    //fprintf(stderr,"gls2:%f %f %f %f\n",pars->perc->gls[0],pars->perc->gls[1],pars->perc->gls[2],pars->perc->gls[3]);
-
+    obj->setWindows(pars->perc->pos,pars->perc->last,pars->blocksize);
+    obj->gls=pars->perc->gls;
+    pars->perc->gls=NULL;
     obj->allocate(tk_l);
     //    fprintf(stderr,"transer:%p\n",obj[0].trans);
     if(pars->chooseChr!=NULL)
       break;
   }
-  objs[0]->outnames = strdup(pars->outname);
   main_analysis(tk,tk_l,epsize,theta,rho,pattern,ndim,pars->nIter,max_t);
 
-  free(objs[0]->outnames);
   for (int i=0;i<nChr;i++)
     delete objs[i];
   delete [] objs;

@@ -200,7 +200,6 @@ args * getArgs(int argc,char **argv,int dontprint){
   p->nChr = -1;
   p->nThreads =1;
   p->doLinear =0;
-  p->outname = strdup("output");
   p->psmc_infile=NULL;
   p->init =p->init_theta=p->init_rho= p->init_max_t=-1;
   p->msstr = NULL;
@@ -226,11 +225,6 @@ args * getArgs(int argc,char **argv,int dontprint){
       p->nIter = atoi(*(++argv));
     else  if(!strcasecmp(*argv,"-p"))
       p->par->pattern =  strdup(*(++argv));
-    else  if(!strcasecmp(*argv,"-out")){
-      if(p->outname)
-	free(p->outname);
-      p->outname =  strdup(*(++argv));
-    }
     else  if(!strcasecmp(*argv,"-ms"))
       p->msstr =  strdup(*(++argv));
     else  if(!strcasecmp(*argv,"-nSites"))
@@ -283,8 +277,6 @@ void destroy_args(args *p){
   if(p->msstr)
     free(p->msstr);
   perpsmc_destroy(p->perc);
-  if(p->outname)
-    free(p->outname);
   if(p->par->par_map)
     free(p->par->par_map);
   if(p->par->pattern)

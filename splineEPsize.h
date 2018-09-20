@@ -33,7 +33,6 @@ public:
 
     void setTk(int n, double *t, double max_t, double alpha, double *inp_ti);
     setTk(tk_l-1,tk,max_t,alpha,NULL);//<- rememer to subtract minus
-    int at=0;
     for(int i=0;i<nsplines+1;i++){
       Tk[i]=i*(pointsperinterval+1);
     }
@@ -70,8 +69,8 @@ public:
   void fillit(){
     srand48(100);
     for(int i=0;i<nsplines+1;i++){
-      fv[i]=drand48()*1+1;
-      dv[i]=drand48()*1-0.5;
+      fv[i]=1;
+      dv[i]=0;
     }
 
   }

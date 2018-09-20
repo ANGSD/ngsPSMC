@@ -10,6 +10,20 @@ double lprod(double a,double b);
 double lprod(double a,double b,double c);
 double lprod(double a,double b,double c,double d);
 
+#if 0
+void ComputeBR1(int tk_l, double *bR1, double **P, double **bw){
+  bR1[tk_l - 1] = log(0);
+  double tmp_denom = 0.0;
+  for (int i = 0; i < tk_l - 1; i++)
+    tmp_denom += P[5][i];
+  for (int i = tk_l - 2; i >= 0 ; i--){
+    //      bR1[i] =  addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1],stationary[i+1]));
+    bR1[i] =  addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1]), -tmp_denom);
+    tmp_denom -= P[5][i];
+  }
+}
+#endif
+
 double addProtect3(double a,double b, double c){
   if(isinf(a)&&isinf(b)&&isinf(c))
     return log(0.0);

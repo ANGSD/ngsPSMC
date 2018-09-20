@@ -112,7 +112,7 @@ int print_main(int argc,char **argv){
 
 
 
-double em(double &x,double *gler,size_t nSites,double tol,int nIter){
+double em(double &x,mygltype *gler,size_t nSites,double tol,int nIter){
   fprintf(stderr,"[%s] x:%f gls:%p nSites:%lu\n",__FUNCTION__,x,gler,nSites);
   fflush(stderr);
 
@@ -156,7 +156,7 @@ double em(double &x,double *gler,size_t nSites,double tol,int nIter){
   return lastllh;
 }
 
-void calcpost(double &x,double *gler,int nSites,double *pp){
+void calcpost(double &x,mygltype *gler,int nSites,double *pp){
   double start =x;
   for(int i=0;i<nSites;i++) {
     //  fprintf(stderr,"gls=(%f,%f)\n",gls[2*i],gls[2*i+1]);
@@ -203,7 +203,7 @@ int makeold(int argc,char **argv){
   writepsmc_header(stderr,pars->perc,1);
   
   fprintf(stderr,"nSize: %lu\n",pars->perc->nSites);
-  double *gls = new double[pars->perc->nSites];
+  mygltype *gls = new mygltype[pars->perc->nSites];
   size_t at=0;
   //first pull all the data
   for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){//loop over chrs
@@ -213,7 +213,7 @@ int makeold(int argc,char **argv){
       it = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);//fetcht it->first
     
     //    fprintf(stderr,"it->first:%s\tlast:%lu\n",it->first,pars->perc->last);
-    memcpy(gls+at,pars->perc->gls,sizeof(double)*pars->perc->last);
+    memcpy(gls+at,pars->perc->gls,sizeof(mygltype)*pars->perc->last);
     at += pars->perc->last;
     if(pars->chooseChr!=NULL)
       break;
@@ -251,7 +251,8 @@ int makeold(int argc,char **argv){
 }
 
 int main(int argc,char **argv){
-  fprintf(stderr,"\t-> ngsPSMC version: %s (htslib: %s) build(%s %s)\n",ngsPSMC_VERSION,hts_version(),__DATE__,__TIME__); 
+  fprintf(stderr,"\t-> ngsPSMC version: %s (htslib: %s) build(%s %s)\n",ngsPSMC_VERSION,hts_version(),__DATE__,__TIME__);
+  fprintf(stderr,"\t-> sizeof(double): %lu sizeof(float): %lu sizeof(mygltype): %lu\n",sizeof(double),sizeof(float),sizeof(mygltype));
   int argc_orig=argc;
   char **argv_orig=argv;
   //start of signal handling

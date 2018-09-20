@@ -9,7 +9,6 @@
 #include "compute.h"
 
 int fastPSMC::tot_index=0;
-char *fastPSMC::outnames = NULL;
 double **fastPSMC::trans=NULL;
 double **fastPSMC::P=NULL;
 double *fastPSMC::stationary=NULL;
@@ -293,10 +292,7 @@ void fastPSMC::allocate(int tk_l_arg){
   Function will set the indices for the windows
   first index and last index INCLUSIVE
  */
-//void fastPSMC::setWindows(perpsmc *perc,char *chooseChr,int start,int stop,int block){
-void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
-  gls = new double[last];
-  memcpy(gls,gls_a,last*sizeof(double));
+void fastPSMC::setWindows(int *pos ,int last,int block){
   int beginIndex =0;
   int endIndex=0;
   int beginPos = 0;
@@ -342,7 +338,7 @@ void fastPSMC::setWindows(double *gls_a,int *pos ,int last,int block){
   stationary(i) = exp(-sum_{j=0}^{i-1}{tau_j/lambda_j}*P2[i])
  */
 
-void calculate_emissions(double *tk,int tk_l,double *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize){
+void calculate_emissions(double *tk,int tk_l,mygltype *gls,std::vector<wins> &windows,double theta,double **emis,double *epsize){
 
   //initialize the first:
   for(int j=0;j<tk_l;j++)
@@ -462,6 +458,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   //prepare probs
 
   calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize);
+  // print_emission("emis.txt");
   calculate_FW_BW_Probs(tk,tk_l,epsize,rho);
 
 

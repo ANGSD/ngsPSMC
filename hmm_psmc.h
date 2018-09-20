@@ -26,7 +26,6 @@ public:
   static double **nP;//8xtk_l
   int index;
   static int tot_index;
-  static char *outnames;
   double pix;
   int tk_l;
   double max_t;
@@ -37,7 +36,7 @@ public:
   double **fw;//tk_l x nWindows+1
   double **bw;//tk_l x nWindows+1
   double **emis;//tk_l x nWindows+1
-  double *gls;//deep copy of the gls for a chr
+  mygltype *gls;//deep copy of the gls for a chr
   std::vector<wins> windows;
 
   double *workspace;
@@ -51,7 +50,7 @@ public:
     index=tot_index++;
   }
   ~fastPSMC();
-  void setWindows(double *gls_a,int *pos,int last,int block);
+  void setWindows(int *pos,int last,int block);
   void printWindows(FILE *fp){
     for(int w=0;w<windows.size();w++)
       fprintf(fp,"win[%d]=(%d,%d)\n",w,windows[w].from,windows[w].to);
@@ -60,7 +59,19 @@ public:
   void calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double rho);
   void make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,double rho);
   double make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho);
-  
+  void print_emission(const char *fname){
+    FILE *fp=NULL;
+    fp=fopen(fname,"w");
+    assert(fp);
+    for(int w=0;w<windows.size();w++){
+      for(int i=0;i<tk_l-1;i++){
+	fprintf(fp,"%f\t",emis[i][w]);
+      }
+      fprintf(fp,"%f\n",emis[tk_l-1][w]);
+    }
+    fclose(fp);
+    exit(0);
+  }
 private:
   void ComputeR2(int v,double **mat){
     double addProtect3(double,double,double);

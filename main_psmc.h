@@ -42,7 +42,6 @@ typedef struct {
   int nThreads;
   int nIter;
   int doLinear;
-  char *outname;
   double init;
   char *msstr;
   msarg msstr_arg;
