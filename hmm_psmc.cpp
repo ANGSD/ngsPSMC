@@ -135,7 +135,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
 //linear
 double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **PP){
   assert(0!=1);
-  ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
+  //  ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
   double Q = 0;
   double esum =0;
   for (unsigned i = 0; i < tk_l; i++){

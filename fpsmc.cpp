@@ -153,8 +153,9 @@ double qFunction_wrapper(const double *pars,const void *d){
     fprintf(stderr,"after scaling:%d %f\n",i,pars2[i]);
   //  exit(0);
 
+  ComputeGlobalProbabilities(ops[0].tk,ops[0].tk_l,ops[0].nP,pars2,ops[0].rho);
   if(doQuadratic){
-    ComputeGlobalProbabilities(ops[0].tk,ops[0].tk_l,ops[0].nP,pars2,ops[0].rho);
+  
     double calc_trans(int,int,double**);
     for(int i=0;i<ops[0].tk_l;i++)
       for(int j=0;j<ops[0].tk_l;j++)
