@@ -7,7 +7,7 @@
 #include "fastas.h"
 #include "header.h"
 
-typedef float mygltype;
+typedef double mygltype;
 typedef struct{
   size_t nSites;
   myMap mm;

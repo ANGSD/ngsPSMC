@@ -222,20 +222,14 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
      my_bgzf_read(pp->bgzf_gls,pp->tmpgls,2*sizeof(double)*it->second.nSites);
      for(int i=0;i<it->second.nSites;i++){
        pp->gls[i] = log(0);
-       //       fprintf(stderr,"precal res:%f\t0:%f\t1:%f\n",pp->gls[i],tmpgls[2*i],tmpgls[2*i+1]);
        if(pp->tmpgls[2*i]!=pp->tmpgls[2*i+1]){
 	 double mmax = std::max(pp->tmpgls[2*i],pp->tmpgls[2*i+1]);
-	 pp->tmpgls[2*i] -= mmax;
-	 pp->tmpgls[2*i+1] -= mmax;
+	 pp->gls[i] = std::min(pp->tmpgls[2*i],pp->tmpgls[2*i+1]) - mmax;
+	 if(pp->tmpgls[2*i]<pp->tmpgls[2*i+1])
+	   pp->gls[i] = -pp->gls[i];
        }
-       // fprintf(stderr,"post scal res:%f\t0:%f\t1:%f\n",pp->gls[i],tmpgls[2*i],tmpgls[2*i+1]);
-       if(pp->tmpgls[2*i]>pp->tmpgls[2*i+1])
-	 pp->gls[i]=pp->tmpgls[2*i+1];
-       else
-	 pp->gls[i]=-pp->tmpgls[2*i];
-       // fprintf(stderr,"res:%f\t0:%f\t1:%f\n",pp->gls[i],tmpgls[2*i],tmpgls[2*i+1]);
      }
-     //   fprintf(stderr," end: %f %f\n",pp->gls[0],pp->gls[1]);
+     
      pp->first=0;
      if(start!=-1)
        while(pp->first<it->second.nSites&&pp->pos[pp->first]<start)
@@ -255,9 +249,9 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
        //important relates to problems with divide by zero in compuation of  backward probablity
        //K=het
        if(tmp[i]=='K')
-	 pp->gls[i] = 500;// 0;//het 
+	 pp->gls[i] = 500.0;// 0;//het 
        else
-	 pp->gls[i] = -500;//;//hom
+	 pp->gls[i] = -500.0;//;//hom
 
        //ok let me explain. negative means homozygotic and postive means heteroeo. The otherone is always 0.
 
