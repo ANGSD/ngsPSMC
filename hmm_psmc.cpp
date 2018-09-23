@@ -375,16 +375,24 @@ void calculate_emissions(double *tk,int tk_l,mygltype *gls,std::vector<wins> &wi
 #endif
       for(int i=windows[v].from;i<=windows[v].to;i++) {//for all elements in window
 	double igl[2]={log(0),log(0)};
+	double val = gls[i];
 	if(!std::isinf(gls[i])){
+	  if(sizeof(mygltype)==1){
+	    // fprintf(stderr,"gl: %d ",(int)val);
+	    val = log(pow(10.0,val/-100.0));
+	    //fprintf(stderr,"gl: %f \n",val);
+	    
+	  }
 	  if(gls[i]<0){
 	    igl[0]=0;
-	    igl[1]=gls[i];
+	    igl[1]=val;
 	  }else{
-	    igl[0]=-gls[i];
+	    igl[0]=-val;
 	    igl[1]=0;
 	  }
-	  //	  fprintf(stderr,"dims\t%f\t%f\n",igl[0],igl[1]);
+	  //	  fprintf(stdout,"dims\t%f\t%f\n",igl[0],igl[1]);
 	}
+
 	if(igl[0]!=igl[1])
 	  emis[j][v+1] += log((exp(igl[0])/4.0) *inner + (exp(igl[1])/6.0)*(1.0-inner));//<- check
 

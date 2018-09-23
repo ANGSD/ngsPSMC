@@ -224,9 +224,19 @@ myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize
        pp->gls[i] = log(0);
        if(pp->tmpgls[2*i]!=pp->tmpgls[2*i+1]){
 	 double mmax = std::max(pp->tmpgls[2*i],pp->tmpgls[2*i+1]);
-	 pp->gls[i] = std::min(pp->tmpgls[2*i],pp->tmpgls[2*i+1]) - mmax;
-	 if(pp->tmpgls[2*i]<pp->tmpgls[2*i+1])
-	   pp->gls[i] = -pp->gls[i];
+	 double val = std::min(pp->tmpgls[2*i],pp->tmpgls[2*i+1]) - mmax;
+	 if(sizeof(mygltype)>1){
+	   pp->gls[i] = val;
+	   if(pp->tmpgls[2*i]<pp->tmpgls[2*i+1])
+	     pp->gls[i] = -pp->gls[i];
+	 }else{
+	   //   fprintf(stderr,"valf:%f vadl: %d\n",val,(int)val);
+	   val /= log(10)/-100.0;
+	   //   fprintf(stdout,"VALp\t%f\n",val);
+	   pp->gls[i] = val;
+	   if(pp->tmpgls[2*i]<pp->tmpgls[2*i+1])
+	     pp->gls[i] = -pp->gls[i];
+	 }
        }
      }
      

@@ -7,7 +7,14 @@
 #include "fastas.h"
 #include "header.h"
 
-typedef double mygltype;
+#define GL_AS_CHAR
+
+#ifdef GL_AS_CHAR
+typedef char mygltype;
+#else
+typedef char mygltype;
+#endif 
+
 typedef struct{
   size_t nSites;
   myMap mm;
@@ -19,7 +26,6 @@ typedef struct{
   char *fname;//input.saf.idx?
   size_t first;//if we have specified a region, then this is the first index to use
   size_t last;//if we have specified a region, then this is the last index to use
-  //  double *gls;//2*nSites long homogl_1 hetgl_1 homogl_2 hetgl_2
   mygltype *gls;//one gl. Postive means its the gl for the hom, negative means its th gl for the het. The other gl is zero. This value is therefore very beautiful. This pointer should be copied to HMM. And the HMM should free it after use.
   perFasta *pf;
   double *tmpgls;//temparray to holddata
