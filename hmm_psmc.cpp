@@ -209,7 +209,7 @@ void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double r
     }
     pix = addProtectN(tmp,tk_l);
 
-    assert(!isnan(pix));
+    assert(!std::isnan(pix));
     fwllh = pix;
 
     //now do backward algorithm
@@ -237,7 +237,7 @@ void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double r
     for(int i=0;i<tk_l;i++)
       tmp[i] = bw[i][1]+stationary[i]+emis[i][1];
     double tmptmp= addProtectN(tmp,tk_l);
-    assert(!isnan(tmptmp));
+    assert(!std::isnan(tmptmp));
     bwllh = tmptmp;
  
 }
@@ -396,7 +396,7 @@ void calculate_emissions(double *tk,int tk_l,mygltype *gls,std::vector<wins> &wi
 	if(igl[0]!=igl[1])
 	  emis[j][v+1] += log((exp(igl[0])/4.0) *inner + (exp(igl[1])/6.0)*(1.0-inner));//<- check
 
-	if(isinf(emis[j][v+1])){
+	if(std::isinf(emis[j][v+1])){
 	  fprintf(stderr,"\t-> Huge bug in code contact developer. Emissions evaluates to zero\n");
 	  /*
 	    This will corrupt the computation of the backward probability.

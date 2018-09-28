@@ -61,7 +61,7 @@ int print_header(int argc,char **argv){
 }
 
 void toGl(double ingl,double outgl[2]){
-  if(isinf(ingl)){
+  if(std::isinf(ingl)){
     outgl[0]=outgl[1]=log(0);
   }else{
     if(ingl<0){
@@ -126,7 +126,7 @@ double em(double &x,mygltype *gler,size_t nSites,double tol,int nIter){
     double llh = 0;
     for(size_t i=0;i<nSites;i++) {
       double tmp[2];
-      if(isinf(gler[i]))
+      if(std::isinf(gler[i]))
 	continue;
       double igl[2];
       toGl(gler[i],igl);

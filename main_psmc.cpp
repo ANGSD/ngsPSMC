@@ -10,21 +10,21 @@
 extern int nThreads;
 
 double lprod(double a,double b,double c,double d){
-  if(isinf(a)||isinf(b)||isinf(c)||isinf(d))
+  if(std::isinf(a)||std::isinf(b)||std::isinf(c)||std::isinf(d))
     return log(0.0);
   else
     return a+b+c+d;
 }
 
 double lprod(double a,double b){
-  if(isinf(a)||isinf(b))
+  if(std::isinf(a)||std::isinf(b))
     return log(0.0);
   else
     return a+b;
 }
 
 double lprod(double a,double b,double c){
-  if(isinf(a)||isinf(b)||isinf(c))
+  if(std::isinf(a)||std::isinf(b)||std::isinf(c))
     return log(0.0);
   else
     return a+b+c;
