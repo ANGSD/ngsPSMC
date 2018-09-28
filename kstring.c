@@ -31,7 +31,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <math.h>
-#include "htslib/kstring.h"
+#include "kstring.h"
 
 int kputd(double d, kstring_t *s) {
 	int len = 0;
