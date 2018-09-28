@@ -5,7 +5,7 @@
 #include "msArg_toPars.h"
 #include "main_psmc.h"
 #include "fpsmc.h"
-#include "kstring.h" //<- included directly in this source due to some string errors in latest htslib 17sep2019
+#include <htslib/kstring.h> //<- included directly in this source due to some string errors in latest htslib 17sep2019
 
 extern int nThreads;
 

@@ -16,7 +16,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <htslib/hts.h>
-#include "kstring.h" //<- included directly in this source due to some string errors in latest htslib 17sep2019
+#include <htslib/kstring.h> //<- included directly in this source due to some string errors in latest htslib 17sep2019
 #include <libgen.h>
 #include "psmcreader.h"
 #include "header.h"

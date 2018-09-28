@@ -2,7 +2,7 @@
 #include <vector>
 #include <cassert>
 #include <cmath>
-#include "kstring.h" //<- included directly in this source due to some string errors in latest htslib 17sep2019
+#include <htslib/kstring.h> //<- included directly in this source due to some string errors in latest htslib 17sep2019
 #include "psmcreader.h"
 #include "main_psmc.h"
 #include "hmm_psmc.h"
