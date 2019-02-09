@@ -10,7 +10,7 @@ double lprod(double a,double b);
 double lprod(double a,double b,double c);
 double lprod(double a,double b,double c,double d);
 
-#if 1
+#if 0 //this is undef 9feb 2019 and subsituted with the function below
 void ComputeBR1(int tk_l, double *bR1, double **P, double **bw,double **emis,int w){
   bR1[tk_l - 1] = log(0);
   double tmp_denom = 0.0;
@@ -22,7 +22,23 @@ void ComputeBR1(int tk_l, double *bR1, double **P, double **bw,double **emis,int
     tmp_denom -= P[5][i];
   }
 }
-#endif
+#endif 
+
+void ComputeBR1(int tk_l, double *bR1, double **P, double *stationary, double **bw,double **emis,int w){
+  bR1[tk_l - 1] = log(0);
+  double tmp_denom = 0.0;
+  for (int i = 0; i < tk_l - 1; i++)
+    tmp_denom += P[5][i];
+  for (int i = tk_l - 2; i >= 0 ; i--){
+    //      bR1[i] =  addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1],stationary[i+1]));
+    bR1[i] =  addProtect2(lprod(bR1[i+1],tmp_denom) , lprod(bw[i+1][w+1],emis[i+1][w+1],stationary[i+1]));
+    tmp_denom -= P[5][i];
+    bR1[i] = lprod(bR1[i], -tmp_denom);
+  }
+ /* for (int i = 0; i < tk_l; i++){
+    fprintf(stderr, "bR1[%d] = %f\n", i, bR1[i]);
+  }*/
+}
 
 double addProtect3(double a,double b, double c){
   if(isinf(a)&&isinf(b)&&isinf(c))
@@ -180,7 +196,7 @@ void ComputeP55(unsigned numWind,int tk_l,double **P,double *PP5,double **fw,dou
     for (int i = tk_l - 2; i >= 0 ; i--)
       bR1[i] =  addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1],stationary[i+1]));
      */
-    ComputeBR1(tk_l,bR1,P,bw,emis,l);
+    ComputeBR1(tk_l,bR1,P,stationary,bw,emis,l);
     for (unsigned i = 0; i < tk_l - 1; i++)
       PP5[i] = addProtect2(PP5[i],lprod(R2[i],P[5][i],bR1[i],-P[0][i]));//<- CHECK ptgi
   }
@@ -196,7 +212,7 @@ void ComputeP66(unsigned numWind,int tk_l,double **P,double *PP6,double **fw,dou
     for (int i = tk_l - 2; i >= 0 ; i--)
       bR1[i] = addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1],stationary[i+1]));
     */
-    ComputeBR1(tk_l,bR1,P,bw,emis,l);
+    ComputeBR1(tk_l,bR1,P,stationary,bw,emis,l);
     for (unsigned i = 0; i < tk_l - 1; i++)
       PP6[i] =addProtect2(PP6[i], lprod(fw[i][l],P[6][i],bR1[i],-P[0][i]));//<- CHECK btgi
   }
@@ -216,7 +232,7 @@ void ComputeP77(unsigned numWind,int tk_l,double **P,double *PP7,double **fw,dou
     for (int i = tk_l - 2; i >= 0 ; i--)
       bR1[i] = addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1],stationary[i+1]));
     */
-    ComputeBR1(tk_l,bR1,P,bw,emis,l);
+    ComputeBR1(tk_l,bR1,P,stationary,bw,emis,l);
     for (unsigned i = 0; i < tk_l - 1; i++)
       PP7[i] = addProtect2(PP7[i],lprod(R1[i],P[7][i],bR1[i],-P[0][i]));//<-CHECK ptgi
   }
