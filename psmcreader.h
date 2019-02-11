@@ -7,12 +7,12 @@
 #include "fastas.h"
 #include "header.h"
 
-#define GL_AS_CHAR
+//#define GL_AS_CHAR
 
 #ifdef GL_AS_CHAR
 typedef char mygltype;
 #else
-typedef char mygltype;
+typedef double mygltype;
 #endif 
 
 typedef struct{
