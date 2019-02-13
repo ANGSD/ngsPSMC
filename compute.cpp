@@ -30,14 +30,9 @@ void ComputeBR1(int tk_l, double *bR1, double **P, double *stationary, double **
   for (int i = 0; i < tk_l - 1; i++)
     tmp_denom += P[5][i];
   for (int i = tk_l - 2; i >= 0 ; i--){
-    //      bR1[i] =  addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1],stationary[i+1]));
-    bR1[i] =  addProtect2(lprod(bR1[i+1],tmp_denom) , lprod(bw[i+1][w+1],emis[i+1][w+1],stationary[i+1]));
-    tmp_denom -= P[5][i];
-    bR1[i] = lprod(bR1[i], -tmp_denom);
+    bR1[i] =  addProtect2(lprod(bR1[i+1],P[0][i+1]) , lprod(bw[i+1][w+1],emis[i+1][w+1],stationary[i+1]));
+    bR1[i] = lprod(bR1[i], -P[0][i]);
   }
- /* for (int i = 0; i < tk_l; i++){
-    fprintf(stderr, "bR1[%d] = %f\n", i, bR1[i]);
-  }*/
 }
 
 double addProtect3(double a,double b, double c){
@@ -118,7 +113,6 @@ void ComputeP22(unsigned numWind,int tk_l,double **P,double *PP2,double **fw,dou
   double tmp[tk_l];
   for (unsigned i = 0; i < tk_l; i++)
     PP2[i] = log(0);
-
   for (unsigned l = 1; l < numWind; l++) {
     R1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
@@ -132,7 +126,6 @@ void ComputeP22(unsigned numWind,int tk_l,double **P,double *PP2,double **fw,dou
     for (unsigned i = 1; i < tk_l; i++)
       PP2[i] =addProtect2(PP2[i] , lprod(R2[i-1],P[2][i],bw[i][l+1],emis[i][l+1]));//CHECK
   }
-      
 }
 
 void ComputeP33(unsigned numWind,int tk_l,double *P3,double *PP3,double **fw,double **bw,double **emis){
@@ -197,8 +190,8 @@ void ComputeP55(unsigned numWind,int tk_l,double **P,double *PP5,double **fw,dou
       bR1[i] =  addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1],stationary[i+1]));
      */
     ComputeBR1(tk_l,bR1,P,stationary,bw,emis,l);
-    for (unsigned i = 0; i < tk_l - 1; i++)
-      PP5[i] = addProtect2(PP5[i],lprod(R2[i],P[5][i],bR1[i],-P[0][i]));//<- CHECK ptgi
+    for (unsigned i = 1; i < tk_l - 1; i++)
+      PP5[i] = addProtect2(PP5[i],lprod(R2[i-1],P[5][i],bR1[i]));//<- CHECK ptgi
   }
 }
 
@@ -206,6 +199,7 @@ void ComputeP66(unsigned numWind,int tk_l,double **P,double *PP6,double **fw,dou
   double bR1[tk_l];
   for (unsigned i = 0; i < tk_l; i++)
     PP6[i] = log(0);
+
   for (unsigned l = 1; l < numWind; l++){
     /*
     bR1[tk_l - 1] = log(0);
@@ -214,7 +208,7 @@ void ComputeP66(unsigned numWind,int tk_l,double **P,double *PP6,double **fw,dou
     */
     ComputeBR1(tk_l,bR1,P,stationary,bw,emis,l);
     for (unsigned i = 0; i < tk_l - 1; i++)
-      PP6[i] =addProtect2(PP6[i], lprod(fw[i][l],P[6][i],bR1[i],-P[0][i]));//<- CHECK btgi
+      PP6[i] =addProtect2(PP6[i], lprod(fw[i][l],P[6][i],bR1[i]));//<- CHECK btgi
   }
 }
 
@@ -234,9 +228,8 @@ void ComputeP77(unsigned numWind,int tk_l,double **P,double *PP7,double **fw,dou
     */
     ComputeBR1(tk_l,bR1,P,stationary,bw,emis,l);
     for (unsigned i = 0; i < tk_l - 1; i++)
-      PP7[i] = addProtect2(PP7[i],lprod(R1[i],P[7][i],bR1[i],-P[0][i]));//<-CHECK ptgi
+      PP7[i] = addProtect2(PP7[i],lprod(R1[i],P[7][i],bR1[i]));//<-CHECK ptgi
   }
-  //DRAGON missing PP7[tk_l-1]
 }
 
 //TODO: tk_l is in fact the number of time intervals

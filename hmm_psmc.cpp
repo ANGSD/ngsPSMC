@@ -419,10 +419,13 @@ void ComputePii(unsigned numWind,int tk_l,double **P,double **PP,double **fw,dou
   ComputeP77(numWind,tk_l,P,PP[7],fw,bw,stationary,emis);
   
   
-  for(int p=1;0&&p<8;p++)//CHECK IF THIS SHOULD BE RENAABLED
-    for(int i=0;i<tk_l;i++)
+  for(int p=1; 0 && p<8; p++){//CHECK IF THIS SHOULD BE RENAABLED
+    for(int i=0;i<tk_l;i++){
+      //fprintf(stderr, "P[%d][%d] = %f\t", p, i, PP[p][i]);
       assert(exp(PP[p][i])>=0&&exp(PP[p][i])<=1);
-
+    }
+  //fprintf(stderr, "\n");
+  }
 
 }
 
@@ -474,6 +477,27 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
     ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis,workspace);
   else
     ComputeBaumWelch(windows.size(),tk_l,fw,bw,emis,trans,baumwelch,pix);
+
+  /*for (int i = 0; i < tk_l; i++)
+    fprintf(stderr, "st[%d] = %f\t", i, stationary[i]);
+  fprintf(stderr, "\n");
+
+
+  for(int p=1;p<8;p++){//CHECK IF THIS SHOULD BE RENAABLED
+    for(int i=0;i<tk_l;i++){
+      fprintf(stderr, "P[%d][%d] = %f\t", p, i, P[p][i]);
+     // assert(exp(PP[p][i])>=0&&exp(PP[p][i])<=1);
+    }
+  fprintf(stderr, "\n");
+  }
+
+  for(int p=1;p<8;p++){//CHECK IF THIS SHOULD BE RENAABLED
+    for(int i=0;i<tk_l;i++){
+      fprintf(stderr, "PP[%d][%d] = %f\t", p, i, exp(PP[p][i]-pix));
+     // assert(exp(PP[p][i])>=0&&exp(PP[p][i])<=1);
+    }
+  fprintf(stderr, "\n");
+  }*/
 
   //no need to recompute P. But we fix this later;
   if(doQuadratic==0)
