@@ -105,13 +105,13 @@ double qFunction(const double *params ,const void *d){
 }
 
 
-double qFunction_inner2(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **PP,double **trans);
+double qFunction_inner2(int tk_l,double **nP,double **PP,double **trans);
 
 
 double qFunction2(const double *params ,const void *d){
   oPars *data = (oPars*) d;
   //  fprintf(stderr,"pix:%f\n",data->pix);
-  return qFunction_inner2(data->tk,data->tk_l,params,data->rho,data->pix,data->numWind,data->nP,data->baumwelch,data->trans);
+  return qFunction_inner2(data->tk_l,data->nP,data->baumwelch,data->trans);
 
 }
 

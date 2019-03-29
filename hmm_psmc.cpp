@@ -138,6 +138,21 @@ double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,doubl
   //  ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
   double Q = 0;
   double esum =0;
+#if 0
+  for(int i=0;i<tk_l;i++){
+    fprintf(stderr,"PP:");
+    for(int j=0;j<8;j++)
+      fprintf(stderr," %f",PP[j][i]);
+    fprintf(stderr,"\n");
+  }
+  for(int i=0;i<tk_l;i++){
+    fprintf(stderr,"nPP:");
+    for(int j=0;j<8;j++)
+      fprintf(stderr," %f",nP[j][i]);
+    fprintf(stderr,"\n");
+  }
+  exit(0);
+#endif
   for (unsigned i = 0; i < tk_l; i++){
     double tmpQ = qkFunction(i, pix,numWind,nP,PP,tk_l,esum);
     Q += tmpQ;
@@ -148,8 +163,9 @@ double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,doubl
   
 }
 
+
 //quadratic
-double qFunction_inner2(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **baumwelch,double **trans){
+double qFunction_inner2(int tk_l,double **nP,double **baumwelch,double **trans){
   
   double newstationary[tk_l];
   calculate_stationary(tk_l,newstationary,nP);
@@ -503,7 +519,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   if(doQuadratic==0)
     qval=qFunction_inner(tk,tk_l,epsize,rho,pix,windows.size(),P,PP);
   else
-    qval=qFunction_inner2(tk,tk_l,epsize,rho,pix,windows.size(),P,baumwelch,trans);
+    qval=qFunction_inner2(tk_l,P,baumwelch,trans);
   return qval;
  }
 
