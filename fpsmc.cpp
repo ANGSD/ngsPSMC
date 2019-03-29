@@ -96,12 +96,12 @@ void setEPSize(double *ary,int tk_l,double *from_infile){
   objective function. Function to be optimized, for each chromo
 */
 
-double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **PP);
+double qFunction_inner(int tk_l,double pix,int numWind,double **nP,double **PP);
 
 
 double qFunction(const double *params ,const void *d){
   oPars *data = (oPars*) d;
-  return qFunction_inner(data->tk,data->tk_l,params,data->rho,data->pix,data->numWind,data->nP,data->PP);
+  return qFunction_inner(data->tk_l,data->pix,data->numWind,data->nP,data->PP);
 }
 
 

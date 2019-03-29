@@ -133,7 +133,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
 
 }
 //linear
-double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **PP){
+double qFunction_inner(int tk_l,double pix,int numWind,double **nP,double **PP){
   assert(0!=1);
   //  ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
   double Q = 0;
@@ -517,7 +517,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
 
   //no need to recompute P. But we fix this later;
   if(doQuadratic==0)
-    qval=qFunction_inner(tk,tk_l,epsize,rho,pix,windows.size(),P,PP);
+    qval=qFunction_inner(tk_l,pix,windows.size(),P,PP);
   else
     qval=qFunction_inner2(tk_l,P,baumwelch,trans);
   return qval;
