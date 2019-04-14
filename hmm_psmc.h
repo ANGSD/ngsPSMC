@@ -6,8 +6,6 @@ double lprod(double a,double b,double c,double d);
 
 void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *epsize,double rho);
 
-#define DOTRANS 1
-
 #define PSMC_T_INF 1000.0
 struct wins{
   int from;//inclusive
@@ -48,6 +46,7 @@ public:
     pix = -666;
     max_t = 15;
     index=tot_index++;
+    has_calc_emissions = 0;
   }
   ~fastPSMC();
   void setWindows(int *pos,int last,int block);
@@ -73,6 +72,7 @@ public:
     exit(0);
   }
 private:
+  int has_calc_emissions;
   void ComputeR2(int v,double **mat){
     double addProtect3(double,double,double);
     double tmp = log(0);

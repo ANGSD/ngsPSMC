@@ -63,9 +63,6 @@ P<-exp(read.table("P.txt"));colnames(P)<-paste0("P",0:7);
 PP<-exp(read.table("PP.txt"));colnames(PP)<-paste0("PP",0:7);
 ##emis[,1:10]
 ##fw[,1:10]
-
-
-
  */
 
 double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **PP,int tk_l,double &esum){
@@ -83,7 +80,9 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
   
   //i follows PP index.
   for(int i=1;i<8;i++){
+    //  fprintf(stderr,"PP[]:%f pix:%f\n",PP[i][k],pix);exit(0);
     expec[i-1] = exp(lprod(PP[i][k],-pix));
+    //    fprintf(stderr,"k:%d expec[%d]:%f\n",k,i,expec[i-1]);
     npfac[i-1] = nP[i][k];
     if(i!=2&&i!=5)
       esum +=expec[i-1];
@@ -97,18 +96,19 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
   
   double ret = 0;
   for(int i=0;i<7;i++) 
-    if(i==6)
+    //   if(i==6)
       ret += qi[i];
 
   return ret;
 }
+
 /*
   tk: intervals, fixed
   tk_l: length of tk
   P: matrix where results will be plugged in
   epsize: the effective populationsize (lambda)
   rho: rho, or theta to rho value.
- */
+*/
 
 void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *epsize,double rho){
   ComputeP1(tk,tk_l,P[1],epsize,rho);
@@ -132,6 +132,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
   }
 
 }
+
 //linear
 double qFunction_inner(int tk_l,double pix,int numWind,double **nP,double **PP){
   assert(0!=1);
@@ -142,16 +143,16 @@ double qFunction_inner(int tk_l,double pix,int numWind,double **nP,double **PP){
   for(int i=0;i<tk_l;i++){
     fprintf(stderr,"PP:");
     for(int j=0;j<8;j++)
-      fprintf(stderr," %f",PP[j][i]);
+      fprintf(stderr," %f",exp(PP[j][i]));
     fprintf(stderr,"\n");
   }
   for(int i=0;i<tk_l;i++){
     fprintf(stderr,"nPP:");
     for(int j=0;j<8;j++)
-      fprintf(stderr," %f",nP[j][i]);
+      fprintf(stderr," %f",exp(nP[j][i]));
     fprintf(stderr,"\n");
   }
-  exit(0);
+  //  exit(0);
 #endif
   for (unsigned i = 0; i < tk_l; i++){
     double tmpQ = qkFunction(i, pix,numWind,nP,PP,tk_l,esum);
@@ -293,7 +294,7 @@ void fastPSMC::allocate(int tk_l_arg){
   for(int i=0;i<tk_l;i++)
     PP[0][i] = -666;
   workspace = new double[windows.size()];
-  if(DOTRANS&&index==0){
+  if(index==0){
     //    fprintf(stderr,"allocating\n");
     trans = new double *[tk_l];
     for(int i=0;i<tk_l;i++){
@@ -469,8 +470,9 @@ void fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,doub
   assert(trans);
   assert(index==0);
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
+
   calculate_stationary(tk_l,stationary,P);
-  if(DOTRANS){
+  if(doQuadratic){
     for(int i=0;i<tk_l;i++)
       for(int j=0;j<tk_l;j++){
 	//	fprintf(stderr,"trans:%p\n",trans);
@@ -483,16 +485,37 @@ void fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,doub
 
 double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho){
   //prepare probs
-
-  calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize);
+  if(has_calc_emissions==0){
+    calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize);
+    has_calc_emissions=1;
+  }
   // print_emission("emis.txt");
   calculate_FW_BW_Probs(tk,tk_l,epsize,rho);
-
+  
 
   if(doQuadratic==0)
     ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis,workspace);
   else
     ComputeBaumWelch(windows.size(),tk_l,fw,bw,emis,trans,baumwelch,pix);
+
+#if 0
+  for(int i=0;i<tk_l;i++){
+    fprintf(stderr,"baum[%d,] ",i);
+    for(int j=0;j<tk_l;j++)
+      fprintf(stderr,",%f ",baumwelch[i][j]);
+    fprintf(stderr,"\n");
+  }
+#endif
+
+#if 0
+  for(int i=0;i<tk_l;i++){
+    fprintf(stderr,"trans[%d,] ",i);
+    for(int j=0;j<tk_l;j++)
+      fprintf(stderr,",%f:%f ",trans[i][j],exp(trans[i][j]));
+    fprintf(stderr,"\n");
+  }
+
+#endif 
 
   /*for (int i = 0; i < tk_l; i++)
     fprintf(stderr, "st[%d] = %f\t", i, stationary[i]);
@@ -550,7 +573,7 @@ fastPSMC::~fastPSMC(){
   delete [] PP;
   if(index==0)
   delete [] nP;
-  if(DOTRANS&&index==0){
+  if(index==0){
     for(int i=0;i<tk_l;i++)
       delete [] trans[i];
     delete [] trans;

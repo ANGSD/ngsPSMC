@@ -182,7 +182,7 @@ void ComputeP55(unsigned numWind,int tk_l,double **P,double *PP5,double **fw,dou
   for (unsigned l = 1; l < numWind; l++){
     double tmp = log(0);
     for (unsigned i = 0; i < tk_l ; i++){
-      R2[i] = addProtect3(lprod(tmp,P[2][i]),lprod(fw[i][l],P[6][i]),lprod(R1[i],P[7][i]));
+      R2[i] = addProtect3(lprod(tmp,P[5][i]),lprod(fw[i][l],P[6][i]),lprod(R1[i],P[7][i]));
       tmp = R2[i];
     }/*
     bR1[tk_l - 1] = log(0);
@@ -276,6 +276,32 @@ void ComputeP6(double *tk,int tk_l,double *P,const double *epsize,double rho){
     P[tk_l - 1] = log(0.0);
 }
 
+/*
+void ComputeP6(double *tk,int tk_l,double *P,const double *epsize,double rho){
+  double en=2.3;
+  double to=3.4;
+  double tre=addProtect2(en,to);
+  fprintf(stderr,"%f %f %f\n",en,to,tre);
+    for (unsigned i = 0; i < tk_l-1; i++){
+      double inner = -(tk[i+1]-tk[i])/epsize[i];
+      fprintf(stderr,"inner:%f\n",inner);
+      P[i] = log(1)-log(1-exp(inner));
+      fprintf(stderr,"pi no addprotect: %f\n",P[i]);
+      P[i] = log(1)-addProtect2(log(1.0),-log(-exp(-inner)));
+      fprintf(stderr,"pi with addprotect: %f\n",P[i]);
+      exit(0);
+      P[i] += inner;
+      double tmp = exp(-2*rho*tk[i]);
+      tmp -= 1/(1-2*rho*epsize[i])*exp(-2*rho*tk[i+1]);
+      tmp += 2*rho*epsize[i]/(1 - 2*rho*epsize[i])*exp(-2*rho*tk[i]+inner);
+      P[i] += log(tmp);
+      fprintf(stderr,"pi:%f\n",P[i]);
+      exit(0);
+    }
+    P[tk_l - 1] = log(0.0);
+}
+*/
+
 
 void ComputeP2(int tk_l,double *P2,double *P5){
   for (unsigned i = 0; i < tk_l; i++){
@@ -309,7 +335,7 @@ void ComputeP4(double *tk,int tk_l,double *P4,const double *epsize,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
 
     //    double fact1 = (exp(-(2.0*rho*tk[i])))/(1.0 - exp(-(tk[i+1]-tk[i])/epsize[i]) );
-    double fact1 =(exp(-(2.0*rho*tk[i])))/(addProtect2(1.0, - exp(-(tk[i+1]-tk[i])/epsize[i]) ));
+    double fact1 =(exp(-(2.0*rho*tk[i])))/((1.0 - exp(-(tk[i+1]-tk[i])/epsize[i]) ));
 
     double part1 = 2.0/(1-2.0*epsize[i]*rho)/(1+2.0*epsize[i]*rho);
     //    fprintf(stderr,"part1:%f epszie:%f\n",part1,epsize[i]);
