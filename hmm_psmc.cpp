@@ -82,7 +82,7 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
   for(int i=1;i<8;i++){
     //  fprintf(stderr,"PP[]:%f pix:%f\n",PP[i][k],pix);exit(0);
     expec[i-1] = exp(lprod(PP[i][k],-pix));
-    //    fprintf(stderr,"k:%d expec[%d]:%f\n",k,i,expec[i-1]);
+    fprintf(stderr,"k:%d expec[%d]:%f\n",k,i,expec[i-1]);
     npfac[i-1] = nP[i][k];
     if(i!=2&&i!=5)
       esum +=expec[i-1];
@@ -139,11 +139,11 @@ double qFunction_inner(int tk_l,double pix,int numWind,double **nP,double **PP){
   //  ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
   double Q = 0;
   double esum =0;
-#if 0
+#if 1
   for(int i=0;i<tk_l;i++){
     fprintf(stderr,"PP:");
     for(int j=0;j<8;j++)
-      fprintf(stderr," %f",exp(PP[j][i]));
+      fprintf(stderr," %f",PP[j][i]);
     fprintf(stderr,"\n");
   }
   for(int i=0;i<tk_l;i++){
@@ -472,7 +472,7 @@ void fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,doub
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
 
   calculate_stationary(tk_l,stationary,P);
-  if(doQuadratic){
+  if(1||doQuadratic){
     for(int i=0;i<tk_l;i++)
       for(int j=0;j<tk_l;j++){
 	//	fprintf(stderr,"trans:%p\n",trans);
@@ -493,12 +493,12 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   calculate_FW_BW_Probs(tk,tk_l,epsize,rho);
   
 
-  if(doQuadratic==0)
+  //if(doQuadratic==0)
     ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis,workspace);
-  else
+    //else
     ComputeBaumWelch(windows.size(),tk_l,fw,bw,emis,trans,baumwelch,pix);
 
-#if 0
+#if 1
   for(int i=0;i<tk_l;i++){
     fprintf(stderr,"baum[%d,] ",i);
     for(int j=0;j<tk_l;j++)
@@ -507,15 +507,27 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   }
 #endif
 
-#if 0
+#if 1
   for(int i=0;i<tk_l;i++){
     fprintf(stderr,"trans[%d,] ",i);
     for(int j=0;j<tk_l;j++)
       fprintf(stderr,",%f:%f ",trans[i][j],exp(trans[i][j]));
     fprintf(stderr,"\n");
   }
+#endif
 
-#endif 
+#if 1
+  double E5 = baumwelch[2][2]*trans[2][2]*P[7][0]*P[5][1]*P[2][2]+baumwelch[1][2]/trans[1][2]*P[7][0]*P[5][1]*P[2][2];
+  double E6 = baumwelch[1][2]/trans[1][2]*P[6][1]*P[2][2];
+  double E7 = baumwelch[2][2]/trans[2][2]*P[7][1]*P[2][2];
+  int at = 1;
+  double E1=baumwelch[at][at]/trans[at][at]*P[1][at];
+  fprintf(stderr,"E5: %f\n",E5);
+  fprintf(stderr,"E6: %f\n",E6);
+  fprintf(stderr,"E7: %f\n",E7);
+  fprintf(stderr,"E1: %f\n",E1);
+#endif
+ 
 
   /*for (int i = 0; i < tk_l; i++)
     fprintf(stderr, "st[%d] = %f\t", i, stationary[i]);
