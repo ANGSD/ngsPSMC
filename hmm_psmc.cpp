@@ -527,7 +527,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   fprintf(stderr,"E6: %f\n",E6);
   fprintf(stderr,"E7: %f\n",E7);
   for(int at =0;at<3;at++){
-    double E1=baumwelch[at][at]/trans[at][at]*P[1][at];
+    double E1=baumwelch[at][at]/exp(trans[at][at])*exp(P[1][at]);
     fprintf(stderr,"E1[%d]: %f\n",at,E1);  
   }
   
