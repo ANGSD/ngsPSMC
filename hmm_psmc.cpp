@@ -520,7 +520,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
 #endif
 
 #if 1
-  double E5 = baumwelch[2][2]*exp(trans[2][2])*exp(P[7][0])*exp(P[5][1])*exp(P[2][2])+baumwelch[1][2]/exp(trans[1][2])*exp(P[7][0])*exp(P[5][1])*exp(P[2][2]);
+  double E5 = baumwelch[2][2]*exp(trans[2][2])*exp(P[7][0])*exp(P[5][1])*exp(P[2][2]) + baumwelch[0][2] + baumwelch[1][2]/exp(trans[1][2])*exp(P[7][0])*exp(P[5][1])*exp(P[2][2]);
   double E6 = baumwelch[1][2]/exp(trans[1][2])*exp(P[6][1])*exp(P[2][2]);
   double E7 = baumwelch[2][2]/exp(trans[2][2])*exp(P[7][1])*exp(P[2][2]);
   fprintf(stderr,"E5: %f\n",E5);

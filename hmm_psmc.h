@@ -97,7 +97,7 @@ private:
     for (int i = tk_l - 2; i >= 0 ; i--){
       R1[i] = addProtect2(R1[i+1] , mat[i+1][v]);
     }
-    if(0&&direction==0)//0=from start to end, 1=from end to start
+    if(direction==0)//0=from start to end, 1=from end to start
       fprintf(stderr,"ComputeRs_R1[%d]:\t%f\t%f\t%f\n",v,R1[0],R1[1],R1[2]);
   }
   
