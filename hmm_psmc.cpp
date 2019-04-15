@@ -140,14 +140,16 @@ double qFunction_inner(int tk_l,double pix,int numWind,double **nP,double **PP){
   double Q = 0;
   double esum =0;
 #if 1
+#if 0
   for(int i=0;i<tk_l;i++){
-    fprintf(stderr,"PP:");
+    fprintf(stderr,"PP:"); // 
     for(int j=0;j<8;j++)
       fprintf(stderr," %f",PP[j][i]);
     fprintf(stderr,"\n");
   }
+#endif
   for(int i=0;i<tk_l;i++){
-    fprintf(stderr,"nPP:");
+    fprintf(stderr,"nPP:");// Pi
     for(int j=0;j<8;j++)
       fprintf(stderr," %f",exp(nP[j][i]));
     fprintf(stderr,"\n");
@@ -494,6 +496,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   
 
   //if(doQuadratic==0)
+  //
     ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis,workspace);
     //else
     ComputeBaumWelch(windows.size(),tk_l,fw,bw,emis,trans,baumwelch,pix);
@@ -517,15 +520,17 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
 #endif
 
 #if 1
-  double E5 = baumwelch[2][2]*trans[2][2]*P[7][0]*P[5][1]*P[2][2]+baumwelch[1][2]/trans[1][2]*P[7][0]*P[5][1]*P[2][2];
-  double E6 = baumwelch[1][2]/trans[1][2]*P[6][1]*P[2][2];
-  double E7 = baumwelch[2][2]/trans[2][2]*P[7][1]*P[2][2];
-  int at = 1;
-  double E1=baumwelch[at][at]/trans[at][at]*P[1][at];
+  double E5 = baumwelch[2][2]*exp(trans[2][2])*exp(P[7][0])*exp(P[5][1])*exp(P[2][2])+baumwelch[1][2]/exp(trans[1][2])*exp(P[7][0])*exp(P[5][1])*exp(P[2][2]);
+  double E6 = baumwelch[1][2]/exp(trans[1][2])*exp(P[6][1])*exp(P[2][2]);
+  double E7 = baumwelch[2][2]/exp(trans[2][2])*exp(P[7][1])*exp(P[2][2]);
   fprintf(stderr,"E5: %f\n",E5);
   fprintf(stderr,"E6: %f\n",E6);
   fprintf(stderr,"E7: %f\n",E7);
-  fprintf(stderr,"E1: %f\n",E1);
+  for(int at =0;at<3;at++){
+    double E1=baumwelch[at][at]/trans[at][at]*P[1][at];
+    fprintf(stderr,"E1[%d]: %f\n",at,E1);  
+  }
+  
 #endif
  
 
