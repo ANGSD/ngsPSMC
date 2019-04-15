@@ -215,7 +215,7 @@ void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double r
     //we now loop over windows.
     //v=0 is above and is the initial distribution, we therefore plug in at v+1
     for(int v=0;v<windows.size();v++){
-      ComputeRs(v,fw);//<-prepare R1,R2
+      ComputeRs(v,fw,0);//<-prepare R1,R2
 
       fw[0][v+1] = addProtect3(lprod(fw[0][v],P[1][0]) , lprod(R1[0],P[3][0]) , lprod(fw[0][v],P[4][0]))+emis[0][v+1] ;
       for (unsigned i = 1; i < tk_l; i++)
@@ -239,7 +239,7 @@ void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double r
 
     //we plug in values at v-1, therefore we break at v==1
     for(int v=windows.size();v>0;v--){
-      ComputeRs(v,bw);//<-prepare R1,R2
+      ComputeRs(v,bw,1);//<-prepare R1,R2
 
       bw[0][v-1] = addProtect3(lprod(bw[0][v],P[1][0]) , lprod( R1[0],P[3][0]) , lprod(bw[0][v],P[4][0]))+emis[0][v-1];
       bw[0][v] -= lprod(stationary[0],emis[0][v]);

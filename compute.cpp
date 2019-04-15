@@ -174,17 +174,22 @@ void ComputeP55(unsigned numWind,int tk_l,double **P,double *PP5,double **fw,dou
 
   for (unsigned l = 1; l < numWind; l++){
     R1[tk_l - 1] = log(0);
+    double tmp = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
       R1[i] = addProtect2(R1[i+1] , fw[i+1][l]);
-  }
-  for (unsigned i = 0; i < tk_l; i++)
-    PP5[i] = log(0);
-  for (unsigned l = 1; l < numWind; l++){
-    double tmp = log(0);
+    fprintf(stderr,"ComputeP55_R1[%d]:\t%f\t%f\t%f\n",l,R1[0],R1[1],R1[2]);
     for (unsigned i = 0; i < tk_l ; i++){
       R2[i] = addProtect3(lprod(tmp,P[5][i]),lprod(fw[i][l],P[6][i]),lprod(R1[i],P[7][i]));
       tmp = R2[i];
-    }/*
+    }
+    fprintf(stderr,"ComputeP55_R2[%d]:\t%f\t%f\t%f\n",l,R2[0],R2[1],R2[2]);
+  }
+  
+  for (unsigned i = 0; i < tk_l; i++)
+    PP5[i] = log(0);
+  
+  for (unsigned l = 1; l < numWind; l++){
+    /*
     bR1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
       bR1[i] =  addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1],stationary[i+1]));
@@ -192,6 +197,7 @@ void ComputeP55(unsigned numWind,int tk_l,double **P,double *PP5,double **fw,dou
     ComputeBR1(tk_l,bR1,P,stationary,bw,emis,l);
     for (unsigned i = 1; i < tk_l - 1; i++)
       PP5[i] = addProtect2(PP5[i],lprod(R2[i-1],P[5][i],bR1[i]));//<- CHECK ptgi
+    
   }
 }
 
