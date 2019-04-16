@@ -166,29 +166,24 @@ void ComputeP44(unsigned numWind,int tk_l,double *P4,double *PP4,double **fw,dou
   }
 
 }
-
 void ComputeP55(unsigned numWind,int tk_l,double **P,double *PP5,double **fw,double **bw,double *stationary,double **emis){
   double R1[tk_l];
   double R2[tk_l];
   double bR1[tk_l];
 
+  for (unsigned i = 0; i < tk_l; i++)
+    PP5[i] = log(0);
   for (unsigned l = 1; l < numWind; l++){
     R1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
       R1[i] = addProtect2(R1[i+1] , fw[i+1][l]);
-  }
-  for (unsigned i = 0; i < tk_l; i++)
-    PP5[i] = log(0);
-  for (unsigned l = 1; l < numWind; l++){
+    //    fprintf(stderr,"ComputeP55_R1[%d]:\t%f\t%f\t%f\n",l,R1[0],R1[1],R1[2]);	
     double tmp = log(0);
     for (unsigned i = 0; i < tk_l ; i++){
-      R2[i] = addProtect3(lprod(tmp,P[2][i]),lprod(fw[i][l],P[6][i]),lprod(R1[i],P[7][i]));
+      R2[i] = addProtect3(lprod(tmp,P[5][i]),lprod(fw[i][l],P[6][i]),lprod(R1[i],P[7][i]));
       tmp = R2[i];
-    }/*
-    bR1[tk_l - 1] = log(0);
-    for (int i = tk_l - 2; i >= 0 ; i--)
-      bR1[i] =  addProtect2(bR1[i+1] , lprod(bw[i+1][l+1],emis[i+1][l+1],stationary[i+1]));
-     */
+    }
+    //fprintf(stderr,"ComputeP55_R2[%d]:\t%f\t%f\t%f\n",l,R2[0],R2[1],R2[2]);
     ComputeBR1(tk_l,bR1,P,stationary,bw,emis,l);
     for (unsigned i = 1; i < tk_l - 1; i++)
       PP5[i] = addProtect2(PP5[i],lprod(R2[i-1],P[5][i],bR1[i]));//<- CHECK ptgi
@@ -276,6 +271,32 @@ void ComputeP6(double *tk,int tk_l,double *P,const double *epsize,double rho){
     P[tk_l - 1] = log(0.0);
 }
 
+/*
+void ComputeP6(double *tk,int tk_l,double *P,const double *epsize,double rho){
+  double en=2.3;
+  double to=3.4;
+  double tre=addProtect2(en,to);
+  fprintf(stderr,"%f %f %f\n",en,to,tre);
+    for (unsigned i = 0; i < tk_l-1; i++){
+      double inner = -(tk[i+1]-tk[i])/epsize[i];
+      fprintf(stderr,"inner:%f\n",inner);
+      P[i] = log(1)-log(1-exp(inner));
+      fprintf(stderr,"pi no addprotect: %f\n",P[i]);
+      P[i] = log(1)-addProtect2(log(1.0),-log(-exp(-inner)));
+      fprintf(stderr,"pi with addprotect: %f\n",P[i]);
+      exit(0);
+      P[i] += inner;
+      double tmp = exp(-2*rho*tk[i]);
+      tmp -= 1/(1-2*rho*epsize[i])*exp(-2*rho*tk[i+1]);
+      tmp += 2*rho*epsize[i]/(1 - 2*rho*epsize[i])*exp(-2*rho*tk[i]+inner);
+      P[i] += log(tmp);
+      fprintf(stderr,"pi:%f\n",P[i]);
+      exit(0);
+    }
+    P[tk_l - 1] = log(0.0);
+}
+*/
+
 
 void ComputeP2(int tk_l,double *P2,double *P5){
   for (unsigned i = 0; i < tk_l; i++){
@@ -309,7 +330,7 @@ void ComputeP4(double *tk,int tk_l,double *P4,const double *epsize,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
 
     //    double fact1 = (exp(-(2.0*rho*tk[i])))/(1.0 - exp(-(tk[i+1]-tk[i])/epsize[i]) );
-    double fact1 =(exp(-(2.0*rho*tk[i])))/(addProtect2(1.0, - exp(-(tk[i+1]-tk[i])/epsize[i]) ));
+    double fact1 =(exp(-(2.0*rho*tk[i])))/((1.0 - exp(-(tk[i+1]-tk[i])/epsize[i]) ));
 
     double part1 = 2.0/(1-2.0*epsize[i]*rho)/(1+2.0*epsize[i]*rho);
     //    fprintf(stderr,"part1:%f epszie:%f\n",part1,epsize[i]);

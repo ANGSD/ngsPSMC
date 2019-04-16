@@ -63,9 +63,6 @@ P<-exp(read.table("P.txt"));colnames(P)<-paste0("P",0:7);
 PP<-exp(read.table("PP.txt"));colnames(PP)<-paste0("PP",0:7);
 ##emis[,1:10]
 ##fw[,1:10]
-
-
-
  */
 
 double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **PP,int tk_l,double &esum){
@@ -83,7 +80,9 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
   
   //i follows PP index.
   for(int i=1;i<8;i++){
+    //  fprintf(stderr,"PP[]:%f pix:%f\n",PP[i][k],pix);exit(0);
     expec[i-1] = exp(lprod(PP[i][k],-pix));
+    //fprintf(stderr,"k:%d expec[%d]:%f\n",k,i,expec[i-1]);
     npfac[i-1] = nP[i][k];
     if(i!=2&&i!=5)
       esum +=expec[i-1];
@@ -97,18 +96,19 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
   
   double ret = 0;
   for(int i=0;i<7;i++) 
-    if(i==6)
+    //   if(i==6)
       ret += qi[i];
 
   return ret;
 }
+
 /*
   tk: intervals, fixed
   tk_l: length of tk
   P: matrix where results will be plugged in
   epsize: the effective populationsize (lambda)
   rho: rho, or theta to rho value.
- */
+*/
 
 void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *epsize,double rho){
   ComputeP1(tk,tk_l,P[1],epsize,rho);
@@ -132,12 +132,30 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
   }
 
 }
+
 //linear
-double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **PP){
+double qFunction_inner(int tk_l,double pix,int numWind,double **nP,double **PP){
   assert(0!=1);
   //  ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
   double Q = 0;
   double esum =0;
+#if 0
+#if 0
+  for(int i=0;i<tk_l;i++){
+    fprintf(stderr,"PP:"); // 
+    for(int j=0;j<8;j++)
+      fprintf(stderr," %f",PP[j][i]);
+    fprintf(stderr,"\n");
+  }
+#endif
+  for(int i=0;i<tk_l;i++){
+    fprintf(stderr,"nPP:");// Pi
+    for(int j=0;j<8;j++)
+      fprintf(stderr," %f",exp(nP[j][i]));
+    fprintf(stderr,"\n");
+  }
+  //  exit(0);
+#endif
   for (unsigned i = 0; i < tk_l; i++){
     double tmpQ = qkFunction(i, pix,numWind,nP,PP,tk_l,esum);
     Q += tmpQ;
@@ -148,8 +166,9 @@ double qFunction_inner(double *tk,int tk_l,const double *epsize,double rho,doubl
   
 }
 
+
 //quadratic
-double qFunction_inner2(double *tk,int tk_l,const double *epsize,double rho,double pix,int numWind,double **nP,double **baumwelch,double **trans){
+double qFunction_inner2(int tk_l,double **nP,double **baumwelch,double **trans){
   
   double newstationary[tk_l];
   calculate_stationary(tk_l,newstationary,nP);
@@ -196,7 +215,7 @@ void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double r
     //we now loop over windows.
     //v=0 is above and is the initial distribution, we therefore plug in at v+1
     for(int v=0;v<windows.size();v++){
-      ComputeRs(v,fw);//<-prepare R1,R2
+      ComputeRs(v,fw,0);//<-prepare R1,R2
 
       fw[0][v+1] = addProtect3(lprod(fw[0][v],P[1][0]) , lprod(R1[0],P[3][0]) , lprod(fw[0][v],P[4][0]))+emis[0][v+1] ;
       for (unsigned i = 1; i < tk_l; i++)
@@ -220,7 +239,7 @@ void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double r
 
     //we plug in values at v-1, therefore we break at v==1
     for(int v=windows.size();v>0;v--){
-      ComputeRs(v,bw);//<-prepare R1,R2
+      ComputeRs(v,bw,1);//<-prepare R1,R2
 
       bw[0][v-1] = addProtect3(lprod(bw[0][v],P[1][0]) , lprod( R1[0],P[3][0]) , lprod(bw[0][v],P[4][0]))+emis[0][v-1];
       bw[0][v] -= lprod(stationary[0],emis[0][v]);
@@ -277,7 +296,7 @@ void fastPSMC::allocate(int tk_l_arg){
   for(int i=0;i<tk_l;i++)
     PP[0][i] = -666;
   workspace = new double[windows.size()];
-  if(DOTRANS&&index==0){
+  if(index==0){
     //    fprintf(stderr,"allocating\n");
     trans = new double *[tk_l];
     for(int i=0;i<tk_l;i++){
@@ -453,8 +472,9 @@ void fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,doub
   assert(trans);
   assert(index==0);
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
+
   calculate_stationary(tk_l,stationary,P);
-  if(DOTRANS){
+  if(1||doQuadratic){
     for(int i=0;i<tk_l;i++)
       for(int j=0;j<tk_l;j++){
 	//	fprintf(stderr,"trans:%p\n",trans);
@@ -467,16 +487,52 @@ void fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,doub
 
 double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho){
   //prepare probs
-
-  calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize);
+  if(has_calc_emissions==0){
+    calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize);
+    has_calc_emissions=1;
+  }
   // print_emission("emis.txt");
   calculate_FW_BW_Probs(tk,tk_l,epsize,rho);
+  
 
-
-  if(doQuadratic==0)
+  //if(doQuadratic==0)
+  //
     ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis,workspace);
-  else
+    //else
     ComputeBaumWelch(windows.size(),tk_l,fw,bw,emis,trans,baumwelch,pix);
+
+#if 0
+  for(int i=0;i<tk_l;i++){
+    fprintf(stderr,"baum[%d,] ",i);
+    for(int j=0;j<tk_l;j++)
+      fprintf(stderr,",%f ",baumwelch[i][j]);
+    fprintf(stderr,"\n");
+  }
+#endif
+
+#if 0
+  for(int i=0;i<tk_l;i++){
+    fprintf(stderr,"trans[%d,] ",i);
+    for(int j=0;j<tk_l;j++)
+      fprintf(stderr,",%f:%f ",trans[i][j],exp(trans[i][j]));
+    fprintf(stderr,"\n");
+  }
+#endif
+
+#if 0
+  double E5 = baumwelch[2][2]/exp(trans[2][2])*exp(P[7][0])*exp(P[5][1])*exp(P[2][2]) + baumwelch[0][2] + baumwelch[1][2]/exp(trans[1][2])*exp(P[7][0])*exp(P[5][1])*exp(P[2][2]);
+  double E6 = baumwelch[1][2]/exp(trans[1][2])*exp(P[6][1])*exp(P[2][2]);
+  double E7 = baumwelch[2][2]/exp(trans[2][2])*exp(P[7][1])*exp(P[2][2]);
+  fprintf(stderr,"E5: %f\n",E5);
+  fprintf(stderr,"E6: %f\n",E6);
+  fprintf(stderr,"E7: %f\n",E7);
+  for(int at =0;at<3;at++){
+    double E1=baumwelch[at][at]/exp(trans[at][at])*exp(P[1][at]);
+    fprintf(stderr,"E1[%d]: %f\n",at,E1);  
+  }
+  
+#endif
+ 
 
   /*for (int i = 0; i < tk_l; i++)
     fprintf(stderr, "st[%d] = %f\t", i, stationary[i]);
@@ -501,9 +557,9 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
 
   //no need to recompute P. But we fix this later;
   if(doQuadratic==0)
-    qval=qFunction_inner(tk,tk_l,epsize,rho,pix,windows.size(),P,PP);
+    qval=qFunction_inner(tk_l,pix,windows.size(),P,PP);
   else
-    qval=qFunction_inner2(tk,tk_l,epsize,rho,pix,windows.size(),P,baumwelch,trans);
+    qval=qFunction_inner2(tk_l,P,baumwelch,trans);
   return qval;
  }
 
@@ -534,7 +590,7 @@ fastPSMC::~fastPSMC(){
   delete [] PP;
   if(index==0)
   delete [] nP;
-  if(DOTRANS&&index==0){
+  if(index==0){
     for(int i=0;i<tk_l;i++)
       delete [] trans[i];
     delete [] trans;

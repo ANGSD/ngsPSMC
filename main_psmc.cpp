@@ -202,6 +202,9 @@ args * getArgs(int argc,char **argv,int dontprint){
   p->doLinear =0;
   p->psmc_infile=NULL;
   p->init =p->init_theta=p->init_rho= p->init_max_t=-1;
+  p->init_max_t = 23.861429;
+  p->init_rho = 0.005367;
+  p->init_theta = 0.000235;
   p->msstr = NULL;
   
   if(argc==0)

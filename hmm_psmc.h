@@ -6,8 +6,6 @@ double lprod(double a,double b,double c,double d);
 
 void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *epsize,double rho);
 
-#define DOTRANS 1
-
 #define PSMC_T_INF 1000.0
 struct wins{
   int from;//inclusive
@@ -48,6 +46,7 @@ public:
     pix = -666;
     max_t = 15;
     index=tot_index++;
+    has_calc_emissions = 0;
   }
   ~fastPSMC();
   void setWindows(int *pos,int last,int block);
@@ -73,7 +72,8 @@ public:
     exit(0);
   }
 private:
-  void ComputeR2(int v,double **mat){
+  int has_calc_emissions;
+  void ComputeR2(int v,double **mat,int direction){
     double addProtect3(double,double,double);
     double tmp = log(0);
     for (unsigned i = 0; i < tk_l ; i++){
@@ -82,25 +82,28 @@ private:
       double p3 = lprod(R1[i],P[7][i]);
       R2[i] = addProtect3(p1,p2,p3);
       if(std::isnan(R2[i])){
-	fprintf(stderr,"[hmm_psmc.h:computeR2] R2[%d] evaluates to NaN p5:%f tmp:%f p1:%f p2:%f p3:%f\n",i,P[5][i],tmp,p1,p2,p3);
+	//	fprintf(stderr,"[hmm_psmc.h:computeR2] R2[%d] evaluates to NaN p5:%f tmp:%f p1:%f p2:%f p3:%f\n",i,P[5][i],tmp,p1,p2,p3);
 	exit(0);
       }
       tmp = R2[i];
     }
+    if(0&&direction==0)
+      fprintf(stderr,"ComputeRs_R2[%d]:\t%f\t%f\t%f\n",v,R2[0],R2[1],R2[2]);
   }
   
-  void ComputeR1(int v,double **mat){
+  void ComputeR1(int v,double **mat,int direction){
     double addProtect2(double,double);
     R1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--){
       R1[i] = addProtect2(R1[i+1] , mat[i+1][v]);
     }
-    
+    if(0&&direction==0)//0=from start to end, 1=from end to start
+      fprintf(stderr,"ComputeRs_R1[%d]:\t%f\t%f\t%f\n",v,R1[0],R1[1],R1[2]);
   }
   
-  void ComputeRs(int v,double **mat){
-    ComputeR1(v,mat);
-    ComputeR2(v,mat);
+  void ComputeRs(int v,double **mat,int direction){
+    ComputeR1(v,mat,direction);
+    ComputeR2(v,mat,direction);
   }
 
 };
