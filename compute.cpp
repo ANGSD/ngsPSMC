@@ -177,13 +177,13 @@ void ComputeP55(unsigned numWind,int tk_l,double **P,double *PP5,double **fw,dou
     R1[tk_l - 1] = log(0);
     for (int i = tk_l - 2; i >= 0 ; i--)
       R1[i] = addProtect2(R1[i+1] , fw[i+1][l]);
-    fprintf(stderr,"ComputeP55_R1[%d]:\t%f\t%f\t%f\n",l,R1[0],R1[1],R1[2]);	
+    //    fprintf(stderr,"ComputeP55_R1[%d]:\t%f\t%f\t%f\n",l,R1[0],R1[1],R1[2]);	
     double tmp = log(0);
     for (unsigned i = 0; i < tk_l ; i++){
       R2[i] = addProtect3(lprod(tmp,P[5][i]),lprod(fw[i][l],P[6][i]),lprod(R1[i],P[7][i]));
       tmp = R2[i];
     }
-    fprintf(stderr,"ComputeP55_R2[%d]:\t%f\t%f\t%f\n",l,R2[0],R2[1],R2[2]);
+    //fprintf(stderr,"ComputeP55_R2[%d]:\t%f\t%f\t%f\n",l,R2[0],R2[1],R2[2]);
     ComputeBR1(tk_l,bR1,P,stationary,bw,emis,l);
     for (unsigned i = 1; i < tk_l - 1; i++)
       PP5[i] = addProtect2(PP5[i],lprod(R2[i-1],P[5][i],bR1[i]));//<- CHECK ptgi

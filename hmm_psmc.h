@@ -82,12 +82,12 @@ private:
       double p3 = lprod(R1[i],P[7][i]);
       R2[i] = addProtect3(p1,p2,p3);
       if(std::isnan(R2[i])){
-	fprintf(stderr,"[hmm_psmc.h:computeR2] R2[%d] evaluates to NaN p5:%f tmp:%f p1:%f p2:%f p3:%f\n",i,P[5][i],tmp,p1,p2,p3);
+	//	fprintf(stderr,"[hmm_psmc.h:computeR2] R2[%d] evaluates to NaN p5:%f tmp:%f p1:%f p2:%f p3:%f\n",i,P[5][i],tmp,p1,p2,p3);
 	exit(0);
       }
       tmp = R2[i];
     }
-    if(direction==0)
+    if(0&&direction==0)
       fprintf(stderr,"ComputeRs_R2[%d]:\t%f\t%f\t%f\n",v,R2[0],R2[1],R2[2]);
   }
   
@@ -97,7 +97,7 @@ private:
     for (int i = tk_l - 2; i >= 0 ; i--){
       R1[i] = addProtect2(R1[i+1] , mat[i+1][v]);
     }
-    if(direction==0)//0=from start to end, 1=from end to start
+    if(0&&direction==0)//0=from start to end, 1=from end to start
       fprintf(stderr,"ComputeRs_R1[%d]:\t%f\t%f\t%f\n",v,R1[0],R1[1],R1[2]);
   }
   

@@ -82,7 +82,7 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
   for(int i=1;i<8;i++){
     //  fprintf(stderr,"PP[]:%f pix:%f\n",PP[i][k],pix);exit(0);
     expec[i-1] = exp(lprod(PP[i][k],-pix));
-    fprintf(stderr,"k:%d expec[%d]:%f\n",k,i,expec[i-1]);
+    //fprintf(stderr,"k:%d expec[%d]:%f\n",k,i,expec[i-1]);
     npfac[i-1] = nP[i][k];
     if(i!=2&&i!=5)
       esum +=expec[i-1];
@@ -139,7 +139,7 @@ double qFunction_inner(int tk_l,double pix,int numWind,double **nP,double **PP){
   //  ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
   double Q = 0;
   double esum =0;
-#if 1
+#if 0
 #if 0
   for(int i=0;i<tk_l;i++){
     fprintf(stderr,"PP:"); // 
@@ -501,7 +501,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
     //else
     ComputeBaumWelch(windows.size(),tk_l,fw,bw,emis,trans,baumwelch,pix);
 
-#if 1
+#if 0
   for(int i=0;i<tk_l;i++){
     fprintf(stderr,"baum[%d,] ",i);
     for(int j=0;j<tk_l;j++)
@@ -510,7 +510,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   }
 #endif
 
-#if 1
+#if 0
   for(int i=0;i<tk_l;i++){
     fprintf(stderr,"trans[%d,] ",i);
     for(int j=0;j<tk_l;j++)
@@ -519,8 +519,8 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   }
 #endif
 
-#if 1
-  double E5 = baumwelch[2][2]*exp(trans[2][2])*exp(P[7][0])*exp(P[5][1])*exp(P[2][2]) + baumwelch[0][2] + baumwelch[1][2]/exp(trans[1][2])*exp(P[7][0])*exp(P[5][1])*exp(P[2][2]);
+#if 0
+  double E5 = baumwelch[2][2]/exp(trans[2][2])*exp(P[7][0])*exp(P[5][1])*exp(P[2][2]) + baumwelch[0][2] + baumwelch[1][2]/exp(trans[1][2])*exp(P[7][0])*exp(P[5][1])*exp(P[2][2]);
   double E6 = baumwelch[1][2]/exp(trans[1][2])*exp(P[6][1])*exp(P[2][2]);
   double E7 = baumwelch[2][2]/exp(trans[2][2])*exp(P[7][1])*exp(P[2][2]);
   fprintf(stderr,"E5: %f\n",E5);
