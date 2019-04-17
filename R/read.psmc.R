@@ -155,16 +155,38 @@ if(FALSE){
 
 }
 
-
-plot_chain<-function(x,...){
+plot_chain<-function(x,ylim,type,...){
     colfunc<-colorRampPalette(c("black","red"))
     colo=colfunc(length(x))
-    plot(x[[1]]$RS[,2],x[[1]]$RS[,3],type='l',ylim=c(0,max(sapply(x,function(x) x$RS[,3]))),col=colo[1],lwd=6,...)
+    if(missing(ylim))
+        ylim=c(0,max(sapply(x,function(x) x$RS[,3])))
+    if(missing(type))
+        type='s'
+    plot(x[[1]]$RS[,2],x[[1]]$RS[,3],type=type,ylim=ylim,col=colo[1],lwd=6,...)
     for (i in 2:length(x)){
         d<-x[[i]]
-        lines(d$RS[,2],d$RS[,3],col=colo[i],lwd=2)
+        lines(d$RS[,2],d$RS[,3],col=colo[i],lwd=2,type=type)
     }
     legend("topright",paste0(c("init.llh","optim.llh"),"=",c(x[[1]]$LK,tail(x,1)[[1]]$LK)),fill=1:2)
+}
+
+plot.psmc<-function(x,ylim,type,col,lwd,main,add=FALSE,...){
+    if(missing(ylim))
+        ylim=c(0,max(sapply(x,function(x) x$RS[,3])))
+    if(missing(type))
+        type='s'
+    if(missing(col))
+        col='black'
+    if(missing(lwd))
+        lwd=2
+    if(missing(main))
+        main=NULL
+    x <- tail(x,1)
+    if(add==FALSE)
+        plot(x[[1]]$RS[,2],x[[1]]$RS[,3],type=type,ylim=ylim,col=col,lwd=lwd,main=main,...)
+    else
+        lines(x[[1]]$RS[,2],x[[1]]$RS[,3],type=type,ylim=ylim,col=col,lwd=lwd,...)
+   # legend("topright",paste0(c("optim.llh"),"=",c(x[[1]]$LK),fill=1))
 }
 
 plot_ngs <-function(x,...){
@@ -210,7 +232,7 @@ if(FALSE){
     plot_ngs(read.psmc("test28/ngs.lh3.w100.fa.gz.stdout"),main="Fasta w100 for one optim")	
 #gl
   plot_ngs(read.psmc("test28/ngs.tsk.w1.gl.gz.stdout"),main="gl w1 for one optim(based on psmcfasta)")	
-  plot_ngs(read.psmc("test28/ngs.tsk.w100.gl.gz.stdout"),main="gl w100 for one optim(based on psmcfasta)")	
+  plot_ngs(read.psmc("test28/ngs.tsk.w100o.gl.gz.stdout"),main="gl w100 for one optim(based on psmcfasta)")	
   dev.off()
 }
 
@@ -218,5 +240,11 @@ if(FALSE){
 
 if(FALSE){
 plot_chain(read.psmc("ngs.run2.stdout"))
+
+}
+
+
+if(FALSE){
+    source("read.psmc.R")
 
 }
