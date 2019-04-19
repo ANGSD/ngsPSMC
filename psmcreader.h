@@ -18,8 +18,8 @@ typedef double mygltype;
 typedef struct{
   size_t nSites;
   myMap mm;
-  BGZF *bgzf_pos;
-  BGZF *bgzf_gls;
+  char *bgzf_pos;
+  char *bgzf_gls;
   int version;//1 is gl, otherwise assuming fasta
   int *pos;//contains the positions
   size_t pos_l;

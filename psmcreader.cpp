@@ -69,6 +69,7 @@ int psmcversion(const char *fname){
 
 
 
+
 perpsmc * perpsmc_init(char *fname,int nChr){
   assert(fname);
   perpsmc *ret = new perpsmc ;
@@ -164,26 +165,31 @@ perpsmc * perpsmc_init(char *fname,int nChr){
   char *tmp2 = (char*)calloc(strlen(fname)+100,1);//that should do it
   snprintf(tmp2,strlen(fname)+100,"%sgz",tmp);
   fprintf(stderr,"\t-> Assuming .psmc.gz file: \'%s\'\n",tmp2);
-  ret->bgzf_gls = bgzf_open(tmp2,"r");
-  if(ret->bgzf_gls)
-    my_bgzf_seek(ret->bgzf_gls,8,SEEK_SET);
-  if(ret->bgzf_gls && ret->version!=psmcversion(tmp2)){
+  ret->bgzf_gls = strdup(tmp2);
+  BGZF *tmpfp = NULL;
+  tmpfp = bgzf_open(ret->bgzf_gls,"r");
+  if(tmpfp)
+    my_bgzf_seek(tmpfp,8,SEEK_SET);
+  if(tmpfp && ret->version!=psmcversion(tmp2)){
     fprintf(stderr,"\t-> Problem with mismatch of version of %s vs %s %d vs %d\n",fname,tmp2,ret->version,psmcversion(tmp2));
     exit(0);
   }
-
+  bgzf_close(tmpfp);
+  tmpfp=NULL;
+  
   snprintf(tmp2,strlen(fname)+100,"%spos.gz",tmp);
   fprintf(stderr,"\t-> Assuming .psmc.pos.gz: \'%s\'\n",tmp2);
-  ret->bgzf_pos = bgzf_open(tmp2,"r");
-  if(ret->pos)
-    my_bgzf_seek(ret->bgzf_pos,8,SEEK_SET);
-  if(ret->bgzf_pos&& ret->version!=psmcversion(tmp2)){
+  ret->bgzf_pos = strdup(tmp2,"r");
+  tmpfp = bgzf_open(ret->bgzf_pos,"r");
+  if(tmpfp)
+    my_bgzf_seek(tmpfp,8,SEEK_SET);
+  if(tmpfp&& ret->version!=psmcversion(tmp2)){
     fprintf(stderr,"Problem with mismatch of version of %s vs %s\n",fname,tmp2);
     exit(0);
   }
-  //assert(ret->pos!=NULL&&ret->saf!=NULL);
+  bgzf_close(tmpfp);
+
   free(tmp);free(tmp2);
-  
  return ret;
  }
 

@@ -17,11 +17,15 @@ struct wins{
  */
 class fastPSMC {
 public:
-  //shared between all threads
+  //shared between all contigs chroms
   static double **trans;// tk_l x tk_l
   static double **P;//8xtk_l
   static double *stationary;//tk_l
   static double **nP;//8xtk_l
+  static perpsmc *readerstructure;
+  //not shared between all threads
+
+  char *cnam;//<-chromosomename/contig/scaffold
   int index;
   static int tot_index;
   double pix;
@@ -47,6 +51,7 @@ public:
     max_t = 15;
     index=tot_index++;
     has_calc_emissions = 0;
+    readerstructure = NULL;
   }
   ~fastPSMC();
   void setWindows(int *pos,int last,int block);

@@ -2,7 +2,7 @@
 #include <vector>
 #include <cassert>
 #include <cmath>
-#include <htslib/kstring.h> //<- included directly in this source due to some string errors in latest htslib 17sep2019
+#include <htslib/kstring.h>
 #include "psmcreader.h"
 #include "main_psmc.h"
 #include "hmm_psmc.h"
@@ -13,6 +13,7 @@ double **fastPSMC::trans=NULL;
 double **fastPSMC::P=NULL;
 double *fastPSMC::stationary=NULL;
 double **fastPSMC::nP = NULL;
+perpsmc *fastPSMC::readerstructure = NULL;
 //#define __SHOW_TIME__
 
 extern int doQuadratic;
@@ -484,9 +485,116 @@ void fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,doub
 
 }
 
+BGZF *bgzf_open_seek(char *fname,int64_t offs){
+  BGZF *ret = NULL;
+  ret = bgzf_open(fname,"r");
+  my_bgzf_seek(ret,offs,SEEK_SET);
+  return ret;
+}
+
+typedef struct{
+  double **
+
+
+}rawdata;
+
+
+//this functions returns the emissions
+double **readstuff(perpsmc *pp,char *chr,int blockSize,int start,int stop){
+  double **emis = NULL;
+     assert(chr!=NULL);
+   assert(pp->gls==NULL);
+   myMap::iterator it = pp->mm.find(chr);
+   if(it==pp->mm.end()){
+     fprintf(stderr,"\t-> [%s] Problem finding chr: \'%s\'\n",__FUNCTION__,chr);
+     exit(0);
+   }
+   //   fprintf(stderr,"%s->%lu,%lu,%lu\n",it->first,it->second.nSites,it->second.saf,it->second.pos);
+   if(pp->version==1){
+     my_bgzf_seek(pp->bgzf_gls,it->second.saf,SEEK_SET);
+     my_bgzf_seek(pp->bgzf_pos,it->second.pos,SEEK_SET);
+   }
+   //fprintf(stderr,"pp->gls:%p\n",pp->gls);
+   if(pp->pos_l<it->second.nSites){
+     delete [] pp->pos;
+     pp->pos = new int[it->second.nSites];
+     pp->pos_l = it->second.nSites;
+   }
+   pp->gls = new mygltype[it->second.nSites];
+   
+   if(pp->tmpgls_l<2*it->second.nSites){
+     //     fprintf(stderr,"reallocing all the time\n");
+     delete [] pp->tmpgls;
+     pp->tmpgls = new double[2*it->second.nSites];
+     pp->tmpgls_l = 2*it->second.nSites;
+   }
+   
+   if(pp->version==1) {
+     my_bgzf_read(pp->bgzf_pos,pp->pos,sizeof(int)*it->second.nSites);
+     my_bgzf_read(pp->bgzf_gls,pp->tmpgls,2*sizeof(double)*it->second.nSites);
+     for(int i=0;i<it->second.nSites;i++){
+       pp->gls[i] = log(0);
+       if(pp->tmpgls[2*i]!=pp->tmpgls[2*i+1]){
+	 double mmax = std::max(pp->tmpgls[2*i],pp->tmpgls[2*i+1]);
+	 double val = std::min(pp->tmpgls[2*i],pp->tmpgls[2*i+1]) - mmax;
+	 if(sizeof(mygltype)>1){
+	   pp->gls[i] = val;
+	   if(pp->tmpgls[2*i]<pp->tmpgls[2*i+1])
+	     pp->gls[i] = -pp->gls[i];
+	 }else{
+	   //   fprintf(stderr,"valf:%f vadl: %d\n",val,(int)val);
+	   val /= log(10)/-100.0;
+	   //   fprintf(stdout,"VALp\t%f\n",val);
+	   pp->gls[i] = val;
+	   if(pp->tmpgls[2*i]<pp->tmpgls[2*i+1])
+	     pp->gls[i] = -pp->gls[i];
+	 }
+       }
+     }
+     
+     pp->first=0;
+     if(start!=-1)
+       while(pp->first<it->second.nSites&&pp->pos[pp->first]<start)
+	 pp->first++;
+     
+     pp->last = it->second.nSites;
+     if(stop!=-1&&stop<=pp->pos[pp->last-1]){
+       pp->last=pp->first;
+       while(pp->pos[pp->last]<stop) 
+	 pp->last++;
+     }
+   }else{
+     int asdf = it->second.nSites;
+     char *tmp = faidx_fetch_seq(pp->pf->fai, it->first, 0, 0x7fffffff, &asdf);
+     for(int i=0;i<it->second.nSites;i++){
+       pp->pos[i] = i*blockSize;
+       //important relates to problems with divide by zero in compuation of  backward probablity
+       //K=het
+       if(tmp[i]=='K')
+	 pp->gls[i] = 500.0;// 0;//het 
+       else
+	 pp->gls[i] = -500.0;//;//hom
+
+       //ok let me explain. negative means homozygotic and postive means heteroeo. The otherone is always 0.
+
+       //       fprintf(stderr,"%c\n",tmp[i]);
+     }
+     free(tmp);
+    
+     pp->first=0;
+     pp->last=it->second.nSites;
+   }
+
+   return emis;
+}
 
 double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho){
   //prepare probs
+  if(emis==NULL){
+    
+
+  }
+
   if(has_calc_emissions==0){
     calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize);
     has_calc_emissions=1;
@@ -495,10 +603,9 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   calculate_FW_BW_Probs(tk,tk_l,epsize,rho);
   
 
-  //if(doQuadratic==0)
-  //
+  if(doQuadratic==0)
     ComputePii(windows.size(),tk_l,P,PP,fw,bw,stationary,emis,workspace);
-    //else
+  else
     ComputeBaumWelch(windows.size(),tk_l,fw,bw,emis,trans,baumwelch,pix);
 
 #if 0

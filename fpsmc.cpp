@@ -536,6 +536,7 @@ int psmc_wrapper(args *pars,int blocksize) {
       it2 = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);
     //    fprintf(stderr,"\t-> Parsing chr:%s \n",it2->first);
     fastPSMC *obj=objs[nChr++]=new fastPSMC;
+    obj->cnam=strdup(pars->chooseChr!=NULL?pars->chooseChr:it->first);
     obj->setWindows(pars->perc->pos,pars->perc->last,pars->blocksize);
     obj->gls=pars->perc->gls;
     pars->perc->gls=NULL;
