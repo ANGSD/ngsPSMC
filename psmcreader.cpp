@@ -204,34 +204,31 @@ rawdata readstuff(perpsmc *pp,char *chr,int blockSize,int start,int stop){
 
   ret.pos = new int[it->second.nSites];
   ret.len = it->second.nSites; 
-  ret.gls = new double[2*it->second.nSites];
+  ret.gls = new double[it->second.nSites];
+  double *tmpgls = new double[2*it->second.nSites];
 
   if(pp->version==1) { 
     BGZF* bgzf_gls =bgzf_open_seek(pp->bgzf_gls,it->second.saf);
     BGZF* bgzf_pos =bgzf_open_seek(pp->bgzf_pos,it->second.pos);
 
     my_bgzf_read(bgzf_pos,ret.pos,sizeof(int)*it->second.nSites);
-    my_bgzf_read(bgzf_gls,ret.gls,2*sizeof(double)*it->second.nSites);
+    my_bgzf_read(bgzf_gls,tmpgls,2*sizeof(double)*it->second.nSites);
+
     for(int i=0;i<it->second.nSites;i++){
       ret.gls[i] = log(0);
-      if(ret.gls[2*i]!=ret.gls[2*i+1]){
-	double mmax = std::max(ret.gls[2*i],ret.gls[2*i+1]);
-	double val = std::min(ret.gls[2*i],ret.gls[2*i+1]) - mmax;
-	if(sizeof(mygltype)>1){
-	  ret.gls[i] = val;
-	  if(ret.gls[2*i]<ret.gls[2*i+1])
-	    ret.gls[i] = -ret.gls[i];
-	}else{
-	  assert(0==1);
-	  //   fprintf(stderr,"valf:%f vadl: %d\n",val,(int)val);
-	  val /= log(10)/-100.0;
-	  //   fprintf(stdout,"VALp\t%f\n",val);
-	  ret.gls[i] = val;
-	  if(ret.gls[2*i]<ret.gls[2*i+1])
-	    ret.gls[i] = -ret.gls[i];
-	}
+      if(tmpgls[2*i]!=tmpgls[2*i+1]){
+	double mmax = std::max(tmpgls[2*i],tmpgls[2*i+1]);
+	double val = std::min(tmpgls[2*i],tmpgls[2*i+1]) - mmax;
+
+	ret.gls[i] = val;
+	if(tmpgls[2*i]<tmpgls[2*i+1])
+	  ret.gls[i] = -ret.gls[i];
+
+	//code here should be implemented for using phredstyle gls //if(sizeof(mygltype))
+	
       }
     }
+    delete [] tmpgls;
     bgzf_close(bgzf_gls);
     bgzf_close(bgzf_pos);
   }else{

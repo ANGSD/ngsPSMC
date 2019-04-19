@@ -94,13 +94,14 @@ int print_main(int argc,char **argv){
     
 
     rawdata rd = readstuff(pars->perc,pars->chooseChr!=NULL?pars->chooseChr:it->first,pars->blocksize,-1,-1);
-
+    fprintf(stderr,"\t-> gls %f %f\n",rd.gls[2],rd.gls[3]);
     double tmp[2];
     
     for(size_t s=rd.firstp;s<rd.lastp;s++){
       toGl(rd.gls[s],tmp);
       fprintf(stdout,"%s\t%d\t%e\t%e\n",it->first,rd.pos[s]+1,tmp[0],tmp[1]);
     }
+    delete [] rd.pos; delete [] rd.gls;
     if(pars->chooseChr!=NULL)
       break;
   }
