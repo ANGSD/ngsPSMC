@@ -471,10 +471,8 @@ void fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,doub
   }
 }
 
-double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho){
-  double **fw=NULL;
-  double **bw=NULL;
-
+double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho,fw_bw *d){
+  
   //prepare probs
   if(emis==NULL){
     emis = new double *[tk_l];
@@ -489,6 +487,20 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
     delete [] gls;
   }
 
+  double **fw=NULL;
+  double **bw=NULL;
+  if(d->len<windows.size()+1){
+    for(int i=0;i<tk_l;i++){
+      delete [] d->fw[i];
+      delete [] d->bw[i];
+      d->fw[i] = new double[windows.size()+1];
+      d->bw[i] = new double[windows.size()+1];
+      d->len = windows.size()+1;
+    }
+  }
+  fw=d->fw;
+  bw=d->bw;
+  
   calculate_FW_BW_Probs(tk,tk_l,epsize,rho,fw,bw);
   
 

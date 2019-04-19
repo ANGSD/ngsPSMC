@@ -11,7 +11,7 @@
 #include "compute.h"
 #include "fpsmc.h"
 #include "splineEPsize.h"
-//#include 
+
 extern int nThreads;
 
 int nChr = 0;
@@ -21,6 +21,9 @@ int doQuadratic = 1; //<-only used in qFunction_wrapper
 int DOSPLINE=0;
 
 splineEPSize *spl=NULL;
+
+
+fw_bw *fws_bws = NULL;
 
 typedef struct{
   double *tk;
@@ -44,6 +47,8 @@ typedef struct{
   double **trans;
   double llh;
   double *parsIn;
+  double **fw;
+  double **bw;
 }oPars;
 
 int remap_l;
@@ -297,7 +302,7 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
 
 void *run_a_hmm(void *ptr){
   size_t at =(size_t) ptr;
-  objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
+  objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho,&fws_bws[at % nThreads]);
   pthread_exit(NULL);
 }
 
@@ -315,7 +320,7 @@ void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double theta,doub
   //  double qval =0;
   if(nThreads==1)
     for(int i=0;i<nChr;i++){
-      objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
+      objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho,&fws_bws[i % nThreads]);
   }else {
     int at=0;
     while(at<nChr){
@@ -544,6 +549,19 @@ int psmc_wrapper(args *pars,int blocksize) {
     if(pars->chooseChr!=NULL)
       break;
   }
+  //stupid hook for allocating //fw bw
+  fws_bws = new fw_bw[nThreads];
+  for(int i=0;i<nThreads;i++){
+    fws_bws[i].fw = new double*[tk_l];
+    fws_bws[i].bw = new double*[tk_l];
+    for(int j=0;j<tk_l;j++){
+      fws_bws[i].fw[j] = new double[objs[i]->windows.size()+1];
+      fws_bws[i].bw[j] = new double[objs[i]->windows.size()+1];
+    }
+    fws_bws[i].len = objs[i]->windows.size()+1;
+  }
+    
+  
   stoptimer(datareader_timer);
   fprintf(stdout,"MM\tfilereading took: (wall(min),cpu(min)):(%f,%f)\n",datareader_timer.tids[1],datareader_timer.tids[0]);
   main_analysis(tk,tk_l,epsize,theta,rho,pattern,ndim,pars->nIter,max_t);
