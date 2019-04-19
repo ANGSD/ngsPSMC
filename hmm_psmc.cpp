@@ -194,7 +194,7 @@ double qFunction_inner2(int tk_l,double **nP,double **baumwelch,double **trans){
   
 }
 
-void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double rho){
+void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double rho,double **fw,double **bw){
     //we first set the initial fwprobs to stationary distribution
   for(int i=0;i<tk_l;i++)
       fw[i][0] = stationary[i];
@@ -255,16 +255,16 @@ void fastPSMC::allocate(int tk_l_arg){
     stationary  = new double[tk_l];
   R1 = new double[tk_l];
   R2 = new double[tk_l];
-  fw = new double *[tk_l];
-  bw = new double *[tk_l];
+  //fw = new double *[tk_l];
+  //bw = new double *[tk_l];
   //pp = new double *[tk_l];
  
   baumwelch = new double *[tk_l+1];
   for(int i=0;i<tk_l;i++){
     
     baumwelch[i] = new double[tk_l];
-    fw[i] = new double[numWindows+1];
-    bw[i] = new double[numWindows+1];
+    //fw[i] = new double[numWindows+1];
+    //bw[i] = new double[numWindows+1];
   }
   baumwelch[tk_l] = new double[tk_l];
   for(int i=0;i<tk_l+1;i++)
@@ -472,6 +472,9 @@ void fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,doub
 }
 
 double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho){
+  double **fw=NULL;
+  double **bw=NULL;
+
   //prepare probs
   if(emis==NULL){
     emis = new double *[tk_l];
@@ -486,7 +489,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
     delete [] gls;
   }
 
-  calculate_FW_BW_Probs(tk,tk_l,epsize,rho);
+  calculate_FW_BW_Probs(tk,tk_l,epsize,rho,fw,bw);
   
 
   if(doQuadratic==0)
@@ -563,8 +566,8 @@ fastPSMC::~fastPSMC(){
   delete [] R2;
   for(int i=0;i<tk_l;i++){
     delete [] emis[i];
-    delete [] fw[i];
-    delete [] bw[i];
+    //    delete [] fw[i];
+    //delete [] bw[i];
     delete [] baumwelch[i];
   }
   delete [] baumwelch[tk_l];
@@ -576,8 +579,8 @@ fastPSMC::~fastPSMC(){
     delete [] nP[i];
   }
   delete [] emis;
-  delete [] fw;
-  delete [] bw;
+  //  delete [] fw;
+  //delete [] bw;
   delete [] baumwelch;
   if(index==0)
     delete [] P;

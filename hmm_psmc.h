@@ -35,8 +35,8 @@ public:
   double **PP;//8xtk_l
   
   double *R1,*R2;//tk_l long
-  double **fw;//tk_l x nWindows+1
-  double **bw;//tk_l x nWindows+1
+  //double **fw;//tk_l x nWindows+1
+  //double **bw;//tk_l x nWindows+1
   double **emis;//tk_l x nWindows+1
   mygltype *gls;//deep copy of the gls for a chr
   std::vector<wins> windows;
@@ -62,7 +62,7 @@ public:
       fprintf(fp,"win[%d]=(%d,%d)\n",w,windows[w].from,windows[w].to);
   }
   void allocate(int tk_l);
-  void calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double rho);
+  void calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double rho,double **fw,double **bw);
   void make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,double rho);
   double make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho);
   void print_emission(const char *fname){
