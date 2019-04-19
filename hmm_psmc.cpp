@@ -52,20 +52,6 @@ void calculate_stationary(int tk_l,double *results,double **P){
   returnvalue is in logspace
  */
 
-/*
-  if something doesnt work check this formula:
-
-  trans<-(exp(read.table("transitions.txt")));
-fw<-t(exp(read.table("fw")))
-bw<-t(exp(read.table("bw")))
-emis<-t(exp(read.table("emis")))
-stat<-exp(scan("stationary"))
-P<-exp(read.table("P.txt"));colnames(P)<-paste0("P",0:7);
-PP<-exp(read.table("PP.txt"));colnames(PP)<-paste0("PP",0:7);
-##emis[,1:10]
-##fw[,1:10]
- */
-
 double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **PP,int tk_l,double &esum){
   //  fprintf(stderr,"k:%u pix:%f numWind:%u tk_l:%d\n",k,pix,numWind,tk_l);
   /*
@@ -499,7 +485,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
     has_calc_emissions=1;
     delete [] gls;
   }
-  // print_emission("emis.txt");
+
   calculate_FW_BW_Probs(tk,tk_l,epsize,rho);
   
 
