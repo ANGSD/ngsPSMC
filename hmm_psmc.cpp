@@ -272,10 +272,10 @@ void fastPSMC::allocate(int tk_l_arg){
   fw = new double *[tk_l];
   bw = new double *[tk_l];
   //pp = new double *[tk_l];
-  emis = new double *[tk_l];
+ 
   baumwelch = new double *[tk_l+1];
   for(int i=0;i<tk_l;i++){
-    emis[i] = new double[numWindows+1];
+    
     baumwelch[i] = new double[tk_l];
     fw[i] = new double[numWindows+1];
     bw[i] = new double[numWindows+1];
@@ -284,15 +284,18 @@ void fastPSMC::allocate(int tk_l_arg){
   for(int i=0;i<tk_l+1;i++)
     for(int j=0;j<tk_l;j++)
       baumwelch[i][j] = -777;
+
   if(index==0)
-  P = new double *[8];
+    P = new double *[8];
   PP= new double *[8];
-  nP = new double*[8];
+  if(index==0)
+    nP = new double*[8];
   for(int i=0;i<8;i++){
     if(index==0)
     P[i] = new double[tk_l];
     PP[i]= new double[tk_l];
-    nP[i]= new double[tk_l];
+    if(index==0)
+      nP[i]= new double[tk_l];
   }
   for(int i=0;i<tk_l;i++)
     PP[0][i] = -666;
@@ -475,26 +478,26 @@ void fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,doub
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
 
   calculate_stationary(tk_l,stationary,P);
-  if(1||doQuadratic){
+  if(doQuadratic){
     for(int i=0;i<tk_l;i++)
-      for(int j=0;j<tk_l;j++){
-	//	fprintf(stderr,"trans:%p\n",trans);
+      for(int j=0;j<tk_l;j++)
 	trans[i][j] = calc_trans(i,j,P);
-      }
   }
-
 }
 
 double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho){
   //prepare probs
   if(emis==NULL){
-    
-
+    emis = new double *[tk_l];
+    for(int i=0;i<tk_l;i++)
+      emis[i] = new double[windows.size()+1];
+    //    exit(0);
   }
 
   if(has_calc_emissions==0){
     calculate_emissions(tk,tk_l,gls,windows,theta,emis,epsize);
     has_calc_emissions=1;
+    delete [] gls;
   }
   // print_emission("emis.txt");
   calculate_FW_BW_Probs(tk,tk_l,epsize,rho);
@@ -568,7 +571,8 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
  }
 
 fastPSMC::~fastPSMC(){
-  delete [] gls;
+  free(cnam);
+  //  delete [] gls;
   delete [] R1;
   delete [] R2;
   for(int i=0;i<tk_l;i++){
@@ -590,10 +594,10 @@ fastPSMC::~fastPSMC(){
   delete [] bw;
   delete [] baumwelch;
   if(index==0)
-  delete [] P;
+    delete [] P;
   delete [] PP;
   if(index==0)
-  delete [] nP;
+    delete [] nP;
   if(index==0){
     for(int i=0;i<tk_l;i++)
       delete [] trans[i];
@@ -601,5 +605,5 @@ fastPSMC::~fastPSMC(){
   }
   delete [] workspace;
   if(index==0)
-  delete [] stationary;
+    delete [] stationary;
 }

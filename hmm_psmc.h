@@ -22,7 +22,7 @@ public:
   static double **P;//8xtk_l
   static double *stationary;//tk_l
   static double **nP;//8xtk_l
-  static perpsmc *readerstructure;
+  static perpsmc *readerstructure;//is not used currently, maybe newer
   //not shared between all threads
 
   char *cnam;//<-chromosomename/contig/scaffold
@@ -52,6 +52,8 @@ public:
     index=tot_index++;
     has_calc_emissions = 0;
     readerstructure = NULL;
+    cnam=NULL;
+    emis = NULL;
   }
   ~fastPSMC();
   void setWindows(int *pos,int last,int block);
