@@ -18,16 +18,10 @@ void destroy(myMap &mm){
 void perpsmc_destroy(perpsmc *pp){
   if(pp->pf)
     perFasta_destroy(pp->pf);
-  bgzf_close(pp->bgzf_gls);
-  bgzf_close(pp->bgzf_pos);
+  free(pp->bgzf_gls);
+  free(pp->bgzf_pos);
   destroy(pp->mm);
   
-  if(pp->pos)
-    delete [] pp->pos;
-
-  if(pp->tmpgls)
-    delete [] pp->tmpgls;
-
   free(pp->fname);
   
   delete pp;
@@ -74,14 +68,9 @@ perpsmc * perpsmc_init(char *fname,int nChr){
   assert(fname);
   perpsmc *ret = new perpsmc ;
   ret->fname = strdup(fname);
-  ret->gls =NULL;
-  ret->pos = NULL;
   ret->bgzf_pos=ret->bgzf_gls=NULL;
-  ret->pos = NULL;
-  ret->pos_l = 0;
   ret->pf = NULL;
-  ret->tmpgls = NULL;
-  ret->tmpgls_l = 0;
+
   size_t clen;
   if(!fexists(fname)){
     fprintf(stderr,"\t-> Problem opening file: \'%s\'\n",fname);
@@ -179,7 +168,7 @@ perpsmc * perpsmc_init(char *fname,int nChr){
   
   snprintf(tmp2,strlen(fname)+100,"%spos.gz",tmp);
   fprintf(stderr,"\t-> Assuming .psmc.pos.gz: \'%s\'\n",tmp2);
-  ret->bgzf_pos = strdup(tmp2,"r");
+  ret->bgzf_pos = strdup(tmp2);
   tmpfp = bgzf_open(ret->bgzf_pos,"r");
   if(tmpfp)
     my_bgzf_seek(tmpfp,8,SEEK_SET);
@@ -191,97 +180,95 @@ perpsmc * perpsmc_init(char *fname,int nChr){
 
   free(tmp);free(tmp2);
  return ret;
- }
+}
 
- //chr start stop is given from commandine
-myMap::iterator iter_init(perpsmc *pp,char *chr,int start,int stop,int blockSize){
-   assert(chr!=NULL);
-   assert(pp->gls==NULL);
-   myMap::iterator it = pp->mm.find(chr);
-   if(it==pp->mm.end()){
-     fprintf(stderr,"\t-> [%s] Problem finding chr: \'%s\'\n",__FUNCTION__,chr);
-     exit(0);
-     return it;
-   }
-   //   fprintf(stderr,"%s->%lu,%lu,%lu\n",it->first,it->second.nSites,it->second.saf,it->second.pos);
-   if(pp->version==1){
-     my_bgzf_seek(pp->bgzf_gls,it->second.saf,SEEK_SET);
-     my_bgzf_seek(pp->bgzf_pos,it->second.pos,SEEK_SET);
-   }
-   //fprintf(stderr,"pp->gls:%p\n",pp->gls);
-   if(pp->pos_l<it->second.nSites){
-     delete [] pp->pos;
-     pp->pos = new int[it->second.nSites];
-     pp->pos_l = it->second.nSites;
-   }
-   pp->gls = new mygltype[it->second.nSites];
-   
-   if(pp->tmpgls_l<2*it->second.nSites){
-     //     fprintf(stderr,"reallocing all the time\n");
-     delete [] pp->tmpgls;
-     pp->tmpgls = new double[2*it->second.nSites];
-     pp->tmpgls_l = 2*it->second.nSites;
-   }
-   
-   if(pp->version==1) {
-     my_bgzf_read(pp->bgzf_pos,pp->pos,sizeof(int)*it->second.nSites);
-     my_bgzf_read(pp->bgzf_gls,pp->tmpgls,2*sizeof(double)*it->second.nSites);
-     for(int i=0;i<it->second.nSites;i++){
-       pp->gls[i] = log(0);
-       if(pp->tmpgls[2*i]!=pp->tmpgls[2*i+1]){
-	 double mmax = std::max(pp->tmpgls[2*i],pp->tmpgls[2*i+1]);
-	 double val = std::min(pp->tmpgls[2*i],pp->tmpgls[2*i+1]) - mmax;
-	 if(sizeof(mygltype)>1){
-	   pp->gls[i] = val;
-	   if(pp->tmpgls[2*i]<pp->tmpgls[2*i+1])
-	     pp->gls[i] = -pp->gls[i];
-	 }else{
-	   //   fprintf(stderr,"valf:%f vadl: %d\n",val,(int)val);
-	   val /= log(10)/-100.0;
-	   //   fprintf(stdout,"VALp\t%f\n",val);
-	   pp->gls[i] = val;
-	   if(pp->tmpgls[2*i]<pp->tmpgls[2*i+1])
-	     pp->gls[i] = -pp->gls[i];
-	 }
-       }
-     }
-     
-     pp->first=0;
-     if(start!=-1)
-       while(pp->first<it->second.nSites&&pp->pos[pp->first]<start)
-	 pp->first++;
-     
-     pp->last = it->second.nSites;
-     if(stop!=-1&&stop<=pp->pos[pp->last-1]){
-       pp->last=pp->first;
-       while(pp->pos[pp->last]<stop) 
-	 pp->last++;
-     }
-   }else{
-     int asdf = it->second.nSites;
-     char *tmp = faidx_fetch_seq(pp->pf->fai, it->first, 0, 0x7fffffff, &asdf);
-     for(int i=0;i<it->second.nSites;i++){
-       pp->pos[i] = i*blockSize;
-       //important relates to problems with divide by zero in compuation of  backward probablity
-       //K=het
-       if(tmp[i]=='K')
-	 pp->gls[i] = 500.0;// 0;//het 
-       else
-	 pp->gls[i] = -500.0;//;//hom
 
-       //ok let me explain. negative means homozygotic and postive means heteroeo. The otherone is always 0.
+BGZF *bgzf_open_seek(char *fname,int64_t offs){
+  BGZF *ret = NULL;
+  ret = bgzf_open(fname,"r");
+  my_bgzf_seek(ret,offs,SEEK_SET);
+  return ret;
+}
 
-       //       fprintf(stderr,"%c\n",tmp[i]);
-     }
-     free(tmp);
+
+//this functions returns the emissions
+rawdata readstuff(perpsmc *pp,char *chr,int blockSize,int start,int stop){
+  rawdata ret;
+  assert(chr!=NULL);
+  
+  myMap::iterator it = pp->mm.find(chr);
+  if(it==pp->mm.end()){
+    fprintf(stderr,"\t-> [%s] Problem finding chr: \'%s\'\n",__FUNCTION__,chr);
+    exit(0);
+  }
+
+  ret.pos = new int[it->second.nSites];
+  ret.len = it->second.nSites; 
+  ret.gls = new double[2*it->second.nSites];
+
+  if(pp->version==1){ 
+    BGZF* bgzf_gls =bgzf_open_seek(pp->bgzf_gls,it->second.saf);
+    BGZF* bgzf_pos =bgzf_open_seek(pp->bgzf_pos,it->second.pos);
+
+    my_bgzf_read(bgzf_pos,ret.pos,sizeof(int)*it->second.nSites);
+    my_bgzf_read(bgzf_gls,ret.gls,2*sizeof(double)*it->second.nSites);
+    for(int i=0;i<it->second.nSites;i++){
+      ret.gls[i] = log(0);
+      if(ret.gls[2*i]!=ret.gls[2*i+1]){
+	double mmax = std::max(pp->tmpgls[2*i],pp->tmpgls[2*i+1]);
+	double val = std::min(pp->tmpgls[2*i],pp->tmpgls[2*i+1]) - mmax;
+	if(sizeof(mygltype)>1){
+	  ret.gls[i] = val;
+	  if(ret.gls[2*i]<ret.gls[2*i+1])
+	    ret.gls[i] = -ret.gls[i];
+	}else{
+	  //   fprintf(stderr,"valf:%f vadl: %d\n",val,(int)val);
+	  val /= log(10)/-100.0;
+	  //   fprintf(stdout,"VALp\t%f\n",val);
+	  ret.gls[i] = val;
+	  if(pp->tmpgls[2*i]<pp->tmpgls[2*i+1])
+	    ret.gls[i] = -ret.gls[i];
+	}
+      }
+    }
     
-     pp->first=0;
-     pp->last=it->second.nSites;
-   }
+  }else{
+    int asdf = it->second.nSites;
+    char *tmp = faidx_fetch_seq(pp->pf->fai, it->first, 0, 0x7fffffff, &asdf);
+    for(int i=0;i<it->second.nSites;i++){
+      ret.pos[i] = i*blockSize;
+      //important relates to problems with divide by zero in compuation of  backward probablity
+      //K=het
+      if(tmp[i]=='K')
+	ret.gls[i] = 500.0;// 0;//het 
+      else
+	ret.gls[i] = -500.0;//;//hom
+      
+      //ok let me explain. negative means homozygotic and postive means heteroeo. The otherone is always 0.
+      
+      //       fprintf(stderr,"%c\n",tmp[i]);
+    }
+    free(tmp);
+    
 
-#ifdef __SHOW_TIME__
-   fprintf(stderr, "\t[TIME] cpu-time used =  %.2f sec for reading data\n", (float)(clock() - t) / CLOCKS_PER_SEC);
-   fprintf(stderr, "\t[Time] walltime used =  %.2f sec for reading data\n", (float)(time(NULL) - t2));  
+  }
+  
+  ret.firstp=0;
+  ret.lastp=it->second.nSites;
+
+#if 1 //the code below should be readded if we ever want to run on specific specified regions
+  ret.firstp=0;
+  if(start!=-1)
+    while(ret.firstp<it->second.nSites&&ret.pos[ret.firstp]<start)
+      ret.firstp++;
+  
+  ret.lastp = it->second.nSites;
+  if(stop!=-1&&stop<=ret.pos[ret.lastp-1]){
+    ret.lastp=ret.firstp;
+    while(ret.pos[ret.lastp]<stop) 
+      ret.lastp++;
+  }
 #endif
-   return it;
- }
+  
+  return ret;
+}

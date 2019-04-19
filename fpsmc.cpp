@@ -529,17 +529,13 @@ int psmc_wrapper(args *pars,int blocksize) {
   ops = new oPars[nobs];
   timer datareader_timer = starttimer();
   for (myMap::const_iterator it = pars->perc->mm.begin() ;it!=pars->perc->mm.end();it++) {
-    myMap::const_iterator it2;
-    if(pars->chooseChr!=NULL)
-      it2 = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop,pars->blocksize);
-    else
-      it2 = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);
+    rawdata rd = readstuff(pars->perc,pars->chooseChr!=NULL?pars->chooseChr:it->first,pars->blocksize,-1,-1);
+
     //    fprintf(stderr,"\t-> Parsing chr:%s \n",it2->first);
     fastPSMC *obj=objs[nChr++]=new fastPSMC;
     obj->cnam=strdup(pars->chooseChr!=NULL?pars->chooseChr:it->first);
-    obj->setWindows(pars->perc->pos,pars->perc->last,pars->blocksize);
-    obj->gls=pars->perc->gls;
-    pars->perc->gls=NULL;
+    obj->setWindows(rd.pos,rd.lastp,pars->blocksize);
+    obj->gls=rd.gls;
     obj->allocate(tk_l);
     //    fprintf(stderr,"transer:%p\n",obj[0].trans);
     if(pars->chooseChr!=NULL)
