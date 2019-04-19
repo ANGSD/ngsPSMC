@@ -210,6 +210,7 @@ int makevcf2fq(int argc,char **argv){
     //    fprintf(stderr,"it->first:%s\tlast:%lu\n",it->first,pars->perc->last);
     memcpy(gls+at,rd.gls,sizeof(mygltype)*rd.lastp);
     at += rd.lastp;
+    delete [] rd.pos; delete [] rd.gls;
     if(pars->chooseChr!=NULL)
       break;
   }
@@ -232,14 +233,13 @@ int makevcf2fq(int argc,char **argv){
     fwrite(kstr.s,sizeof(char),kstr.l,stdout);
     kstr.l=0;
     delete [] pp;
+    delete [] rd.pos; delete [] rd.gls;
     if(pars->chooseChr!=NULL)
       break;
   }
   free(kstr.s);
-  /*
- 
-    break;
-  */
+
+  destroy_args(pars);
   return 0;
 }
 
@@ -260,7 +260,7 @@ int main(int argc,char **argv){
 
   if(argc==1){
     fprintf(stderr, "\t-> ---./ngsPSMC\n");
-    fprintf(stderr,"\t-> ./ngsPSMC [print print_header makeold] afile.psmc.idx \n");
+    fprintf(stderr,"\t-> ./ngsPSMC [print print_header vcf2fq] afile.psmc.idx \n");
     fprintf(stderr,"\t-> ./ngsPSMC -tole -maxIter -winSize -RD -nThreads -nIter -p -tkfile -nSites -seed -infile -doLinear -nChr\n");
     return 0;
   }
@@ -271,7 +271,7 @@ int main(int argc,char **argv){
     print_main(--argc,++argv);
   else if(!strcasecmp(*argv,"print_header"))
     print_header(--argc,++argv);
-  else if(!strcasecmp(*argv,"makevcf2fq"))
+  else if(!strcasecmp(*argv,"vcf2fq"))
     makevcf2fq(--argc,++argv);
   else {
     fprintf(stdout,"MM\t");

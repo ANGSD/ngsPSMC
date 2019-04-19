@@ -206,7 +206,7 @@ rawdata readstuff(perpsmc *pp,char *chr,int blockSize,int start,int stop){
   ret.len = it->second.nSites; 
   ret.gls = new double[2*it->second.nSites];
 
-  if(pp->version==1){ 
+  if(pp->version==1) { 
     BGZF* bgzf_gls =bgzf_open_seek(pp->bgzf_gls,it->second.saf);
     BGZF* bgzf_pos =bgzf_open_seek(pp->bgzf_pos,it->second.pos);
 
@@ -215,23 +215,25 @@ rawdata readstuff(perpsmc *pp,char *chr,int blockSize,int start,int stop){
     for(int i=0;i<it->second.nSites;i++){
       ret.gls[i] = log(0);
       if(ret.gls[2*i]!=ret.gls[2*i+1]){
-	double mmax = std::max(pp->tmpgls[2*i],pp->tmpgls[2*i+1]);
-	double val = std::min(pp->tmpgls[2*i],pp->tmpgls[2*i+1]) - mmax;
+	double mmax = std::max(ret.gls[2*i],ret.gls[2*i+1]);
+	double val = std::min(ret.gls[2*i],ret.gls[2*i+1]) - mmax;
 	if(sizeof(mygltype)>1){
 	  ret.gls[i] = val;
 	  if(ret.gls[2*i]<ret.gls[2*i+1])
 	    ret.gls[i] = -ret.gls[i];
 	}else{
+	  assert(0==1);
 	  //   fprintf(stderr,"valf:%f vadl: %d\n",val,(int)val);
 	  val /= log(10)/-100.0;
 	  //   fprintf(stdout,"VALp\t%f\n",val);
 	  ret.gls[i] = val;
-	  if(pp->tmpgls[2*i]<pp->tmpgls[2*i+1])
+	  if(ret.gls[2*i]<ret.gls[2*i+1])
 	    ret.gls[i] = -ret.gls[i];
 	}
       }
     }
-    
+    bgzf_close(bgzf_gls);
+    bgzf_close(bgzf_pos);
   }else{
     int asdf = it->second.nSites;
     char *tmp = faidx_fetch_seq(pp->pf->fai, it->first, 0, 0x7fffffff, &asdf);

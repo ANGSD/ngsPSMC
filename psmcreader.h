@@ -29,13 +29,8 @@ typedef struct{
   char *bgzf_pos;
   char *bgzf_gls;
   int version;//1 is gl, otherwise assuming fasta
-  // int *pos;//contains the positions
-  //size_t pos_l;
   char *fname;//input.saf.idx?
-  //  mygltype *gls;//one gl. Postive means its the gl for the hom, negative means its th gl for the het. The other gl is zero. This value is therefore very beautiful. This pointer should be copied to HMM. And the HMM should free it after use.
   perFasta *pf;
-  double *tmpgls;//temparray to holddata
-  size_t tmpgls_l;//length of temparray to hold data
 }perpsmc;
 
 perpsmc* perpsmc_init(char *fname,int nChr);
