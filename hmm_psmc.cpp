@@ -189,7 +189,7 @@ void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double r
     //we first set the initial fwprobs to stationary distribution
   for(int i=0;i<tk_l;i++){
       fw[i][0] = stationary[i];
-      fprintf(stderr,"stationary[%d]: %f\n",i,stationary[i]);
+      //      fprintf(stderr,"stationary[%d]: %f\n",i,stationary[i]);
   }
     //we now loop over windows.
     //v=0 is above and is the initial distribution, we therefore plug in at v+1
