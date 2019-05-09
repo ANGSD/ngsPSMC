@@ -100,20 +100,43 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
 */
 
 void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *epsize,double rho,int smc,double **U){
-  ComputeP1(tk,tk_l,P[1],epsize,rho);
-  ComputeP5(tk,tk_l,P[5],epsize);
-  ComputeP6(tk,tk_l,P[6],epsize,rho);
-  ComputeP2(tk_l,P[2],P[5]);
-  ComputeP3(tk,tk_l,P[3],epsize,rho);
-  ComputeP4(tk,tk_l,P[4],epsize,rho);
-  ComputeP7(tk,tk_l,P[7],P[3],epsize,rho);
-  ComputeP0(tk_l,P[0],P[5]);
-  
-  if(smc){
-    fprintf(stderr,"calculating special U values\n");
-    //plug in
+	switch (smc){
+		case 0:
+	    	ComputeP1(tk,tk_l,P[1],epsize,rho);
+	    	ComputeP5(tk,tk_l,P[5],epsize);
+	    	ComputeP6(tk,tk_l,P[6],epsize,rho);
+			ComputeP2(tk_l,P[2],P[5]);
+	    	ComputeP3(tk,tk_l,P[3],epsize,rho);
+	    	ComputeP4(tk,tk_l,P[4],epsize,rho);
+	    	ComputeP7(tk,tk_l,P[7],P[3],epsize,rho);
+	    	ComputeP0(tk_l,P[0],P[5]);
+	}
 
-  }
+  
+	case 1:
+		fprintf(stderr,"calculating special U values\n");
+		ComputeU1( tk, tk_l, **U, *epsize, rho);
+		ComputeU3( tk, tk_l, **U, *epsize, rho);
+		ComputeU4( tk, tk_l, **U, *epsize, rho);
+		ComputeU5( tk, tk_l, **U, *epsize, rho);
+		ComputeU2( tk_l, **U);
+		ComputeU6( tk, tk_l, **U, *epsize, **U, rho);
+		ComputeU7( tk, tk_l, **U, *epsize, **U, rho);
+		ComputeU8( tk, tk_l, **U, *epsize, **U, rho);
+		ComputeU9( tk, tk_l, **U, *epsize, **U, rho);
+		ComputeU10(tk, tk_l, **U, *epsize, **U, rho);
+		ComputeP5(tk,tk_l,P[5],epsize);
+		ComputeP2(tk_l,P[2],P[5]);
+		
+		//TESTS
+		ComputeP4(tk,tk_l,P[4],epsize,rho);
+		for (int i = 0; i < tk_l; i++)
+			fprintf(stdout,"%d:%f\t",U[3][i]-exp(P[4][i]) );
+		
+		ComputeP7(tk,tk_l,P[7],P[3],epsize,rho);
+		for (int i = 0; i < tk_l; i++)
+			fprintf(stdout,"%d:%f\t",U[4][i]-exp(P[7][i]) );
+	}
 
 
 }

@@ -476,30 +476,30 @@ double calc_trans(int k, int j,double **P){
   return ret;
 }
 
-#define NUM_LIN 2
+#define NUM_LIN 1
 
-void ComputeU1(double *tk,int tk_l,double *P,const double *epsize,double rho){
+void ComputeU1(double *tk,int tk_l,double **U,const double *epsize,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
     double exponent = (tk[i+1]-tk[i])/epsize[i];
     double fact1 = 1/(1-exp(-exponent));
     double fact2 = -(NUM_LIN+1)*exponent;
     fact2 = exp(fact2)-(NUM_LIN+1)*exp(-exponent);
     fact2 = 1+fact2/NUM_LIN;
-    P[i] = fact1*fact2;
+    U[1][i] = fact1*fact2;
     //		P[i] = log(P[i]);
   }
 }
 
 //wrong
-void ComputeU2(int tk_l,double *P,double **U){
-  P[0] = U[4][0];
+void ComputeU2(int tk_l,double **U){
+  U[2][0] = U[4][0];
   for (unsigned i = 1; i < tk_l; i++){
-    P[i] = P[i-1]*U[5][i]+U[4][i];
+    U[2][i] = U[2][i-1]*U[5][i]+U[4][i];
   }
 }
 
 //Check that ComputeU3 = ComputeP4 for #define NUM_LIN 1
-void ComputeU3(double *tk,int tk_l,double *P,const double *epsize,double rho){
+void ComputeU3(double *tk,int tk_l,double **U,const double *epsize,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
     double exponent = (tk[i+1]-tk[i])/epsize[i];
     double term1 = -exp(-2*rho*tk[i] - exponent)*(1 + NUM_LIN)/NUM_LIN;
@@ -508,82 +508,82 @@ void ComputeU3(double *tk,int tk_l,double *P,const double *epsize,double rho){
     term3 *= 2*rho/NUM_LIN*(-NUM_LIN/epsize[i] + 2*rho);
     double term4 = exp(-2*rho*tk[i+1] - exponent);
     term4 *= (1/(NUM_LIN/epsize[i] - 2*rho) + 1/(1/epsize[i] + 2*rho))/epsize[i];
-    P[i] = term1 + term2 + term3 + term4;
+    U[3][i] = term1 + term2 + term3 + term4;
     //		P[i] = log(P[i]);
   }
 }
 
 //Check that ComputeU4 = ComputeP7 for #define NUM_LIN 1
-void ComputeU4(double *tk,int tk_l,double *P,const double *epsize,double rho){
+void ComputeU4(double *tk,int tk_l,double **U,const double *epsize,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
     double exponent = (tk[i+1]-tk[i])/epsize[i];
-    P[i] = exp(-2*rho*tk[i] - NUM_LIN*exponent) + exp(-2*rho*tk[i+1]);
-    P[i] = P[i]*2*rho/(NUM_LIN/epsize[i] - 2*rho);
+    U[4][i] = exp(-2*rho*tk[i] - NUM_LIN*exponent) + exp(-2*rho*tk[i+1]);
+    U[4][i] = U[4][i]*2*rho/(NUM_LIN/epsize[i] - 2*rho);
     //		P[i] = log(P[i]);
   }
 }
 
 //Check that ComputeU5 = ComputeP5 for #define NUM_LIN 1
-void ComputeU5(double *tk,int tk_l,double *P,const double *epsize,double rho){
+void ComputeU5(double *tk,int tk_l,double **U,const double *epsize,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
-    P[i] = exp( - NUM_LIN*(tk[i+1] - tk[i])/epsize[i] );
+    U[5][i] = exp( - NUM_LIN*(tk[i+1] - tk[i])/epsize[i] );
     //		P[i] = log(P[i]);
   }
-  P[tk_l-1] = 0.0;
+  U[5][tk_l-1] = 0.0;
   //	P[tk_l-1] = log(0.0);
 }
 
 //Check that ComputeU6 = ComputeP6 for #define NUM_LIN 1
-void ComputeU6(double *tk,int tk_l,double *P,const double *epsize,double **U,double rho){
+void ComputeU6(double *tk,int tk_l,double **U,const double *epsize,double **U,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
     double exponent = (tk[i+1]-tk[i])/epsize[i];
     double fact1 = 1/(1-exp(-exponent));
     double term1 = -exp(-2*rho*tk[i])*(-1+exp(-exponent));
     double term2 = -exp(-2*rho*tk[i]) + exp(-exponent - 2*rho*tk[i+1]);
     term2 = term2/epsize[i]/(1/epsize[i] + 2*rho);
-    P[i] = fact1*(term1 + term2)-U[3][i];
+    U[6][i] = fact1*(term1 + term2)-U[3][i];
   }
+  U[6][tk_l-1] = 0;
 }
 
 //wrong
-void ComputeU7(double *tk,int tk_l,double *P,const double *epsize,double **U,double rho){
+void ComputeU7(double *tk,int tk_l,double **U,const double *epsize,double **U,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
-    P[i] = 1 - U[5][i];
+    U[7][i] = 1 - U[5][i];
   }
 }
 
 //wrong
-void ComputeU8(double *tk,int tk_l,double *P,const double *epsize,double **U,double rho){
-  P[0] = U[6][0];
+void ComputeU8(double *tk,int tk_l,double **U,const double *epsize,double **U,double rho){
+  U[8][0] = U[6][0];
   for (unsigned i = 1; i < tk_l; i++){
-    P[i] = P[i-1]*U[7][i]+U[4][i];
+    U[8][i] = U[8][i-1]*U[7][i]+U[4][i];
   }
 }
 
 //Check that ComputeU9 = ComputeP3 for #define NUM_LIN 1
-void ComputeU9(double *tk,int tk_l,double *P,const double *epsize,double **U,double rho){
+void ComputeU9(double *tk,int tk_l,double **U,const double *epsize,double **U,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
-    P[i] = exp(-2*rho*tk[i]) - exp(-2*rho*tk[i+1]) - U[4][i];
+    U[9][i] = exp(-2*rho*tk[i]) - exp(-2*rho*tk[i+1]) - U[4][i];
   }
 }
 
-void ComputeU10(double *tk,int tk_l,double *P,const double *epsize,double **U,double rho){
+void ComputeU10(double *tk,int tk_l,double **U,const double *epsize,double **U,double rho){
   U[10][0] = U[6][0];
   for (unsigned i = 1; i < tk_l; i++){
     U[10][i] = U[10][i-1]*U[5][i]+U[6][i];
   }
 }
 
-void ComputeQ2(int tk_l,double **fw,double **P,double **U,double *Q2,int v){
-  Q2[0] = fw[0][v]*U[10][0];
+void ComputeR3(int tk_l,double **fw,double **P,double **U,double *R3,int v){
+  R3[0] = fw[0][v]*U[10][0];
   for (unsigned i = 1; i < tk_l; i++){
-    Q2[i] = Q2[i-1]*P[2][i]+fw[i][v]*U[10][i];
+    R3[i] = R3[i-1]*P[2][i]+fw[i][v]*U[10][i];
   }
 }
 
-void NextFW(int tk_l,double **P,double **U,double **fw,int v,double **emis,double *R1){
-  double *Q2=NULL;
-  ComputeQ2(tk_l,fw,P,U,Q2,v);
+void NextFW(int tk_l,double **P,double **U,double **fw,int v,double **emis,double *R1, double *R3){
+  ComputeR3(tk_l,fw,P,U,R3,v);
   for (unsigned i = 0; i < tk_l; i++){
     fw[i][v+1] = fw[i][v]*(P[1][i]+U[1][i]+U[3][i])+Q2[i]*P[2][i]+R1[i]*(U[8][i-1]*U[7][i]+U[9][i]);
     fw[i][v+1] = fw[i][v+1]*emis[i][v];
