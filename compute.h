@@ -21,3 +21,26 @@ void ComputeExpectedCoalTime(double *tk,int tk_l,double *expectCoalT,const doubl
 double ComputeXXX(int i,int j,double **P);
 double calc_trans(int k, int j,double **P);
 double smartsize1(int tk_l,int numWind,double **fw,double **bw,double *tk,double *P1,double **emis,double pix,double rho,double *newEpSize);
+
+void ComputeU1(double *tk,int tk_l,double *P,const double *epsize,double rho);
+//wrong
+void ComputeU2(int tk_l,double *P,double **U);
+//Check that ComputeU3 = ComputeP4 for #define NUM_LIN 1
+void ComputeU3(double *tk,int tk_l,double *P,const double *epsize,double rho);
+//Check that ComputeU4 = ComputeP7 for #define NUM_LIN 1
+void ComputeU4(double *tk,int tk_l,double *P,const double *epsize,double rho);
+//Check that ComputeU5 = ComputeP5 for #define NUM_LIN 1
+void ComputeU5(double *tk,int tk_l,double *P,const double *epsize,double rho);
+//Check that ComputeU6 = ComputeP6 for #define NUM_LIN 1
+void ComputeU6(double *tk,int tk_l,double *P,const double *epsize,double **U,double rho);
+//wrong
+void ComputeU7(double *tk,int tk_l,double *P,const double *epsize,double **U,double rho);
+
+//wrong
+void ComputeU8(double *tk,int tk_l,double *P,const double *epsize,double **U,double rho);
+
+//Check that ComputeU9 = ComputeP3 for #define NUM_LIN 1
+void ComputeU9(double *tk,int tk_l,double *P,const double *epsize,double **U,double rho);
+void ComputeU10(double *tk,int tk_l,double *P,const double *epsize,double **U,double rho);
+void ComputeQ2(int tk_l,double **fw,double **P,double **U,double *Q2,int v);
+void NextFW(int tk_l,double **P,double **U,double **fw,int v,double **emis,double *R1);

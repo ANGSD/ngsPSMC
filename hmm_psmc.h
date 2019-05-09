@@ -4,7 +4,7 @@
 double lprod(double a,double b);
 double lprod(double a,double b,double c,double d);
 
-void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *epsize,double rho);
+void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *epsize,double rho,int smc,double **U);
 
 typedef struct{
   double **fw;
@@ -41,7 +41,7 @@ public:
  
   double **PP;//8xtk_l
   
-  double *R1,*R2;//tk_l long
+  double *R1,*R2,*R3;//tk_l long
   //double **fw;//tk_l x nWindows+1
   //double **bw;//tk_l x nWindows+1
   double **emis;//tk_l x nWindows+1

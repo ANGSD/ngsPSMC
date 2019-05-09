@@ -99,7 +99,7 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
   rho: rho, or theta to rho value.
 */
 
-void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *epsize,double rho){
+void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *epsize,double rho,int smc,double **U){
   ComputeP1(tk,tk_l,P[1],epsize,rho);
   ComputeP5(tk,tk_l,P[5],epsize);
   ComputeP6(tk,tk_l,P[6],epsize,rho);
@@ -108,7 +108,12 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
   ComputeP4(tk,tk_l,P[4],epsize,rho);
   ComputeP7(tk,tk_l,P[7],P[3],epsize,rho);
   ComputeP0(tk_l,P[0],P[5]);
+  
+  if(smc){
+    fprintf(stderr,"calculating special U values\n");
+    //plug in
 
+  }
 
 
 }
@@ -116,7 +121,6 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
 //linear
 double qFunction_inner(int tk_l,double pix,int numWind,double **nP,double **PP){
   assert(0!=1);
-  //  ComputeGlobalProbabilities(tk,tk_l,nP,epsize,rho);
   double Q = 0;
   double esum =0;
 #if 0
@@ -249,6 +253,7 @@ void fastPSMC::allocate(int tk_l_arg){
     stationary  = new double[tk_l];
   R1 = new double[tk_l];
   R2 = new double[tk_l];
+  R3 = new double[tk_l];
   //fw = new double *[tk_l];
   //bw = new double *[tk_l];
   //pp = new double *[tk_l];
@@ -462,12 +467,7 @@ void ComputeBaumWelch(unsigned numWind,int tk_l,double **fw,double **bw,double *
 void fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,double rho){
   assert(trans);
   assert(index==0);
-  ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
-  if(smc){
-    //plugin calls for new smc functions
-
-  }
-
+  ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho,smc,U);//only the P* ones
 
 #if 0
   for(int p=0;1&&p<8;p++){

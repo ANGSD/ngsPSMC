@@ -49,6 +49,8 @@ typedef struct{
   double *parsIn;
   double **fw;
   double **bw;
+  double **U;
+  int smc;
 }oPars;
 
 int remap_l;
@@ -163,7 +165,7 @@ double qFunction_wrapper(const double *pars,const void *d){
     fprintf(stderr,"after scaling:%d %f\n",i,pars2[i]);
   //  exit(0);
 
-  ComputeGlobalProbabilities(ops[0].tk,ops[0].tk_l,ops[0].nP,pars2,ops[0].rho);
+  ComputeGlobalProbabilities(ops[0].tk,ops[0].tk_l,ops[0].nP,pars2,ops[0].rho,ops[0].smc,ops[0].U);
   if(doQuadratic){
     double calc_trans(int,int,double**);
     for(int i=0;i<ops[0].tk_l;i++)
@@ -275,6 +277,7 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
     ops[i].rho= rho;
     ops[i].theta = theta;
     ops[i].trans = objs[i]->trans;
+    ops[i].U = objs[0]->U;//<- maybe not;
     //    fprintf(stderr,"trans[0][0]\n",ops[i].trans[0][0]);exit(0);
   }
   ncals=0;
