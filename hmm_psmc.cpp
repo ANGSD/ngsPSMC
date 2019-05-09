@@ -11,9 +11,11 @@
 int fastPSMC::tot_index=0;
 double **fastPSMC::trans=NULL;
 double **fastPSMC::P=NULL;
+double **fastPSMC::U=NULL;
 double *fastPSMC::stationary=NULL;
 double **fastPSMC::nP = NULL;
 perpsmc *fastPSMC::readerstructure = NULL;
+int fastPSMC::smc = 0;
 //#define __SHOW_TIME__
 
 extern int doQuadratic;
@@ -286,6 +288,13 @@ void fastPSMC::allocate(int tk_l_arg){
       for(int j=0;j<tk_l;j++)
 	trans[i][j] = -888;//placeholder, to spot if something shouldnt be happening;
     }
+  }
+  
+  if(index==0){
+    //allocate U
+    U = new double *[11];
+    for(int i=0;i<11;i++)
+      U[i] = new double[tk_l];
   }
 
 }

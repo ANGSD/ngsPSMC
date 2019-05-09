@@ -256,9 +256,7 @@ args * getArgs(int argc,char **argv,int dontprint){
 	return NULL;
     }
     else{
-
       p->fname = *argv;
-
     }
     argv++;
   }

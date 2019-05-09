@@ -28,6 +28,8 @@ public:
   static double *stationary;//tk_l
   static double **nP;//8xtk_l
   static perpsmc *readerstructure;//is not used currently, maybe newer
+  static int smc;
+  static double **U;//11xtk_l// check
   //not shared between all threads
 
   char *cnam;//<-chromosomename/contig/scaffold
@@ -51,7 +53,9 @@ public:
   double bwllh;
   double **baumwelch;
   double qval;
+
   fastPSMC(){
+    smc=0;
     pix = -666;
     max_t = 15;
     index=tot_index++;
@@ -59,6 +63,7 @@ public:
     readerstructure = NULL;
     cnam=NULL;
     emis = NULL;
+    
   }
   ~fastPSMC();
   void setWindows(int *pos,int last,int block);

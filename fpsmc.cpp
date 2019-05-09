@@ -549,6 +549,7 @@ int psmc_wrapper(args *pars,int blocksize) {
     if(pars->chooseChr!=NULL)
       break;
   }
+  objs[0]->smc=pars->smc;
   //stupid hook for allocating //fw bw
   fws_bws = new fw_bw[std::min(nThreads,nChr)];
   for(int i=0;i<std::min(nThreads,nChr);i++){
