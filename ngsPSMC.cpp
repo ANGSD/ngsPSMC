@@ -281,6 +281,7 @@ int main(int argc,char **argv){
     fprintf(stdout,"\n");
     fprintf(stdout,"MM\t");
     fprintf(stdout,"\t-> ngsPSMC version: %s (htslib: %s) build(%s %s)\n",ngsPSMC_VERSION,hts_version(),__DATE__,__TIME__); 
+    fprintf(stdout,"MM\t TR is theta rho, theta in this context is given by the persite theta, and not the per window theta, this is different from the original PSMC\n");
     if(isatty(fileno(stdout))){
       fprintf(stderr,"\t-> You are printing results to the terminal consider dumping into a file\n");
       fprintf(stderr,"\t-> E.g.: \'./ngsPSMC ");

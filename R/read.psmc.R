@@ -247,4 +247,12 @@ plot_chain(read.psmc("ngs.run2.stdout"))
 if(FALSE){
     source("read.psmc.R")
 
+ pdf('plot.pdf',width=14,height=14)
+ par(mfrow=c(2,2))
+ plot_chain(read.psmc("data1.res16/l0.tsk.d32.psmc.idx.stdout"),main='quad sharedstruc')
+ plot_chain(read.psmc("data1.res16/l1.tsk.d32.psmc.idx.stdout"),main='lin sharedstruc')
+ plot_chain(read.psmc("data1.res15/l0.tsk.d32.psmc.idx.stdout"),main='quad nosharedstruc')
+ plot_chain(read.psmc("data1.res15/l1.tsk.d32.psmc.idx.stdout"),main='quad nosharedstruc')
+ dev.off()
+
 }
