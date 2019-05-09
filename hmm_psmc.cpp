@@ -107,16 +107,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
   ComputeP7(tk,tk_l,P[7],P[3],epsize,rho);
   ComputeP0(tk_l,P[0],P[5]);
 
-  for(int p=0;1&&p<8;p++){
-    for(int i=0;i<tk_l;i++){
-      //      fprintf(stderr,"P[%d][%d]: %f\n",p,i,P[p][i]);
-      if(!(P[p][i]<=0)){
-	fprintf(stderr,"\t->[%s] p:%d i:%d val:%f\n",__FUNCTION__,p,i,P[p][i]);
-	exit(0);
-      }
-    }
 
-  }
 
 }
 
@@ -196,56 +187,57 @@ double qFunction_inner2(int tk_l,double **nP,double **baumwelch,double **trans){
 
 void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double rho,double **fw,double **bw){
     //we first set the initial fwprobs to stationary distribution
-  for(int i=0;i<tk_l;i++)
+  for(int i=0;i<tk_l;i++){
       fw[i][0] = stationary[i];
-
+      fprintf(stderr,"stationary[%d]: %f\n",i,stationary[i]);
+  }
     //we now loop over windows.
     //v=0 is above and is the initial distribution, we therefore plug in at v+1
-    for(int v=0;v<windows.size();v++){
-      ComputeRs(v,fw,0);//<-prepare R1,R2
+  for(int v=0;v<windows.size();v++){
+    ComputeRs(v,fw,0);//<-prepare R1,R2
+    fw[0][v+1] = addProtect3(lprod(fw[0][v],P[1][0]) , lprod(R1[0],P[3][0]) , lprod(fw[0][v],P[4][0]))+emis[0][v+1] ;
+    for (unsigned i = 1; i < tk_l; i++)
+      fw[i][v+1]= addProtect4(lprod(fw[i][v],P[1][i]) , lprod(R2[i-1],P[2][i]) , lprod(R1[i],P[3][i]) , lprod(fw[i][v],P[4][i]))+emis[i][v+1];
 
-      fw[0][v+1] = addProtect3(lprod(fw[0][v],P[1][0]) , lprod(R1[0],P[3][0]) , lprod(fw[0][v],P[4][0]))+emis[0][v+1] ;
-      for (unsigned i = 1; i < tk_l; i++)
-	fw[i][v+1]= addProtect4(lprod(fw[i][v],P[1][i]) , lprod(R2[i-1],P[2][i]) , lprod(R1[i],P[3][i]) , lprod(fw[i][v],P[4][i]))+emis[i][v+1];
-    }
+  }
+  
+  double tmp[tk_l];
+  for(int i=0;i<tk_l;i++){
+    tmp[i] = fw[i][windows.size()];
+  }
+  pix = addProtectN(tmp,tk_l);
 
-    double tmp[tk_l];
-    for(int i=0;i<tk_l;i++){
-      tmp[i] = fw[i][windows.size()];
-    }
-    pix = addProtectN(tmp,tk_l);
-
-    assert(!std::isnan(pix));
-    fwllh = pix;
-
-    //now do backward algorithm
-    //initialize by stationary
-    for(int i=0;i<tk_l;i++)
-      bw[i][windows.size()] = lprod(stationary[i],emis[i][windows.size()]);
+  assert(!std::isnan(pix));
+  fwllh = pix;
+  
+  //now do backward algorithm
+  //initialize by stationary
+  for(int i=0;i<tk_l;i++)
+    bw[i][windows.size()] = lprod(stationary[i],emis[i][windows.size()]);
      
 
-    //we plug in values at v-1, therefore we break at v==1
-    for(int v=windows.size();v>0;v--){
-      ComputeRs(v,bw,1);//<-prepare R1,R2
-
-      bw[0][v-1] = addProtect3(lprod(bw[0][v],P[1][0]) , lprod( R1[0],P[3][0]) , lprod(bw[0][v],P[4][0]))+emis[0][v-1];
-      bw[0][v] -= lprod(stationary[0],emis[0][v]);
-      for (unsigned i = 1; i < tk_l; i++){
-	bw[i][v-1] = addProtect4(lprod(bw[i][v],P[1][i]),lprod(R2[i-1],P[2][i]),lprod(R1[i],P[3][i]),lprod(bw[i][v],P[4][i]))+emis[i][v-1];
-	bw[i][v] -= lprod(stationary[i],emis[i][v]);
-      }
+  //we plug in values at v-1, therefore we break at v==1
+  for(int v=windows.size();v>0;v--){
+    ComputeRs(v,bw,1);//<-prepare R1,R2
+    
+    bw[0][v-1] = addProtect3(lprod(bw[0][v],P[1][0]) , lprod( R1[0],P[3][0]) , lprod(bw[0][v],P[4][0]))+emis[0][v-1];
+    bw[0][v] -= lprod(stationary[0],emis[0][v]);
+    for (unsigned i = 1; i < tk_l; i++){
+      bw[i][v-1] = addProtect4(lprod(bw[i][v],P[1][i]),lprod(R2[i-1],P[2][i]),lprod(R1[i],P[3][i]),lprod(bw[i][v],P[4][i]))+emis[i][v-1];
+      bw[i][v] -= lprod(stationary[i],emis[i][v]);
     }
+  }
+  
+  for(int i=0;i<tk_l;i++)
+    bw[i][0] -= stationary[i];
+  
 
-    for(int i=0;i<tk_l;i++)
-      bw[i][0] -= stationary[i];
-     
-
-    for(int i=0;i<tk_l;i++)
-      tmp[i] = bw[i][1]+stationary[i]+emis[i][1];
-    double tmptmp= addProtectN(tmp,tk_l);
-    assert(!std::isnan(tmptmp));
-    bwllh = tmptmp;
- 
+  for(int i=0;i<tk_l;i++)
+    tmp[i] = bw[i][1]+stationary[i]+emis[i][1];
+  double tmptmp= addProtectN(tmp,tk_l);
+  assert(!std::isnan(tmptmp));
+  bwllh = tmptmp;
+  
 }
 
 void fastPSMC::allocate(int tk_l_arg){
@@ -462,6 +454,20 @@ void fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,doub
   assert(trans);
   assert(index==0);
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
+
+#if 0
+  for(int p=0;1&&p<8;p++){
+    for(int i=0;i<tk_l;i++){
+      fprintf(stderr,"P[%d][%d]: %f\n",p,i,P[p][i]);
+      if(0&&!(P[p][i]<=0)){
+	fprintf(stderr,"\t->[%s] p:%d i:%d val:%f\n",__FUNCTION__,p,i,P[p][i]);
+	exit(0);
+      }
+    }
+
+  }
+#endif  
+
 
   calculate_stationary(tk_l,stationary,P);
   if(doQuadratic){

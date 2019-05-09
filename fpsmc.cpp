@@ -244,14 +244,14 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
   if(DOSPLINE==0){
     for(int i=0;i<ndim;i++){
       nbd[i]=2;
-      lbd[i]=0.000001;
+      lbd[i]=0.0001;
       ubd[i]=1000;//PSMC_T_INF;
     }
   }else{
     for(int i=0;i<ndim/2;i++){
 
       nbd[i]=2;
-      lbd[i]=0.000001;
+      lbd[i]=0.0001;
       ubd[i]=1000;//PSMC_T_INF;
       //      fprintf(stderr,"fv[%d][%d/%d] bd[%d]:%d:(%f,%f)\n",at++,i,ndim/2,i,nbd[i],lbd[i],ubd[i]);
     }
@@ -550,8 +550,8 @@ int psmc_wrapper(args *pars,int blocksize) {
       break;
   }
   //stupid hook for allocating //fw bw
-  fws_bws = new fw_bw[nThreads];
-  for(int i=0;i<nThreads;i++){
+  fws_bws = new fw_bw[std::min(nThreads,nChr)];
+  for(int i=0;i<std::min(nThreads,nChr);i++){
     fws_bws[i].fw = new double*[tk_l];
     fws_bws[i].bw = new double*[tk_l];
     for(int j=0;j<tk_l;j++){

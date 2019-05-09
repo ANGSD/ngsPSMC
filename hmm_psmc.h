@@ -94,7 +94,7 @@ private:
       double p3 = lprod(R1[i],P[7][i]);
       R2[i] = addProtect3(p1,p2,p3);
       if(std::isnan(R2[i])){
-	//	fprintf(stderr,"[hmm_psmc.h:computeR2] R2[%d] evaluates to NaN p5:%f tmp:%f p1:%f p2:%f p3:%f\n",i,P[5][i],tmp,p1,p2,p3);
+	fprintf(stderr,"[hmm_psmc.h:computeR2] R2[%d] evaluates to NaN p5:%f tmp:%f p1:%f p2:%f p3:%f\n",i,P[5][i],tmp,p1,p2,p3);
 	exit(0);
       }
       tmp = R2[i];
