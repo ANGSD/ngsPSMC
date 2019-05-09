@@ -463,6 +463,11 @@ void fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,doub
   assert(trans);
   assert(index==0);
   ComputeGlobalProbabilities(tk,tk_l,P,epsize,rho);//only the P* ones
+  if(smc){
+    //plugin calls for new smc functions
+
+  }
+
 
 #if 0
   for(int p=0;1&&p<8;p++){
