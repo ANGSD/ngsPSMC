@@ -65,3 +65,35 @@ lines(1:28,sub.ngspsmc2.gl,type='b',lwd=1,col=5)
 legend("topright",c("PSMC","ngsPSMC (nodiv 4/10)","0.5 ngsPSMC (nodiv 4/10)"),fill=1:3)
 
 dev.off()
+
+if(FALSE){
+    pdf("plots.pdf")
+    source("read.psmc.R")
+    fl <- list.files(".",pattern=".psmc$")
+    plot.psmc(read.psmc(fl[1]),lwd=2,col=1,ylim=c(0,5),main="Only psmc")
+    plot.psmc(read.psmc(fl[2]),lwd=2,add=T,col=2)
+    plot.psmc(read.psmc(fl[3]),lwd=2,add=T,col=3)
+    legend("top",c("CEU","YRI","YRI"),fill=1:3)
+
+    plot.psmc(read.psmc("NA12878.mapped.ILLUMINA.bwa.CEU.low_coverage.20121211.fa.psmcfa.psmc"),lwd=2,col=1,ylim=c(0,5),main="CEU NA12878 ")
+    plot.psmc(read.psmc("NA12878.mapped.ILLUMINA.bwa.CEU.low_coverage.20121211.psmc.idx.1.stdout"),lwd=2,col=2,add=TRUE)
+    plot.psmc(read.psmc("NA12878.mapped.ILLUMINA.bwa.CEU.low_coverage.20121211.psmc.idx.2.stdout"),lwd=2,col=3,add=TRUE)
+    legend("topleft",c("PSMC","ngs init 1","ngs init -1"),fill=1:3)
+
+     plot.psmc(read.psmc("NA18507.mapped.ILLUMINA.bwa.YRI.low_coverage.20120522.fa.psmcfa.psmc"),lwd=2,col=1,ylim=c(0,10),main="YRI NA18507 ")
+    plot.psmc(read.psmc("NA18507.mapped.ILLUMINA.bwa.YRI.low_coverage.20120522.psmc.idx.1.stdout"),lwd=2,col=2,add=TRUE)
+    plot.psmc(read.psmc("NA18507.mapped.ILLUMINA.bwa.YRI.low_coverage.20120522.psmc.idx.2.stdout"),lwd=2,col=3,add=TRUE)
+    legend("topleft",c("PSMC","ngs init 1","ngs init -1"),fill=1:3)
+
+    plot.psmc(read.psmc("NA19239.mapped.ILLUMINA.bwa.YRI.low_coverage.20130415.fa.psmcfa.psmc"),lwd=2,col=1,ylim=c(0,5),main="YRI NA19239 ")
+    plot.psmc(read.psmc("NA19239.mapped.ILLUMINA.bwa.YRI.low_coverage.20130415.psmc.idx.1.stdout"),lwd=2,col=2,add=TRUE)
+    plot.psmc(read.psmc("NA19239.mapped.ILLUMINA.bwa.YRI.low_coverage.20130415.psmc.idx.2.stdout"),lwd=2,col=3,add=TRUE)
+    legend("topleft",c("PSMC","ngs init 1","ngs init -1"),fill=1:3)
+
+    fl <- c(list.files(".",pattern=".psmc$"),list.files(".",pattern=".stdout$"))
+    for(i in fl)
+        plot_chain(read.psmc(i),main=i)
+dev.off()
+    
+
+}

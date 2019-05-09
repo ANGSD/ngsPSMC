@@ -92,16 +92,16 @@ int print_main(int argc,char **argv){
   
   for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){
     
-    if(pars->chooseChr!=NULL)
-      it = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop,pars->blocksize);
-    else
-      it = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);
+
+    rawdata rd = readstuff(pars->perc,pars->chooseChr!=NULL?pars->chooseChr:it->first,pars->blocksize,-1,-1);
+    fprintf(stderr,"\t-> gls %f %f\n",rd.gls[2],rd.gls[3]);
     double tmp[2];
     
-    for(size_t s=pars->perc->first;s<pars->perc->last;s++){
-      toGl(pars->perc->gls[s],tmp);
-      fprintf(stdout,"%s\t%d\t%e\t%e\n",it->first,pars->perc->pos[s]+1,tmp[0],tmp[1]);
+    for(size_t s=rd.firstp;s<rd.lastp;s++){
+      toGl(rd.gls[s],tmp);
+      fprintf(stdout,"%s\t%d\t%e\t%e\n",it->first,rd.pos[s]+1,tmp[0],tmp[1]);
     }
+    delete [] rd.pos; delete [] rd.gls;
     if(pars->chooseChr!=NULL)
       break;
   }
@@ -192,7 +192,7 @@ void writefa(kstring_t *kstr,double *positInt,int regLen,int block, int NBASE_PE
 }
 
 
-int makeold(int argc,char **argv){
+int makevcf2fq(int argc,char **argv){
   if(argc<1){
     fprintf(stderr,"\t-> output is a vcf2fq style file \n");
     return 0; 
@@ -207,14 +207,11 @@ int makeold(int argc,char **argv){
   size_t at=0;
   //first pull all the data
   for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){//loop over chrs
-    if(pars->chooseChr!=NULL)
-      it = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop,pars->blocksize);//fetch chooseChr
-    else
-      it = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);//fetcht it->first
-    
+    rawdata rd = readstuff(pars->perc,pars->chooseChr!=NULL?pars->chooseChr:it->first,pars->blocksize,-1,-1);
     //    fprintf(stderr,"it->first:%s\tlast:%lu\n",it->first,pars->perc->last);
-    memcpy(gls+at,pars->perc->gls,sizeof(mygltype)*pars->perc->last);
-    at += pars->perc->last;
+    memcpy(gls+at,rd.gls,sizeof(mygltype)*rd.lastp);
+    at += rd.lastp;
+    delete [] rd.pos; delete [] rd.gls;
     if(pars->chooseChr!=NULL)
       break;
   }
@@ -226,27 +223,24 @@ int makeold(int argc,char **argv){
 
   kstring_t kstr;kstr.l=kstr.m=0;kstr.s=NULL;
   for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){
-    if(pars->chooseChr!=NULL)
-      it = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop,pars->blocksize);
-    else
-      it = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);
+    rawdata rd = readstuff(pars->perc,pars->chooseChr!=NULL?pars->chooseChr:it->first,pars->blocksize,-1,-1);
+
     ksprintf(&kstr,">%s\n",it->first);
-    double *pp = new double[pars->perc->last];
-    calcpost(opt,pars->perc->gls,pars->perc->last,pp);
-    writefa(&kstr,pp,pars->perc->last,100,50,0.9);
+    double *pp = new double[rd.lastp];
+    calcpost(opt,rd.gls,rd.lastp,pp);
+    writefa(&kstr,pp,rd.lastp,100,50,0.9);
     if(kstr.l>0&&kstr.s[kstr.l-1]!='\n')
       ksprintf(&kstr,"\n");
     fwrite(kstr.s,sizeof(char),kstr.l,stdout);
     kstr.l=0;
     delete [] pp;
+    delete [] rd.pos; delete [] rd.gls;
     if(pars->chooseChr!=NULL)
       break;
   }
   free(kstr.s);
-  /*
- 
-    break;
-  */
+
+  destroy_args(pars);
   return 0;
 }
 
@@ -267,7 +261,7 @@ int main(int argc,char **argv){
 
   if(argc==1){
     fprintf(stderr, "\t-> ---./ngsPSMC\n");
-    fprintf(stderr,"\t-> ./ngsPSMC [print print_header makeold] afile.psmc.idx \n");
+    fprintf(stderr,"\t-> ./ngsPSMC [print print_header vcf2fq] afile.psmc.idx \n");
     fprintf(stderr,"\t-> ./ngsPSMC -tole -maxIter -winSize -RD -nThreads -nIter -p -tkfile -nSites -seed -infile -doLinear -nChr\n");
     return 0;
   }
@@ -278,8 +272,8 @@ int main(int argc,char **argv){
     print_main(--argc,++argv);
   else if(!strcasecmp(*argv,"print_header"))
     print_header(--argc,++argv);
-  else if(!strcasecmp(*argv,"makeold"))
-    makeold(--argc,++argv);
+  else if(!strcasecmp(*argv,"vcf2fq"))
+    makevcf2fq(--argc,++argv);
   else {
     fprintf(stdout,"MM\t");
     for(int i=0;i<argc_orig;i++)
@@ -287,6 +281,7 @@ int main(int argc,char **argv){
     fprintf(stdout,"\n");
     fprintf(stdout,"MM\t");
     fprintf(stdout,"\t-> ngsPSMC version: %s (htslib: %s) build(%s %s)\n",ngsPSMC_VERSION,hts_version(),__DATE__,__TIME__); 
+    fprintf(stdout,"MM\t TR is theta rho, theta in this context is given by the persite theta, and not the per window theta, this is different from the original PSMC\n");
     if(isatty(fileno(stdout))){
       fprintf(stderr,"\t-> You are printing results to the terminal consider dumping into a file\n");
       fprintf(stderr,"\t-> E.g.: \'./ngsPSMC ");

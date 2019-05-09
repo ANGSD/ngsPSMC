@@ -11,7 +11,7 @@
 #include "compute.h"
 #include "fpsmc.h"
 #include "splineEPsize.h"
-//#include 
+
 extern int nThreads;
 
 int nChr = 0;
@@ -21,6 +21,9 @@ int doQuadratic = 1; //<-only used in qFunction_wrapper
 int DOSPLINE=0;
 
 splineEPSize *spl=NULL;
+
+
+fw_bw *fws_bws = NULL;
 
 typedef struct{
   double *tk;
@@ -44,6 +47,8 @@ typedef struct{
   double **trans;
   double llh;
   double *parsIn;
+  double **fw;
+  double **bw;
 }oPars;
 
 int remap_l;
@@ -239,14 +244,14 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
   if(DOSPLINE==0){
     for(int i=0;i<ndim;i++){
       nbd[i]=2;
-      lbd[i]=0.000001;
+      lbd[i]=0.0001;
       ubd[i]=1000;//PSMC_T_INF;
     }
   }else{
     for(int i=0;i<ndim/2;i++){
 
       nbd[i]=2;
-      lbd[i]=0.000001;
+      lbd[i]=0.0001;
       ubd[i]=1000;//PSMC_T_INF;
       //      fprintf(stderr,"fv[%d][%d/%d] bd[%d]:%d:(%f,%f)\n",at++,i,ndim/2,i,nbd[i],lbd[i],ubd[i]);
     }
@@ -297,7 +302,7 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
 
 void *run_a_hmm(void *ptr){
   size_t at =(size_t) ptr;
-  objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
+  objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho,&fws_bws[at % nThreads]);
   pthread_exit(NULL);
 }
 
@@ -315,7 +320,7 @@ void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double theta,doub
   //  double qval =0;
   if(nThreads==1)
     for(int i=0;i<nChr;i++){
-      objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
+      objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho,&fws_bws[i % nThreads]);
   }else {
     int at=0;
     while(at<nChr){
@@ -529,21 +534,34 @@ int psmc_wrapper(args *pars,int blocksize) {
   ops = new oPars[nobs];
   timer datareader_timer = starttimer();
   for (myMap::const_iterator it = pars->perc->mm.begin() ;it!=pars->perc->mm.end();it++) {
-    myMap::const_iterator it2;
-    if(pars->chooseChr!=NULL)
-      it2 = iter_init(pars->perc,pars->chooseChr,pars->start,pars->stop,pars->blocksize);
-    else
-      it2 = iter_init(pars->perc,it->first,pars->start,pars->stop,pars->blocksize);
+    rawdata rd = readstuff(pars->perc,pars->chooseChr!=NULL?pars->chooseChr:it->first,pars->blocksize,-1,-1);
+    
     //    fprintf(stderr,"\t-> Parsing chr:%s \n",it2->first);
     fastPSMC *obj=objs[nChr++]=new fastPSMC;
-    obj->setWindows(pars->perc->pos,pars->perc->last,pars->blocksize);
-    obj->gls=pars->perc->gls;
-    pars->perc->gls=NULL;
+    obj->cnam=strdup(pars->chooseChr!=NULL?pars->chooseChr:it->first);
+
+    obj->setWindows(rd.pos,rd.lastp,pars->blocksize);
     obj->allocate(tk_l);
+    obj->gls=rd.gls;
+
     //    fprintf(stderr,"transer:%p\n",obj[0].trans);
+    delete [] rd.pos;
     if(pars->chooseChr!=NULL)
       break;
   }
+  //stupid hook for allocating //fw bw
+  fws_bws = new fw_bw[std::min(nThreads,nChr)];
+  for(int i=0;i<std::min(nThreads,nChr);i++){
+    fws_bws[i].fw = new double*[tk_l];
+    fws_bws[i].bw = new double*[tk_l];
+    for(int j=0;j<tk_l;j++){
+      fws_bws[i].fw[j] = new double[objs[i]->windows.size()+1];
+      fws_bws[i].bw[j] = new double[objs[i]->windows.size()+1];
+    }
+    fws_bws[i].len = objs[i]->windows.size()+1;
+  }
+    
+  
   stoptimer(datareader_timer);
   fprintf(stdout,"MM\tfilereading took: (wall(min),cpu(min)):(%f,%f)\n",datareader_timer.tids[1],datareader_timer.tids[0]);
   main_analysis(tk,tk_l,epsize,theta,rho,pattern,ndim,pars->nIter,max_t);
