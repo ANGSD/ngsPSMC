@@ -534,7 +534,7 @@ void ComputeU5(double *tk,int tk_l,double **U,const double *epsize,double rho){
 }
 
 //Check that ComputeU6 = ComputeP6 for #define NUM_LIN 1
-void ComputeU6(double *tk,int tk_l,double **U,const double *epsize,double **U,double rho){
+void ComputeU6(double *tk,int tk_l,double **U,const double *epsize,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
     double exponent = (tk[i+1]-tk[i])/epsize[i];
     double fact1 = 1/(1-exp(-exponent));
@@ -547,14 +547,14 @@ void ComputeU6(double *tk,int tk_l,double **U,const double *epsize,double **U,do
 }
 
 //wrong
-void ComputeU7(double *tk,int tk_l,double **U,const double *epsize,double **U,double rho){
+void ComputeU7(double *tk,int tk_l,double **U,const double *epsize,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
     U[7][i] = 1 - U[5][i];
   }
 }
 
 //wrong
-void ComputeU8(double *tk,int tk_l,double **U,const double *epsize,double **U,double rho){
+void ComputeU8(double *tk,int tk_l,double **U,const double *epsize,double rho){
   U[8][0] = U[6][0];
   for (unsigned i = 1; i < tk_l; i++){
     U[8][i] = U[8][i-1]*U[7][i]+U[4][i];
@@ -562,13 +562,13 @@ void ComputeU8(double *tk,int tk_l,double **U,const double *epsize,double **U,do
 }
 
 //Check that ComputeU9 = ComputeP3 for #define NUM_LIN 1
-void ComputeU9(double *tk,int tk_l,double **U,const double *epsize,double **U,double rho){
+void ComputeU9(double *tk,int tk_l,double **U,const double *epsize,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
     U[9][i] = exp(-2*rho*tk[i]) - exp(-2*rho*tk[i+1]) - U[4][i];
   }
 }
 
-void ComputeU10(double *tk,int tk_l,double **U,const double *epsize,double **U,double rho){
+void ComputeU10(double *tk,int tk_l,double **U,const double *epsize,double rho){
   U[10][0] = U[6][0];
   for (unsigned i = 1; i < tk_l; i++){
     U[10][i] = U[10][i-1]*U[5][i]+U[6][i];

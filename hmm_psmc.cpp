@@ -136,6 +136,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
 		ComputeP7(tk,tk_l,P[7],P[3],epsize,rho);
 		for (int i = 0; i < tk_l; i++)
 			fprintf(stdout,"%d:%f\t",U[4][i]-exp(P[7][i]) );
+		assert(0);
 	}
 
 
