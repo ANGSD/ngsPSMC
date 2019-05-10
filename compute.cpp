@@ -500,15 +500,16 @@ void ComputeU2(int tk_l,double **U){
 
 //Check that ComputeU3 = ComputeP4 for #define NUM_LIN 1
 void ComputeU3(double *tk,int tk_l,double **U,const double *epsize,double rho){
-  for (unsigned i = 0; i < tk_l-1; i++){
+  for (unsigned i = 0; i < tk_l; i++){
     double exponent = (tk[i+1]-tk[i])/epsize[i];
     double term1 = -exp(-2*rho*tk[i] - exponent)*(1 + NUM_LIN)/NUM_LIN;
     double term2 = 2*rho/(1/epsize[i] + 2*rho)*exp(-2*rho*tk[i]);
     double term3 = exp(-2*rho*tk[i] - (1 + NUM_LIN)*exponent);
-    term3 *= 2*rho/NUM_LIN*(-NUM_LIN/epsize[i] + 2*rho);
+    term3 *= 2*rho/NUM_LIN/(-NUM_LIN/epsize[i] + 2*rho);
     double term4 = exp(-2*rho*tk[i+1] - exponent);
     term4 *= (1/(NUM_LIN/epsize[i] - 2*rho) + 1/(1/epsize[i] + 2*rho))/epsize[i];
     U[3][i] = term1 + term2 + term3 + term4;
+    U[3][i] /= 1 - exp(-exponent);
     //		P[i] = log(P[i]);
   }
 }
@@ -517,10 +518,11 @@ void ComputeU3(double *tk,int tk_l,double **U,const double *epsize,double rho){
 void ComputeU4(double *tk,int tk_l,double **U,const double *epsize,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
     double exponent = (tk[i+1]-tk[i])/epsize[i];
-    U[4][i] = exp(-2*rho*tk[i] - NUM_LIN*exponent) + exp(-2*rho*tk[i+1]);
+    U[4][i] = -exp(-2*rho*tk[i] - NUM_LIN*exponent) + exp(-2*rho*tk[i+1]);
     U[4][i] = U[4][i]*2*rho/(NUM_LIN/epsize[i] - 2*rho);
     //		P[i] = log(P[i]);
   }
+  U[4][tk_l-1]=0;
 }
 
 //Check that ComputeU5 = ComputeP5 for #define NUM_LIN 1
@@ -566,6 +568,7 @@ void ComputeU9(double *tk,int tk_l,double **U,const double *epsize,double rho){
   for (unsigned i = 0; i < tk_l-1; i++){
     U[9][i] = exp(-2*rho*tk[i]) - exp(-2*rho*tk[i+1]) - U[4][i];
   }
+  U[9][tk_l-1] = 0.0;
 }
 
 void ComputeU10(double *tk,int tk_l,double **U,const double *epsize,double rho){
@@ -585,7 +588,7 @@ void ComputeR3(int tk_l,double **fw,double **P,double **U,double *R3,int v){
 void NextFW(int tk_l,double **P,double **U,double **fw,int v,double **emis,double *R1, double *R3){
   ComputeR3(tk_l,fw,P,U,R3,v);
   for (unsigned i = 0; i < tk_l; i++){
-    fw[i][v+1] = fw[i][v]*(P[1][i]+U[1][i]+U[3][i])+Q2[i]*P[2][i]+R1[i]*(U[8][i-1]*U[7][i]+U[9][i]);
+    fw[i][v+1] = fw[i][v]*(P[1][i]+U[1][i]+U[3][i])+R3[i]*P[2][i]+R1[i]*(U[8][i-1]*U[7][i]+U[9][i]);
     fw[i][v+1] = fw[i][v+1]*emis[i][v];
   }
 }

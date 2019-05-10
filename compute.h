@@ -31,6 +31,6 @@ void ComputeU6(double *tk,int tk_l,double **U,const double *epsize,double rho);
 void ComputeU7(double *tk,int tk_l,double **U,const double *epsize,double rho);
 void ComputeU8(double *tk,int tk_l,double **U,const double *epsize,double rho);
 void ComputeU9(double *tk,int tk_l,double **U,const double *epsize,double rho);
-void ComputeU10(double *tk,int tk_l,double **U,const double *epsize,double **U,double rho);
+void ComputeU10(double *tk,int tk_l,double **U,const double *epsize,double rho);
 void ComputeR3(int tk_l,double **fw,double **P,double **U,double *Q2,int v);
 void NextFW(int tk_l,double **P,double **U,double **fw,int v,double **emis,double *R1, double *R3);
