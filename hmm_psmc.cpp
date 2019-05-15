@@ -45,7 +45,7 @@ void calculate_stationary(int tk_l,double *results,double **P){
   if(fabs(1-tmp)>1e-6){
     fprintf(stderr,"\t-> Problem calculating stationary distribution\n");
     for(int i=0;i<tk_l;i++)
-      fprintf(stderr,"%d) -> %f\n",i,exp(results[i]));
+      fprintf(stderr,"%d) -> %f P[2]:%f P[0]:%f\n",i,exp(results[i]),P[2][i],P[0][i]);
     exit(0);
   }
 }

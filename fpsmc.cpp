@@ -278,6 +278,7 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
     ops[i].theta = theta;
     ops[i].trans = objs[i]->trans;
     ops[i].U = objs[0]->U;//<- maybe not;
+    ops[i].smc=objs[0]->smc;
     //    fprintf(stderr,"trans[0][0]\n",ops[i].trans[0][0]);exit(0);
   }
   ncals=0;
