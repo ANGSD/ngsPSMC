@@ -38,9 +38,10 @@ void calculate_stationary(int tk_l,double *results,double **P){
   }
 
   double tmp=0;
-  for(int i=0;i<tk_l;i++)
+  for(int i=0;i<tk_l;i++){
+    // fprintf(stderr,"res %d/%d :%f\n",i,tk_l,results[i]);
     tmp += exp(results[i]);
-
+  }
   //check that it sums to one
   if(fabs(1-tmp)>1e-6){
     fprintf(stderr,"\t-> Problem calculating stationary distribution\n");
@@ -131,6 +132,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
     ComputeU10(tk, tk_l, U, epsize, rho);
     ComputeP5(tk,tk_l,P[5],epsize);
     ComputeP2(tk_l,P[2],P[5]);
+    ComputeP0(tk_l,P[0],P[5]);
     break;
   default:
     assert(1!=0);
@@ -216,6 +218,8 @@ double qFunction_inner2(int tk_l,double **nP,double **baumwelch,double **trans){
   
 }
 
+#define ISNEW 0
+
 void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double rho,double **fw,double **bw){
     //we first set the initial fwprobs to stationary distribution
   for(int i=0;i<tk_l;i++){
@@ -226,10 +230,17 @@ void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double r
     //v=0 is above and is the initial distribution, we therefore plug in at v+1
   for(int v=0;v<windows.size();v++){
     ComputeRs(v,fw,0);//<-prepare R1,R2
-    fw[0][v+1] = addProtect3(lprod(fw[0][v],P[1][0]) , lprod(R1[0],P[3][0]) , lprod(fw[0][v],P[4][0]))+emis[0][v+1] ;
-    for (unsigned i = 1; i < tk_l; i++)
-      fw[i][v+1]= addProtect4(lprod(fw[i][v],P[1][i]) , lprod(R2[i-1],P[2][i]) , lprod(R1[i],P[3][i]) , lprod(fw[i][v],P[4][i]))+emis[i][v+1];
-
+    if(ISNEW==0){
+      fw[0][v+1] = addProtect3(lprod(fw[0][v],P[1][0]) , lprod(R1[0],P[3][0]) , lprod(fw[0][v],P[4][0]))+emis[0][v+1] ;
+      for (unsigned i = 1; i < tk_l; i++)
+	fw[i][v+1]= addProtect4(lprod(fw[i][v],P[1][i]) , lprod(R2[i-1],P[2][i]) , lprod(R1[i],P[3][i]) , lprod(fw[i][v],P[4][i]))+emis[i][v+1];
+    }else if(ISNEW==1)
+      NextFW(tk_l,P,U,fw,v,emis,R1,R3);
+    else
+      assert(1!=0);
+    for (unsigned i = 0; i < tk_l; i++)
+      fprintf(stderr,"fw[%d][%d]:%f\n",i,v+1,fw[i][v+1]);
+    exit(0);
   }
   
   double tmp[tk_l];

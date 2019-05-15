@@ -385,6 +385,7 @@ void ComputeP4(double *tk,int tk_l,double *P4,const double *epsize,double rho){
   double expot = exp(-2.0*rho*tk[tk_l-1]);
   //  fprintf(stderr,"TOPTOP top:%f bot:%f exp:%f rho:%f epSize[tk_l-1]:%e\n",top,bottom,expot,rho,epsize[tk_l-1]);
   P4[tk_l-1] = log(2.0*rho*epsize[tk_l-1]/(1.0 + 2.0*rho*epsize[tk_l-1])*exp(-2.0*rho*tk[tk_l-1]));
+  // fprintf(stderr,"P4 last:%f\n",exp(P4[tk_l-1]));exit(0);
   assert(exp(P4[tk_l-1])>=0&&exp(P4[tk_l-1])<=1);
 
 }
@@ -500,7 +501,7 @@ void ComputeU2(int tk_l,double **U){
 
 //Check that ComputeU3 = ComputeP4 for #define NUM_LIN 1
 void ComputeU3(double *tk,int tk_l,double **U,const double *epsize,double rho){
-  for (unsigned i = 0; i < tk_l; i++){
+  for (unsigned i = 0; i < tk_l-1; i++){
     double exponent = (tk[i+1]-tk[i])/epsize[i];
     double term1 = -exp(-2*rho*tk[i] - exponent)*(1 + NUM_LIN)/NUM_LIN;
     double term2 = 2*rho/(1/epsize[i] + 2*rho)*exp(-2*rho*tk[i]);
@@ -513,6 +514,7 @@ void ComputeU3(double *tk,int tk_l,double **U,const double *epsize,double rho){
     //		P[i] = log(P[i]);
   }
   U[3][tk_l-1] = 2*rho/(1/epsize[tk_l-1] + 2*rho)*exp(-2*rho*tk[tk_l-1]);
+  //  fprintf(stderr,"U[3]: %f\n",U[3][tk_l-1]);exit(0);
 }
 
 //Check that ComputeU4 = ComputeP7 for #define NUM_LIN 1
