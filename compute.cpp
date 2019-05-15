@@ -591,9 +591,9 @@ void ComputeR3(int tk_l,double **fw,double **P,double **U,double *R3,int v){
 void NextFW(int tk_l,double **P,double **U,double **fw,int v,double **emis,double *R1, double *R3){
   ComputeR3(tk_l,fw,P,U,R3,v);
   fw[0][v+1] = fw[0][v]*(P[1][0]+U[1][0]+U[3][0])+R3[0]*P[2][0]+R1[0]*U[9][0];
-  fw[0][v+1] = fw[0][v+1]*emis[0][v];
+  fw[0][v+1] = fw[0][v+1]*exp(emis[0][v]);
   for (unsigned i = 1; i < tk_l; i++){
-    fw[i][v+1] = fw[i][v]*(P[1][i]+U[1][i]+U[3][i])+R3[i]*P[2][i]+R1[i]*(U[8][i-1]*U[7][i]+U[9][i]);
-    fw[i][v+1] = fw[i][v+1]*emis[i][v];
+    fw[i][v+1] = fw[i][v]*(P[1][i]+U[1][i]+U[3][i])+R3[i]*P[2][i]+exp(R1[i])*(U[8][i-1]*U[7][i]+U[9][i]);
+    fw[i][v+1] = fw[i][v+1]*exp(emis[i][v]);
   }
 }

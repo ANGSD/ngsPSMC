@@ -109,6 +109,7 @@ double qkFunction(unsigned k, double pix, unsigned numWind,double **nP,double **
 void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *epsize,double rho,int smc,double **U){
   switch (smc){
   case 0:
+    fprintf(stderr,"calculating normal P values\n");
     ComputeP1(tk,tk_l,P[1],epsize,rho);
     ComputeP5(tk,tk_l,P[5],epsize);
     ComputeP6(tk,tk_l,P[6],epsize,rho);
@@ -132,7 +133,7 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
     ComputeU10(tk, tk_l, U, epsize, rho);
     ComputeP5(tk,tk_l,P[5],epsize);
     ComputeP2(tk_l,P[2],P[5]);
-    ComputeP0(tk_l,P[0],P[5]);
+    ComputeP0(tk_l,P[0],P[5]); 
     break;
   default:
     assert(1!=0);
@@ -142,6 +143,12 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
     //for (int i = 0; i < tk_l; i++)
     //	fprintf(stdout,"%d:%f,%f\t",i,U[3][i],exp(P[4][i]) );
     //fprintf(stdout,"\n");
+  }
+
+  for(int i=0;0&&i<tk_l;i++){
+    P[5][i] = exp(P[5][i]);
+    P[2][i] = exp(P[2][i]);
+    P[0][i] = exp(P[0][i]);
   }
 }
 
@@ -218,24 +225,28 @@ double qFunction_inner2(int tk_l,double **nP,double **baumwelch,double **trans){
   
 }
 
-#define ISNEW 0
+
 
 void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double rho,double **fw,double **bw){
     //we first set the initial fwprobs to stationary distribution
+  int ISNEW=smc;
   for(int i=0;i<tk_l;i++){
-      fw[i][0] = stationary[i];
-      //      fprintf(stderr,"stationary[%d]: %f\n",i,stationary[i]);
+    fw[i][0] = stationary[i];
+    //      fprintf(stderr,"stationary[%d]: %f\n",i,stationary[i]);
   }
     //we now loop over windows.
     //v=0 is above and is the initial distribution, we therefore plug in at v+1
   for(int v=0;v<windows.size();v++){
-    ComputeRs(v,fw,0);//<-prepare R1,R2
     if(ISNEW==0){
+      ComputeRs(v,fw,0);//<-prepare R1,R2    
       fw[0][v+1] = addProtect3(lprod(fw[0][v],P[1][0]) , lprod(R1[0],P[3][0]) , lprod(fw[0][v],P[4][0]))+emis[0][v+1] ;
       for (unsigned i = 1; i < tk_l; i++)
 	fw[i][v+1]= addProtect4(lprod(fw[i][v],P[1][i]) , lprod(R2[i-1],P[2][i]) , lprod(R1[i],P[3][i]) , lprod(fw[i][v],P[4][i]))+emis[i][v+1];
-    }else if(ISNEW==1)
+    }else if(ISNEW==1){
+      fprintf(stderr,"using NextFW\n");
+      ComputeR1(v,fw,0);
       NextFW(tk_l,P,U,fw,v,emis,R1,R3);
+    }
     else
       assert(1!=0);
     for (unsigned i = 0; i < tk_l; i++)
