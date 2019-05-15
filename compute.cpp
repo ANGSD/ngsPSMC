@@ -512,6 +512,7 @@ void ComputeU3(double *tk,int tk_l,double **U,const double *epsize,double rho){
     U[3][i] /= 1 - exp(-exponent);
     //		P[i] = log(P[i]);
   }
+  U[3][tk_l-1] = 2*rho/(1/epsize[tk_l-1] + 2*rho)*exp(-2*rho*tk[tk_l-1]);
 }
 
 //Check that ComputeU4 = ComputeP7 for #define NUM_LIN 1
