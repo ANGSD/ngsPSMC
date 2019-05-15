@@ -256,3 +256,25 @@ if(FALSE){
  dev.off()
 
 }
+
+
+if(FALSE){
+  source("ngsPSMC/R/read.psmc.R")
+
+ pdf('plot2.pdf',width=14,height=42)
+ par(mfrow=c(6,2))
+ plot_chain(read.psmc("data1.res18/l0.tsk.d32.psmc.idx.stdout"),main='quad sharedstruc d32')
+ plot_chain(read.psmc("data1.res18/l1.tsk.d32.psmc.idx.stdout"),main='lin sharedstruc d32')
+ plot_chain(read.psmc("data1.res18/l0.tsk.d16.psmc.idx.stdout"),main='quad nosharedstruc d16')
+ plot_chain(read.psmc("data1.res18/l1.tsk.d16.psmc.idx.stdout"),main='lin nosharedstruc d16')
+ plot_chain(read.psmc("data1.res18/l0.tsk.d8.psmc.idx.stdout"),main='quad nosharedstruc d8')
+ plot_chain(read.psmc("data1.res18/l1.tsk.d8.psmc.idx.stdout"),main='lin nosharedstruc d8')
+ plot_chain(read.psmc("data1.res18/l0.tsk.d4.psmc.idx.stdout"),main='quad nosharedstruc d4')
+ plot_chain(read.psmc("data1.res18/l1.tsk.d4.psmc.idx.stdout"),main='lin nosharedstruc d4')
+ plot_chain(read.psmc("data1.res18/l0.tsk.d2.psmc.idx.stdout"),main='quad nosharedstruc d2')
+ plot_chain(read.psmc("data1.res18/l1.tsk.d2.psmc.idx.stdout"),main='lin nosharedstruc d2')
+ plot_chain(read.psmc("data1.res18/l0.tsk.d1.psmc.idx.stdout"),main='quad nosharedstruc d1')
+ plot_chain(read.psmc("data1.res18/l1.tsk.d1.psmc.idx.stdout"),main='lin nosharedstruc d1')
+ dev.off()
+
+}
