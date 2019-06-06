@@ -581,19 +581,48 @@ void ComputeU10(double *tk,int tk_l,double **U,const double *epsize,double rho){
   }
 }
 
-void ComputeR3(int tk_l,double **fw,double **P,double **U,double *R3,int v){
+void ComputeR3_original(int tk_l,double **fw,double **P,double **U,double *R3,int v){
   R3[0] = fw[0][v]*U[10][0];
+  fprintf(stderr,"ComputeR3: fw[0][%d] U[10][0]:%f R3[0]:%f\n",v,fw[0][v],U[10][0],R3[0]);
   for (unsigned i = 1; i < tk_l; i++){
     R3[i] = R3[i-1]*P[2][i]+fw[i][v]*U[10][i];
+    fprintf(stderr,"ComputeR3: R3[%d]:%f R3[%d]:%f P[2][%d]:%f fw[%d][%d]:%f U[10][%d]:%f\n",i,R3[i],i-1,R3[i-1],i,P[2][i],i,v,fw[i][v],i,U[10][i]);
   }
 }
 
-void NextFW(int tk_l,double **P,double **U,double **fw,int v,double **emis,double *R1, double *R3){
+void ComputeR3(int tk_l,double **fw,double **P,double **U,double *R3,int v){
+  R3[0] = fw[0][v]*U[10][0];
+  fprintf(stderr,"ComputeR3: fw[0][%d] U[10][0]:%f R3[0]:%f\n",v,fw[0][v],U[10][0],R3[0]);
+  for (unsigned i = 1; i < tk_l; i++){
+    R3[i] = R3[i-1]*P[2][i]+fw[i][v]*U[10][i];
+    fprintf(stderr,"ComputeR3: R3[%d]:%f R3[%d]:%f P[2][%d]:%f fw[%d][%d]:%f U[10][%d]:%f\n",i,R3[i],i-1,R3[i-1],i,P[2][i],i,v,fw[i][v],i,U[10][i]);
+  }
+}
+
+
+//original
+void NextFW_original(int tk_l,double **P,double **U,double **fw,int v,double **emis,double *R1, double *R3){
   ComputeR3(tk_l,fw,P,U,R3,v);
   fw[0][v+1] = fw[0][v]*(P[1][0]+U[1][0]+U[3][0])+R3[0]*P[2][0]+R1[0]*U[9][0];
   fw[0][v+1] = fw[0][v+1]*exp(emis[0][v]);
   for (unsigned i = 1; i < tk_l; i++){
     fw[i][v+1] = fw[i][v]*(P[1][i]+U[1][i]+U[3][i])+R3[i]*P[2][i]+exp(R1[i])*(U[8][i-1]*U[7][i]+U[9][i]);
     fw[i][v+1] = fw[i][v+1]*exp(emis[i][v]);
+  }
+}
+//p in log
+//fw in normal
+//u in normal
+//emis in log
+//r1 and r3 in normal
+void NextFW(int tk_l,double **P,double **U,double **fw,int v,double **emis,double *R1, double *R3){
+  ComputeR3(tk_l,fw,P,U,R3,v);
+  fw[0][v+1] =   fw[0][v]*(exp(P[1][0])+U[1][0]+U[3][0])+R3[0]*exp(P[2][0])+R1[0]*U[9][0];
+  fprintf(stderr  ,"fw[0][%d]:%f lastfw[0][%d]:%f p10:%f U10:%f u30:%f r30:%f p20:%f R1:%f u90:%f emis[0][%d]:%f\n",v+1,fw[0][v+1],v,fw[0][v],exp(P[1][0]),U[1][0],U[3][0],R3[0],exp(P[2][0]),R1[0],U[9][0],v+1,exp(emis[0][v+1]));
+  fw[0][v+1] = fw[0][v+1]*exp(emis[0][v+1]);
+  for (unsigned i = 1; i < tk_l; i++){
+    fw[i][v+1] = fw[i][v]*(exp(P[1][i])+U[1][i]+U[3][i])+R3[i]*exp(P[2][i])+R1[i]*(U[8][i-1]*U[7][i]+U[9][i]);
+    fprintf(stderr  ,"fw[%d][%d]:%f lastfw[%d][%d]:%f p1i:%f U1i:%f u3i:%f r3i:%f p2i:%f R1:%f u9i:%f emis[0][%d]:%f U8[i-1]:%f U7i:%f\n",i,v+1,fw[i][v+1],i,v,fw[i][v],exp(P[1][i]),U[1][i],U[3][i],R3[i],exp(P[2][i]),R1[i],U[9][i],v+1,exp(emis[0][v+1]),U[8][i-1],U[7][i]);
+    fw[i][v+1] = fw[i][v+1]*exp(emis[i][v+1]);
   }
 }

@@ -232,7 +232,9 @@ void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double r
   int ISNEW=smc;
   for(int i=0;i<tk_l;i++){
     fw[i][0] = stationary[i];
-    //      fprintf(stderr,"stationary[%d]: %f\n",i,stationary[i]);
+    if(ISNEW)
+      fw[i][0] = exp(fw[i][0]);
+    //    fprintf(stderr,"stationary[%d]: %f fw[%d][0]:%f\n",i,stationary[i],i,fw[i][0]);
   }
     //we now loop over windows.
     //v=0 is above and is the initial distribution, we therefore plug in at v+1
@@ -244,13 +246,17 @@ void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double r
 	fw[i][v+1]= addProtect4(lprod(fw[i][v],P[1][i]) , lprod(R2[i-1],P[2][i]) , lprod(R1[i],P[3][i]) , lprod(fw[i][v],P[4][i]))+emis[i][v+1];
     }else if(ISNEW==1){
       fprintf(stderr,"using NextFW\n");
-      ComputeR1(v,fw,0);
+      /// ComputeR1(v,fw,0);computeR1 in normal(not log) space
+      R1[tk_l-1] = 0;
+      for (int i = tk_l - 2; i >= 0 ; i--)
+	R1[i] =  R1[i+1]+fw[i+1][v];
+      //NextFW plugs in values at v+1
       NextFW(tk_l,P,U,fw,v,emis,R1,R3);
     }
     else
       assert(1!=0);
     for (unsigned i = 0; i < tk_l; i++)
-      fprintf(stderr,"fw[%d][%d]:%f\n",i,v+1,fw[i][v+1]);
+      fprintf(stderr,"fw[%d][%d]:%f\n",i,v+1,ISNEW==0?fw[i][v+1]:log(fw[i][v+1]));
     exit(0);
   }
   
