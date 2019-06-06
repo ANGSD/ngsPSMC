@@ -480,7 +480,7 @@ double calc_trans(int k, int j,double **P){
 #define NUM_LIN 1
 
 void ComputeU1(double *tk,int tk_l,double **U,const double *epsize,double rho){
-  for (unsigned i = 0; i < tk_l-1; i++){
+  for (unsigned i = 1; i < tk_l-1; i++){
     double exponent = (tk[i+1]-tk[i])/epsize[i];
     double fact1 = 1/(1-exp(-exponent));
     double fact2 = -(NUM_LIN+1)*exponent;
@@ -489,6 +489,8 @@ void ComputeU1(double *tk,int tk_l,double **U,const double *epsize,double rho){
     U[1][i] = fact1*fact2;
     //		P[i] = log(P[i]);
   }
+  U[1][0] = 0;
+  U[1][tk_l-1] = 1;
 }
 
 //wrong
@@ -591,12 +593,36 @@ void ComputeR3_original(int tk_l,double **fw,double **P,double **U,double *R3,in
 }
 
 void ComputeR3(int tk_l,double **fw,double **P,double **U,double *R3,int v){
+  for (int k = 0; k < tk_l; k++){
+
+    double r3 = 0;
+    for (int i = 0; i < k; i++){
+      double part1=exp(P[6][i]), part2=1.0;
+      for (int l = 0; l < i-1; l++) {
+	double prod = 1.0;
+	for (int j = l+1; j < i+1; j++){
+	  prod *= exp(P[5][j]);
+	}
+	prod *= exp(P[7][l]);
+	part1 += prod;
+      }
+      for (int j = i+1; j < k+1; j++){
+	part2 *= exp(P[5][j]);
+      }
+      // fprintf(stderr,"r3:%f fw:%f part1:%f part2:%f fw*part1*part2:%f\n",r3,fw[i][v],part1,part2,fw[i][v]*part1*part2);
+      r3 += fw[i][v]*part1*part2;
+    }
+    //    fprintf(stderr,"r3[%d] = %f k:%d\n",k, r3,k);   
+  }
+
+  
   R3[0] = fw[0][v]*U[10][0];
-  fprintf(stderr,"ComputeR3: fw[0][%d]:%f U[10][0]:%f R3[0]:%f\n",v,fw[0][v],U[10][0],R3[0]);
+  //fprintf(stderr,"ComputeR3: fw[0][%d]:%f U[10][0]:%f R3[0]:%f\n",v,fw[0][v],U[10][0],R3[0]);
   for (unsigned i = 1; i < tk_l; i++){
     R3[i] = R3[i-1]*P[2][i]+fw[i][v]*U[10][i];
-    fprintf(stderr,"ComputeR3: R3[%d]:%f R3[%d]:%f P[2][%d]:%f fw[%d][%d]:%f U[10][%d]:%f\n",i,R3[i],i-1,R3[i-1],i,P[2][i],i,v,fw[i][v],i,U[10][i]);
+    //fprintf(stderr,"ComputeR3: R3[%d]:%f R3[%d]:%f P[2][%d]:%f fw[%d][%d]:%f U[10][%d]:%f\n",i,R3[i],i-1,R3[i-1],i,P[2][i],i,v,fw[i][v],i,U[10][i]);
   }
+  //  exit(0);
 }
 
 
@@ -617,14 +643,28 @@ void NextFW_original(int tk_l,double **P,double **U,double **fw,int v,double **e
 //r1 and r3 in normal
 void NextFW(int tk_l,double **P,double **U,double **fw,int v,double **emis,double *R1, double *R3){
   ComputeR3(tk_l,fw,P,U,R3,v);
+  for (int k = 0; k < tk_l; k++){
+    double u12 = 0.0;
+    double prod;
+    for (int i = 0; i < k; i++){
+      prod = exp(P[7][i])*exp(P[2][k]);
+      for (int j = i+1; j < k-1; j++)
+	prod *= exp(P[5][j]);
+      u12 += prod;
+    }
+    fprintf(stderr,"u12[%d] = %f\n",k, u12);
+  }
+
   //  fw[0][v+1] =   fw[0][v]*(exp(P[1][0])+U[3][0])+R3[0]*exp(P[2][0])+R1[0]*U[9][0];
   fw[0][v+1] =   fw[0][v]*(exp(P[1][0])+U[3][0])+R1[0]*U[9][0];
   fw[0][v+1] = fw[0][v+1]*exp(emis[0][v+1]);
-  fprintf(stderr  ,"fw[0][%d]:%f lastfw[0][%d]:%f p10:%f U10:%f u30:%f r30:%f p20:%f R1:%f u90:%f emis[0][%d]:%f\n",v+1,log(fw[0][v+1]),v,fw[0][v],exp(P[1][0]),U[1][0],U[3][0],R3[0],exp(P[2][0]),R1[0],U[9][0],v+1,emis[0][v+1]);
+  //  fprintf(stderr,"U12 test[0]: %f\n",U[1][0]*U[2][0]);
+  //  fprintf(stderr  ,"fw[0][%d]:%f lastfw[0][%d]:%f p10:%f U10:%f u30:%f r30:%f p20:%f R1:%f u90:%f emis[0][%d]:%f\n",v+1,log(fw[0][v+1]),v,fw[0][v],exp(P[1][0]),U[1][0],U[3][0],R3[0],exp(P[2][0]),R1[0],U[9][0],v+1,emis[0][v+1]);
   for (unsigned i = 1; i < tk_l; i++){
+    fprintf(stderr,"U12 test[%d]: %f U[1][i]:%f U[2][i-1]:%f\n",i,U[1][i]*U[2][i-1],U[1][i],U[2][i-1]);
     fw[i][v+1] = fw[i][v]*(exp(P[1][i])+U[1][i]*U[2][i-1]+U[3][i])+R3[i-1]*exp(P[2][i])+R1[i]*(U[8][i-1]*U[7][i]+U[9][i]);
 
     fw[i][v+1] = fw[i][v+1]*exp(emis[i][v+1]);
-    fprintf(stderr  ,"fw[%d][%d]:%f lastfw[%d][%d]:%f p1i:%f U1i:%f u3i:%f r3i:%f p2i:%f R1:%f u9i:%f emis[0][%d]:%f U8[i-1]:%f U7i:%f\n",i,v+1,log(fw[i][v+1]),i,v,fw[i][v],exp(P[1][i]),U[1][i],U[3][i],R3[i],exp(P[2][i]),R1[i],U[9][i],v+1,emis[i][v+1],U[8][i-1],U[7][i]);
+    //    fprintf(stderr  ,"fw[%d][%d]:%f lastfw[%d][%d]:%f p1i:%f U1i:%f u3i:%f r3i:%f p2i:%f R1:%f u9i:%f emis[0][%d]:%f U8[i-1]:%f U7i:%f\n",i,v+1,log(fw[i][v+1]),i,v,fw[i][v],exp(P[1][i]),U[1][i],U[3][i],R3[i],exp(P[2][i]),R1[i],U[9][i],v+1,emis[i][v+1],U[8][i-1],U[7][i]);
   }
 }

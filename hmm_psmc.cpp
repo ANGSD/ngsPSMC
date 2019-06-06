@@ -135,6 +135,9 @@ void ComputeGlobalProbabilities(double *tk,int tk_l,double **P,const double *eps
     ComputeP2(tk_l,P[2],P[5]);
     ComputeP0(tk_l,P[0],P[5]);
     ComputeP1(tk,tk_l,P[1],epsize,rho);
+    ComputeP6(tk,tk_l,P[6],epsize,rho);
+    ComputeP3(tk,tk_l,P[3],epsize,rho);
+    ComputeP7(tk,tk_l,P[7],P[3],epsize,rho);
     break;
   default:
     assert(1!=0);
