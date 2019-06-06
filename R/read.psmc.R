@@ -278,3 +278,55 @@ if(FALSE){
  dev.off()
 
 }
+
+
+
+if(FALSE){
+  source("ngsPSMC/R/read.psmc.R")
+
+ pdf('plot2.pdf',width=14,height=42)
+ par(mfrow=c(6,2))
+ plot_chain(read.psmc("data1.res18/l0.tsk.d32.psmc.idx.stdout"),main='quad sharedstruc d32')
+ plot_chain(read.psmc("data1.res18/l1.tsk.d32.psmc.idx.stdout"),main='lin sharedstruc d32')
+ plot_chain(read.psmc("data1.res18/l0.tsk.d16.psmc.idx.stdout"),main='quad nosharedstruc d16')
+ plot_chain(read.psmc("data1.res18/l1.tsk.d16.psmc.idx.stdout"),main='lin nosharedstruc d16')
+ plot_chain(read.psmc("data1.res18/l0.tsk.d8.psmc.idx.stdout"),main='quad nosharedstruc d8')
+ plot_chain(read.psmc("data1.res18/l1.tsk.d8.psmc.idx.stdout"),main='lin nosharedstruc d8')
+ plot_chain(read.psmc("data1.res18/l0.tsk.d4.psmc.idx.stdout"),main='quad nosharedstruc d4')
+ plot_chain(read.psmc("data1.res18/l1.tsk.d4.psmc.idx.stdout"),main='lin nosharedstruc d4')
+ plot_chain(read.psmc("data1.res18/l0.tsk.d2.psmc.idx.stdout"),main='quad nosharedstruc d2')
+ plot_chain(read.psmc("data1.res18/l1.tsk.d2.psmc.idx.stdout"),main='lin nosharedstruc d2')
+ plot_chain(read.psmc("data1.res18/l0.tsk.d1.psmc.idx.stdout"),main='quad nosharedstruc d1')
+ plot_chain(read.psmc("data1.res18/l1.tsk.d1.psmc.idx.stdout"),main='lin nosharedstruc d1')
+ dev.off()
+
+}
+
+
+if(FALSE){
+  source("ngsPSMC/R/read.psmc.R")
+ pdf('plotdenisova.pdf',width=7,height=21)
+ par(mfrow=c(3,1))
+plot_chain(read.psmc("data.real4/DNK02.fa.psmcfa.psmc"),main='dnk02 psmc')
+plot_chain(read.psmc("data.real4/DNK02.fa.init1.stdout"),main='dnk02 ngspsmc (gl)')
+plot_chain(read.psmc("data.real4/DNK02.fa.init2.stdout"),main='dnk02 ngspsmc (fa)')
+
+ dev.off()
+
+}
+
+
+
+if(FALSE){
+  source("ngsPSMC/R/read.psmc.R")
+ pdf('simtest.pdf',width=7,height=42)
+ par(mfrow=c(5,1))
+plot_chain(read.psmc("data1/lh3.fa.gz.psmc"),main='sim psmc')
+plot_chain(read.psmc("data.real4/fa1.stdout"),main='sim ngspsmc (fa)')
+plot_chain(read.psmc("data.real4/fa2.stdout"),main='sim ngspsmc (gl d32)')
+plot_chain(read.psmc("data.real4/fa3.stdout"),main='sim ngspsmc theta(fa3)')
+plot_chain(read.psmc("data.real4/fa4.stdout"),main='sim ngspsmc theta/2(fa4)')
+plot_chain(read.psmc("data.real5/DNK02.fa.psmcfa.psmc"),main='psmc sim dep>19')
+ dev.off()
+
+}
