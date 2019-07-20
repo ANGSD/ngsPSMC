@@ -67,9 +67,9 @@ public:
       fprintf(fp,"win[%d]=(%d,%d)\n",w,windows[w].from,windows[w].to);
   }
   void allocate(int tk_l);
-  void calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double rho,double **fw,double **bw);
+  void calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double **fw,double **bw);
   void make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,double rho);
-  double make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho,fw_bw *d);
+  double make_hmm(double *tk,int tk_l,double *epsize,double theta,fw_bw *d);
   void print_emission(const char *fname){
     FILE *fp=NULL;
     fp=fopen(fname,"w");

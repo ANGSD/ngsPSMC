@@ -185,7 +185,7 @@ double qFunction_inner2(int tk_l,double **nP,double **baumwelch,double **trans){
   
 }
 
-void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double rho,double **fw,double **bw){
+void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double **fw,double **bw){
     //we first set the initial fwprobs to stationary distribution
   for(int i=0;i<tk_l;i++){
       fw[i][0] = stationary[i];
@@ -477,7 +477,7 @@ void fastPSMC::make_hmm_pre(double *tk,int tk_l,double *epsize,double theta,doub
   }
 }
 
-double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double rho,fw_bw *d){
+double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,fw_bw *d){
   
   //prepare probs
   if(emis==NULL){
@@ -507,7 +507,7 @@ double fastPSMC::make_hmm(double *tk,int tk_l,double *epsize,double theta,double
   fw=d->fw;
   bw=d->bw;
   
-  calculate_FW_BW_Probs(tk,tk_l,epsize,rho,fw,bw);
+  calculate_FW_BW_Probs(tk,tk_l,epsize,fw,bw);
   
 
   if(doQuadratic==0)

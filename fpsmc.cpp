@@ -30,7 +30,7 @@ typedef struct{
   int tk_l;
   double *epsize;
   double theta;
-  double rho;
+  //double rho;
   //  double **trans;
 }shared_forhmm;
 
@@ -302,7 +302,7 @@ void runoptim3(double *tk,int tk_l,double *epsize,double theta,double rho,int nd
 
 void *run_a_hmm(void *ptr){
   size_t at =(size_t) ptr;
-  objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho,&fws_bws[at % nThreads]);
+  objs[at]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,&fws_bws[at % nThreads]);
   pthread_exit(NULL);
 }
 
@@ -312,15 +312,15 @@ void main_analysis_make_hmm(double *tk,int tk_l,double *epsize,double theta,doub
   shmm.tk=tk;
   shmm.tk_l=tk_l;
   shmm.theta=theta;
-  shmm.rho=rho;
+  //  shmm.rho=rho;
   shmm.epsize=epsize;
 
   pthread_t thread[nThreads];
-  objs[0]->make_hmm_pre(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho);
+  objs[0]->make_hmm_pre(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,rho);
   //  double qval =0;
   if(nThreads==1)
     for(int i=0;i<nChr;i++){
-      objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,shmm.rho,&fws_bws[i % nThreads]);
+      objs[i]->make_hmm(shmm.tk,shmm.tk_l,shmm.epsize,shmm.theta,&fws_bws[i % nThreads]);
   }else {
     int at=0;
     while(at<nChr){
