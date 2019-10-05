@@ -1,6 +1,16 @@
 # ngsPSMC
 [![Build Status](https://travis-ci.org/ANGSD/ngsPSMC.svg?branch=master)](https://travis-ci.org/ANGSD/ngsPSMC)
 This program implements the PSMC for genotype likelihoods. The program is under development.
+
+
+- [ngsPSMC](#ngspsmc)
+  * [Installation](#installation)
+  * [Generate Input Files from BAM/CRAM](#generate-input-files-from-bam-cram)
+  * [Generate Input Files from simulated data](#generate-input-files-from-simulated-data)
+- [Run examples](#run-examples)
+- [Details and potential issues (BUGS)](#details-and-potential-issues--bugs-)
+  * [All (relevant) options](#all--relevant--options)
+
 ## Installation
 Dependencies: `htslib`.
 ```
