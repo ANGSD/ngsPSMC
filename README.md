@@ -9,9 +9,14 @@ git clone https://github.com/ANGSD/ngsPSMC
 cd ngsPSMC;make HTSSRC=../htslib/;cd ..
 ```
 ## Generate Input Files from BAM/CRAM
-Before running ngsPSMC you will need to generate the input files. This is done using ANGSD with the command below
-```./angsd/angsd -i input.bam -dopsmc 1  -out psmcinput -gl 1 -minq 20 -minmapq 30```
+Before running ngsPSMC you will need to generate the input files. This is done using ANGSD with the command below:
+
+```
+./angsd/angsd -i input.bam -dopsmc 1  -out psmcinput -gl 1 -minq 20 -minmapq 30
+```
+
 Here -gl 1 indicates the SAMtools genotype likelihood model.
+
 ## Generate Input Files from simulated data
 For validating the program we simulated data like below:
 ```
@@ -20,9 +25,12 @@ msHOT 2 1000 -t 8196 -r 1355 3000000 -l -eN 0.01 0.05 -eN 0.0375 0.5 -eN 1.25 1.
 ```
 
 # Run examples
-```./ngsPSMC input.psmc.idx -p "1*4+25*2+1*4+1*6\" -dospline 0 -nthreads 8 -nIter 20 -init 1  -theta 0.000233095 -rho 0.005357 ```
+```
+./ngsPSMC input.psmc.idx -p "1*4+25*2+1*4+1*6\" -dospline 0 -nthreads 8 -nIter 20 -init 1  -theta 0.000233095 -rho 0.005357
+```
 
 Where input are the output from either sim.d8.psmc.idx or psmcinput.psmc.idx
+
 You can also specify the output from the original PSMC as input:
 
 ```./ngsPSMC input.psmc.idx -infile output.from.psmc -dospline 0 -nthreads 8 -nIter 20 ```
