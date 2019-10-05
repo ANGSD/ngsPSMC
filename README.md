@@ -53,7 +53,7 @@ You can specify the intitial population size with -init popsize
  - Optimization of rho is currently disabled.
  - Be carefull with the binsize (default 100) when comparing results between different winsizes. (binsize part of theta)
 
-## All relevant options
+## All (relevant) options
 
 -dolinear [0,1] linear is much faster if there are many states
 
@@ -65,3 +65,26 @@ You can specify the intitial population size with -init popsize
 
 -RD which round of optimization to use if using -infile
 
+-nThreads number of threads, program will not be able to utilize more threads than number of chromosomes
+
+-p PSMC style pattern
+
+-dospline [0,1] use splines instead of 'pattern'
+
+-ms debug pars
+
+-nSites debug pars
+
+-seed seed for random number generator
+
+-init initial popsize
+
+-rho (initial) rho
+
+-max_t maximum time, coalescence times will be set similar to PSMC
+
+-nChr debug pars
+
+-nSites debug pars
+
+-r limit analysis to specified chromosome
