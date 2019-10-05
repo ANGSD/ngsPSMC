@@ -56,4 +56,12 @@ You can specify the intitial population size with -init popsize
 ## All relevant options
 
 -dolinear [0,1] linear is much faster if there are many states
+
 -tole tolerance for breaking
+
+-winSize window size
+
+-infile filename for PSMC output
+
+-RD which round of optimization to use if using -infile
+
