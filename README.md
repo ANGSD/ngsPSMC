@@ -1,7 +1,14 @@
 # ngsPSMC
 [![Build Status](https://travis-ci.org/ANGSD/ngsPSMC.svg?branch=master)](https://travis-ci.org/ANGSD/ngsPSMC)
 
+# Installation
 Dependencies: `htslib`.
+```
+git clone https://github.com/SAMtools/htslib
+git clone https://github.com/ANGSD/ngsPSMC
+cd ngsPSMC;make HTSSRC=../htslib/;cd ..
+
+# Generate Input Files
 
 First one need to run angsd on a sorted bam file. `-out` is the output filename. `-gl 1` means that the standard GLs (as in SamTools) will be used.
 ```./angsd/angsd -i /willerslev/datasets/public/1000genomes_2015_nature/bam/NA12878.mapped.ILLUMINA.bwa.CEU.low_coverage.20121211.bam -dopsmc 1  -out data.real1/NA12878.mapped.ILLUMINA.bwa.CEU.low_coverage.20121211 -gl 1 -minq 20 -minmap 30```
