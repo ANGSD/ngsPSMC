@@ -36,13 +36,19 @@ You can also specify the output from the original PSMC as input:
 ```./ngsPSMC input.psmc.idx -infile output.from.psmc -dospline 0 -nthreads 8 -nIter 20 ```
 
 
-There are two options: to initialise all the parameters similar to the original PSMC, or to read them from another PSMC file with `-infile` option (e.g. if you already have another high-coverage sample). Notice that theta (mutation rate) and maxT (last non-inifinite time point in the time discritisation) are not optimised in our version. If you do not use `-infile` option, it is highly recommended to specify theta if you run ngsPSMC with an organism other than humans. One can calculate it by the simple formula theta=2*N_0*mu*binsize (N_0 is a reference effective population size, e.g. 10000, mu is the mutation rate per basepair per generation, binsize is the window length TODO CHECK if binsize is part of theta, also is it 2 or 4?).
+There are two options: to initialise all the parameters similar to the original PSMC, or to read them from another PSMC file with `-infile` option (e.g. if you already have another high-coverage sample).
+
+Notice that theta (mutation rate) and maxT (last non-inifinite time point in the time discritisation) are not optimised in our version.
+
+If you do not use `-infile` option, it is highly recommended to specify theta if you run ngsPSMC with an organism other than humans.
+
+One can calculate it by the simple formula theta=2*N_0*mu*binsize (N_0 is a reference effective population size, e.g. 10000, mu is the mutation rate per basepair per generation, binsize is the window length. 
 
 If `-infile` is used, there is a possibility to choose which round of optimisation is used for initialisation. To choose the last round use `-rd -1`.
 
 You can specify the intitial population size with -init popsize
 
 
-# Details and potential issues
+# Details and potential issues (BUGS)
  - Optimization of rho is currently disabled.
- - Be carefull with the binsize (default 100) when comparing results between different winsizes.
+ - Be carefull with the binsize (default 100) when comparing results between different winsizes. (binsize part of theta)
