@@ -7,8 +7,10 @@ Dependencies: `htslib`.
 git clone https://github.com/SAMtools/htslib
 git clone https://github.com/ANGSD/ngsPSMC
 cd ngsPSMC;make HTSSRC=../htslib/;cd ..
+```
+# Generate Input Files from BAM/CRAM
 
-# Generate Input Files
+# Generate Input Files from simulated data
 
 First one need to run angsd on a sorted bam file. `-out` is the output filename. `-gl 1` means that the standard GLs (as in SamTools) will be used.
 ```./angsd/angsd -i /willerslev/datasets/public/1000genomes_2015_nature/bam/NA12878.mapped.ILLUMINA.bwa.CEU.low_coverage.20121211.bam -dopsmc 1  -out data.real1/NA12878.mapped.ILLUMINA.bwa.CEU.low_coverage.20121211 -gl 1 -minq 20 -minmap 30```
@@ -19,4 +21,4 @@ If `-infile` is used, there is a possibility to choose which round of optimisati
 
 The following command reads data from `data.psmc.idx`, and initialises all the parameters from the last round from the file `another_data.psmc`. Then it resets initial values of effective population size to 1 (`-init`). It runs for 25 rounds of optimisation (`-nIter`).
 
-```./ngsPSMC/ngsPSMC data.psmc.idx -infile another_data.psmc -dospline 0 -dolinear 1 -rd -1 -nthreads 25 -nIter 25 -init 1  1>data.real1/NA12878.mapped.ILLUMINA.bwa.CEU.low_coverage.20121211.psmc.idx.1.stdout 2>data.real1/NA12878.mapped.ILLUMINA.bwa.CEU.low_coverage.20121211.psmc.idx.1.stderr```
+./ngsPSMC/ngsPSMC data.psmc.idx -infile another_data.psmc -dospline 0 -dolinear 1 -rd -1 -nthreads 25 -nIter 25 -init 1  1>data.real1/NA12878.mapped.ILLUMINA.bwa.CEU.low_coverage.20121211.psmc.idx.1.stdout 2>data.real1/NA12878.mapped.ILLUMINA.bwa.CEU.low_coverage.20121211.psmc.idx.1.stderr```
