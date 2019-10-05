@@ -1,6 +1,7 @@
 # ngsPSMC
 [![Build Status](https://travis-ci.org/ANGSD/ngsPSMC.svg?branch=master)](https://travis-ci.org/ANGSD/ngsPSMC)
-This program implements the PSMC for genotype likelihoods. The program is under development.
+
+This program implements the PSMC for genotype likelihoods. The program is under development. Consider current version a beta version.
 
 
 - [ngsPSMC](#ngspsmc)
