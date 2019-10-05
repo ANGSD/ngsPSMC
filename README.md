@@ -52,3 +52,8 @@ You can specify the intitial population size with -init popsize
 # Details and potential issues (BUGS)
  - Optimization of rho is currently disabled.
  - Be carefull with the binsize (default 100) when comparing results between different winsizes. (binsize part of theta)
+
+## All relevant options
+
+-dolinear [0,1] linear is much faster if there are many states
+-tole tolerance for breaking
