@@ -4,6 +4,7 @@
 #include <sys/sysctl.h>
 #endif
 #include <cassert>
+#include <unistd.h>
 #include "header.h"
 
 void normalize(double *tmp,size_t len){
