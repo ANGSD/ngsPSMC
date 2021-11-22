@@ -37,7 +37,7 @@ msHOT 2 1000 -t 8196 -r 1355 3000000 -l -eN 0.01 0.05 -eN 0.0375 0.5 -eN 1.25 1.
 
 # Run examples
 ```
-./ngsPSMC input.psmc.idx -p "1*4+25*2+1*4+1*6\" -dospline 0 -nthreads 8 -nIter 20 -init 1  -theta 0.000233095 -rho 0.005357
+./ngsPSMC input.psmc.idx -p "1*4+25*2+1*4+1*6" -dospline 0 -nthreads 8 -nIter 20 -init 1  -theta 0.000233095 -rho 0.005357
 ```
 
 Where input are the output from either sim.d8.psmc.idx or psmcinput.psmc.idx
