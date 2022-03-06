@@ -82,7 +82,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
   memset(buf,0,fsize(fname)+10);
   assert(fread(buf,sizeof(char),fsize(fname),fp)==fsize(fname));
   fclose(fp);
-  char *slashslash[100];
+  char *slashslash[100];//????????????
   
   //stupid loop below....
   int n=0;
@@ -182,7 +182,7 @@ void setpars( char *fname,psmc_par *pp,int which) {
 
 
 
-
+// get all args from command line and put it in structure args
 args * getArgs(int argc,char **argv,int dontprint){
   args *p = new args;
   p->dospline =0;
@@ -261,12 +261,15 @@ args * getArgs(int argc,char **argv,int dontprint){
     argv++;
   }
   nThreads = p->nThreads;
-  p->perc = perpsmc_init(p->fname,p->nChr);
+  p->perc = infstruct_init(p->fname,p->nChr);
   if(p->seed==0)
     p->seed = time(NULL);
   srand48(p->seed);
   
   fprintf(stderr,"\t-> args: tole:%f maxiter:%d chr:%s start:%d stop:%d\n\t-> fname:\'%s\' seed:%ld winsize:%d RD:%d nThreads:%d doLinear:%d -nChr:%d -ms:\'%s\' -theta: %f -rho: %f -max_t:%f\n",p->tole,p->maxIter,p->chooseChr,p->start,p->stop,p->fname,p->seed,p->blocksize,p->RD,p->nThreads,p->doLinear,p->nChr,p->msstr,p->init_theta,p->init_rho,p->init_max_t);
+  printf("infiletype is %d \n",p->infile_type);
+
+  // printf("vcf infile is %s \n\n",p->vcf_infile);
   extern int doQuadratic;
   if(p->doLinear==0)
     doQuadratic=1;
@@ -279,7 +282,7 @@ args * getArgs(int argc,char **argv,int dontprint){
 void destroy_args(args *p){
   if(p->msstr)
     free(p->msstr);
-  perpsmc_destroy(p->perc);
+  infstruct_destroy(p->perc);
   if(p->par->par_map)
     free(p->par->par_map);
   if(p->par->pattern)
@@ -296,7 +299,8 @@ void destroy_args(args *p){
 }
 
  
-//simple function 
+//this function obtain args and put ut in structure args
+//then printout 
 int main_psmc(int argc, char **argv){
   fprintf(stderr,"\t-> we are in file: %s function: %s line:%d\n",__FILE__,__FUNCTION__,__LINE__);
 
@@ -311,8 +315,8 @@ int main_psmc(int argc, char **argv){
     return 0;
   //this will printout the header
   writepsmc_header(stderr,pars->perc,1);
-
-  psmc_wrapper(pars,pars->blocksize);
+  
+  psmc_wrapper(pars,pars->blocksize);//here the main part begins //!! Why to do that if pars->blocksize is in pars?
   fprintf(stdout,"MM\t winsize(blocksize): %d\n",pars->blocksize);
 #if 0
     //below is old printout, keeping for reference

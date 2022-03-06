@@ -3,6 +3,7 @@ FLAGS=-O3
 
 CFLAGS += $(FLAGS)
 CXXFLAGS += $(FLAGS)
+CXXFLAGS += -g
 
 CSRC = $(wildcard *.c) 
 CXXSRC = $(wildcard *.cpp)

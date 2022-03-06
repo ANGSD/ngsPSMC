@@ -443,6 +443,7 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ch
 #define DEFAULT_PATTERN "4+5*3+4"
 void setpars( char *fname,psmc_par *pp,int which) ;
 int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars);
+//Fill spline patterns and setpars???
 int psmc_wrapper(args *pars,int blocksize) {
   DOSPLINE=pars->dospline;
   if(pars->psmc_infile)
@@ -468,8 +469,9 @@ int psmc_wrapper(args *pars,int blocksize) {
     make_remapper(pars->par);
 
   //adjust theta:
-  pars->par->TR[0] = pars->par->TR[0]/2.0;
-  fprintf(stderr,"\t-> p->perc->version:%d (one is gls, otherwise fasta)\n",pars->perc->version);
+  pars->par->TR[0] = pars->par->TR[0]/2.0;//WHY?
+  fprintf(stderr,"\t-> p->perc->version:%d (one is PSMC gls, two is? vcf gls , otherwise fasta)\n",pars->perc->version);
+
   if(pars->perc->version==1){//if it is gls
     fprintf(stderr,"\t-> Adjusing theta with blocksize: %d\n",pars->blocksize);
     pars->par->TR[0] = pars->par->TR[0]/(1.0*pars->blocksize);
@@ -534,7 +536,7 @@ int psmc_wrapper(args *pars,int blocksize) {
   ops = new oPars[nobs];
   timer datareader_timer = starttimer();
   for (myMap::const_iterator it = pars->perc->mm.begin() ;it!=pars->perc->mm.end();it++) {
-    rawdata rd = readstuff(pars->perc,pars->chooseChr!=NULL?pars->chooseChr:it->first,pars->blocksize,-1,-1);
+    rawdata rd = readstuff(pars->perc,pars->chooseChr!=NULL?pars->chooseChr:it->first,pars->blocksize,-1,-1);//Here we get gls
     
     //    fprintf(stderr,"\t-> Parsing chr:%s \n",it2->first);
     fastPSMC *obj=objs[nChr++]=new fastPSMC;
@@ -564,6 +566,8 @@ int psmc_wrapper(args *pars,int blocksize) {
   
   stoptimer(datareader_timer);
   fprintf(stdout,"MM\tfilereading took: (wall(min),cpu(min)):(%f,%f)\n",datareader_timer.tids[1],datareader_timer.tids[0]);
+  
+  
   main_analysis(tk,tk_l,epsize,theta,rho,pattern,ndim,pars->nIter,max_t);
 
   for (int i=0;i<nChr;i++)

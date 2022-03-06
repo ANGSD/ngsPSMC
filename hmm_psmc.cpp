@@ -13,7 +13,7 @@ double **fastPSMC::trans=NULL;
 double **fastPSMC::P=NULL;
 double *fastPSMC::stationary=NULL;
 double **fastPSMC::nP = NULL;
-perpsmc *fastPSMC::readerstructure = NULL;
+infstruct *fastPSMC::readerstructure = NULL;
 //#define __SHOW_TIME__
 
 extern int doQuadratic;

@@ -10,7 +10,7 @@ typedef struct{
   char *pattern;
   double *times;//<-splittimes
   double *params;//<- effective population sizes
-  double TR[2];
+  double TR[2];// \theta_0 in TR[1] \\ What is in TR[0] RO is in TR[1]
   double MT;
 }psmc_par;
 
@@ -22,7 +22,7 @@ typedef struct{
 }msarg;
 
 
-
+// Structure for all arguements from command line
 typedef struct {
   int nChr;
   char *chooseChr;
@@ -31,7 +31,7 @@ typedef struct {
   size_t nSites;
   int maxIter;
   double tole;
-  perpsmc * perc;
+  infstruct * perc; 
   char *fname;
   int onlyOnce;
   long seed;//<-seed=-1 old version;seed=0 means time; othervise it will be used as seed
@@ -45,6 +45,7 @@ typedef struct {
   double init;
   char *msstr;
   msarg msstr_arg;
+  int infile_type; // 1 if vcf (0 else)
   char *psmc_infile;
   double init_theta;
   double init_rho;

@@ -4,7 +4,7 @@
 #include <sys/stat.h>
 #include <htslib/bgzf.h>
 #include <cstring>
-
+#include <unistd.h>
 
 void normalize(double *tmp,size_t len);
 size_t fsize(const char* fname);
@@ -15,7 +15,8 @@ int fexists(const char* str);
 typedef struct{
   size_t nSites;
   int64_t pos;
-  int64_t saf;
+  int64_t saf; //what is it? IT IS SAMPLE ALLEL FREQUENCY? https://github.com/mfumagalli/Copenhagen/blob/master/Files/day2a.md
+
 }datum;
 
 

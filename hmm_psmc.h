@@ -27,7 +27,7 @@ public:
   static double **P;//8xtk_l
   static double *stationary;//tk_l
   static double **nP;//8xtk_l
-  static perpsmc *readerstructure;//is not used currently, maybe newer
+  static infstruct *readerstructure;//is not used currently, maybe newer
   //not shared between all threads
 
   char *cnam;//<-chromosomename/contig/scaffold

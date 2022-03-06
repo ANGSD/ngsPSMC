@@ -22,7 +22,7 @@
 #include "header.h"
 #include "main_psmc.h"
 #include "version.h"
-
+// SIGNAL HANDLER
 int SIG_COND =1;
 double ttol = 1e-16; 
 int nThreads =1;
@@ -43,7 +43,9 @@ void handler(int s) {
   SIG_COND=0;
 
 }
+//END OF SIGNAL HANDLER
 
+// Prints header (obv)
 int print_header(int argc,char **argv){
 
   if(argc<1){
@@ -74,7 +76,7 @@ void toGl(double ingl,double outgl[2]){
   }
 }
 
-
+// Prints information about programm
 int print_main(int argc,char **argv){
   
   if(argc<1){
@@ -156,6 +158,15 @@ double em(double &x,mygltype *gler,size_t nSites,double tol,int nIter){
   return lastllh;
 }
 
+/*
+Calculate posterior probability
+Params
+------
+x: double
+  start??????????
+gler: mygltype
+
+*/
 void calcpost(double &x,mygltype *gler,int nSites,double *pp){
   double start =x;
   for(int i=0;i<nSites;i++) {
