@@ -11,7 +11,7 @@
 #include "compute.h"
 #include "fpsmc.h"
 #include "splineEPsize.h"
-
+#include "vcfreader.h"
 extern int nThreads;
 
 int nChr = 0;
@@ -534,18 +534,23 @@ int psmc_wrapper(args *pars,int blocksize) {
   fprintf(stderr,"\t-> nobs/nchr: %d\n",nobs);
   objs = new fastPSMC*[nobs];
   ops = new oPars[nobs];
+   
   timer datareader_timer = starttimer();
+  
   for (myMap::const_iterator it = pars->perc->mm.begin() ;it!=pars->perc->mm.end();it++) {
-    rawdata rd = readstuff(pars->perc,pars->chooseChr!=NULL?pars->chooseChr:it->first,pars->blocksize,-1,-1);//Here we get gls
+    // rawdata rd = readstuff(pars->perc,pars->chooseChr!=NULL?pars->chooseChr:it->first,pars->blocksize,-1,-1);//Here we get gls
     
+    rawdata rd = readvcf("out4.vcf.gz", it->first);//ПОЧУМУ ТО c .gz работает, а без нет
+        fprintf(stderr,"@end of rawdata\n");
     //    fprintf(stderr,"\t-> Parsing chr:%s \n",it2->first);
     fastPSMC *obj=objs[nChr++]=new fastPSMC;
     obj->cnam=strdup(pars->chooseChr!=NULL?pars->chooseChr:it->first);
-
-    obj->setWindows(rd.pos,rd.lastp,pars->blocksize);
+    fprintf(stderr,"@check");
+    obj->setWindows(rd.pos,rd.lastp,pars->blocksize);//Здесь проблема
+    
     obj->allocate(tk_l);
     obj->gls=rd.gls;
-
+    fprintf(stderr,"@sssuper");
     //    fprintf(stderr,"transer:%p\n",obj[0].trans);
     delete [] rd.pos;
     if(pars->chooseChr!=NULL)

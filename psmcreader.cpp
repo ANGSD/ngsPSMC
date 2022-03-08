@@ -7,7 +7,7 @@
 #include <cmath>
 #include "header.h"
 #include "psmcreader.h"
-
+#include "vcfreader.h"
 
 
 void destroy(myMap &mm){
@@ -219,6 +219,7 @@ infstruct * infstruct_init(char *fname,int nChr){
   else if(ret->version == 2){
 
     htsFile *fp = bcf_open(fname, "r");
+
     bcf1_t *rec = bcf_init();
     if(fp == NULL) {
         throw std::runtime_error("Unable to open file.");
@@ -229,6 +230,7 @@ infstruct * infstruct_init(char *fname,int nChr){
     if(hdr == NULL) {
         throw std::runtime_error("Unable to read header.");
     }
+
     while(bcf_read(fp, hdr, rec) == 0){
       datum d;
       char* chr = strdup(bcf_hdr_id2name(hdr,rec->rid));
@@ -281,8 +283,8 @@ rawdata readstuff(infstruct *pp,char *chr,int blockSize,int start,int stop){
   ret.len = it->second.nSites; 
   ret.gls = new double[it->second.nSites];
   double *tmpgls = new double[2*it->second.nSites];
-
-  if(pp->version==1) { 
+  
+  if(pp->version==1) { //PSMC
     BGZF* bgzf_gls =bgzf_open_seek(pp->bgzf_gls,it->second.saf);//?Why do such offset???????
     BGZF* bgzf_pos =bgzf_open_seek(pp->bgzf_pos,it->second.pos);//?same
 
@@ -307,7 +309,11 @@ rawdata readstuff(infstruct *pp,char *chr,int blockSize,int start,int stop){
     delete [] tmpgls;
     bgzf_close(bgzf_gls);
     bgzf_close(bgzf_pos);
-  }else{//Fasta file case
+  }
+  
+  
+  
+  else{//Fasta file case
     int asdf = it->second.nSites;//what means asdf(oh it's first 4 leters to the left)
     char *tmp = faidx_fetch_seq(pp->pf->fai, it->first, 0, 0x7fffffff, &asdf);//read the sequence
 

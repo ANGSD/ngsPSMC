@@ -9,7 +9,7 @@
 
 extern int nThreads;
 
-double lprod(double a,double b,double c,double d){
+double lprod(double a,double b,double c,double d){ // product of value in logarithm
   if(std::isinf(a)||std::isinf(b)||std::isinf(c)||std::isinf(d))
     return log(0.0);
   else
@@ -206,7 +206,7 @@ args * getArgs(int argc,char **argv,int dontprint){
   p->init_rho = 0.005367;
   p->init_theta = 0.000235;
   p->msstr = NULL;
-  
+  p->file_format = strdup("p");
   if(argc==0)
     return p;
 
@@ -236,6 +236,8 @@ args * getArgs(int argc,char **argv,int dontprint){
       p->seed = atol(*(++argv));
     else  if(!strcasecmp(*argv,"-infile"))
       p->psmc_infile = strdup(*++argv);
+    else  if(!strcasecmp(*argv,"-infile"))
+      p->file_format = strdup(*++argv);
     else  if(!strcasecmp(*argv,"-init"))
       p->init = atof(*++argv);
     else  if(!strcasecmp(*argv,"-theta"))

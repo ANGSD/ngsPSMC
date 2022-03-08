@@ -44,6 +44,7 @@ typedef struct {
   int doLinear;
   double init;
   char *msstr;
+  char * file_format;
   msarg msstr_arg;
   int infile_type; // 1 if vcf (0 else)
   char *psmc_infile;

@@ -273,7 +273,7 @@ int main(int argc,char **argv){
   if(argc==1){
     fprintf(stderr, "\t-> ---./ngsPSMC\n");
     fprintf(stderr,"\t-> ./ngsPSMC [print print_header vcf2fq] afile.psmc.idx \n");
-    fprintf(stderr,"\t-> ./ngsPSMC -tole -maxIter -winSize -RD -nThreads -nIter -p -tkfile -nSites -seed -infile -doLinear -nChr\n");
+    fprintf(stderr,"\t-> ./ngsPSMC -tole -maxIter -winSize -RD -nThreads -nIter -p -tkfile -nSites -seed -I -infile -doLinear -nChr\n");
     return 0;
   }
 
