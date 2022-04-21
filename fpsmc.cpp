@@ -2,7 +2,7 @@
 #include <cassert>
 #include <cmath>
 #include <pthread.h>
-#include <errno.h>
+#include <cerrno>
 #include "main_psmc.h"
 #include "psmcreader.h"
 #include "msArg_toPars.h"
@@ -188,7 +188,7 @@ double qFunction_wrapper(const double *pars,const void *d){
   return -ret;
 }
 
-
+//????? WHAT DOES THIS FUNCTIONN
 void make_remapper(psmc_par *pp){
   fprintf(stderr,"\t-> [%s] pp->n_free:%d\n",__FUNCTION__,pp->n_free);
   int at=0;
@@ -540,17 +540,20 @@ int psmc_wrapper(args *pars,int blocksize) {
   for (myMap::const_iterator it = pars->perc->mm.begin() ;it!=pars->perc->mm.end();it++) {
     // rawdata rd = readstuff(pars->perc,pars->chooseChr!=NULL?pars->chooseChr:it->first,pars->blocksize,-1,-1);//Here we get gls
     
-    rawdata rd = readvcf("out4.vcf.gz", it->first);//ПОЧУМУ ТО c .gz работает, а без нет
+    rawdata rd = readvcf(pars->fname, it->first);//ПОЧУМУ ТО c .gz работает, а без нет
         fprintf(stderr,"@end of rawdata\n");
     //    fprintf(stderr,"\t-> Parsing chr:%s \n",it2->first);
     fastPSMC *obj=objs[nChr++]=new fastPSMC;
     obj->cnam=strdup(pars->chooseChr!=NULL?pars->chooseChr:it->first);
     fprintf(stderr,"@check");
     obj->setWindows(rd.pos,rd.lastp,pars->blocksize);//Здесь проблема
-    
+    ;
+    // fprintf(stderr,"@%d\n",obj->windows[1].from);
     obj->allocate(tk_l);
+    
+    fprintf(stderr,"@newcheck\n");
     obj->gls=rd.gls;
-    fprintf(stderr,"@sssuper");
+    
     //    fprintf(stderr,"transer:%p\n",obj[0].trans);
     delete [] rd.pos;
     if(pars->chooseChr!=NULL)

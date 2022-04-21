@@ -90,7 +90,7 @@ int print_main(int argc,char **argv){
   args *pars = getArgs(argc,argv,1);
   if(!pars)
     return 0;
-  //  writepsmc_header(stderr,pars->perc,0);
+    writepsmc_header(stderr,pars->perc,0);
   
   for(myMap::iterator it=pars->perc->mm.begin();it!=pars->perc->mm.end();++it){
     

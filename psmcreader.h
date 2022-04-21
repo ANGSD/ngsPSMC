@@ -16,8 +16,8 @@ typedef double mygltype;
 #endif 
 
 typedef struct{
-  mygltype *gls;//2*len homo or hetero ??? read
-  int *pos;//len or position of start for considering chromosome
+  mygltype *gls;//2*len homo or hetero read
+  int *pos;//positions of start for considering chromosome
   size_t len;
   size_t firstp;//if we have specified a region, then this is the first index to use
   size_t lastp;//if we have specified a region, then this is the last index to use
@@ -35,6 +35,8 @@ typedef struct{
 }infstruct;
 
 infstruct* infstruct_init(char *fname,int nChr);
+int psmcversion(const char *fname);
+int vcfversion(const char *fname);
 void writepsmc_header(FILE *fp,infstruct *pp,int onlysubset);
 void infstruct_destroy(infstruct *pp);
 rawdata readstuff(infstruct *pp,char *chr,int blockSize,int start,int stop);

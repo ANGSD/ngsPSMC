@@ -4,6 +4,7 @@
 #include <htslib/faidx.h>
 #include <htslib/vcf.h>
 #include <iostream>
+#include <cmath>
 /*
 For name of vcf file and chromosome name(???ID) returns struct rawdata of gls scores
 
@@ -59,7 +60,7 @@ rawdata readvcf(char* inf,char* chr){//infile
     fprintf(stderr,"@chr: %s\n",chr);
     
     for (int i = 0; i < hdr->n[BCF_DT_CTG]; ++i){
-        // printf("%s\t%ld\n", ctg[i].key, ctg[i].val->info[0]);
+        printf("%s\t%ld\n", ctg[i].key, ctg[i].val->info[0]);
         if (strcmp(ctg[i].key,chr)==0){
             length = ctg[i].val->info[0];
         }
@@ -75,43 +76,61 @@ rawdata readvcf(char* inf,char* chr){//infile
     int pos = -1;
     
     while(bcf_read(fp, hdr, rec) == 0){
-        // fprintf(stderr,"@%d@%d\n",length,2*k);
-        if (rec->rid!=rid)continue;
+        if (rec->rid != rid)continue;
+        rec ->
         if (pos == -1)pos = k;
         bcf_unpack(rec, BCF_UN_ALL);
         npl = bcf_get_format_int32(hdr, rec, "PL", &pl, &npl_arr);
         //homozygotic sites are on 1,1+1,1+1+2,1+1+2+3
+
         //TODO:  !!! CONSIDER <*> IN CODE !!! 
         int u = 0;
+        int iter = 1;
+//        fprintf(stderr,"@%d\n",rec->n_allele);
         for (int s = 0; s < rec->n_allele;s++){
             tmpgls[2*k] += pl[u];//Homozygotic sum
-        
-            for(int v = 0; v < s; v++){
+
+            for(int v = u+1; v < u+iter+1; v++){
                 tmpgls[2*k+1] += pl[u+v];//Heterozygotic sum
             }    
-            u += s+1;
+            u += iter+1;
+            iter += 1;
            
         }
-        k+=1;   
+//        fprintf(stderr,"@tmpgls: %d,%d\n",tmpgls[2*k],tmpgls[2*k+1]);
+        k+=1;
+
     }
 
     
     ret.pos = new int[1];
     ret.len = k+1; 
-    ret.gls = new double[2*k+2];
+    ret.gls = new double[k];
     ret.pos[0] = pos;
 
-    for (int i = 0; i<k+1;i++)
-    {
-        ret.gls[2*i] = (mygltype)tmpgls[i]/4;
-        ret.gls[2*i+1] = (mygltype)tmpgls[i]/6;
-        fprintf(stderr,"@gls[%d] = %lf\n@gls[%d] = %lf\n",2*i,ret.gls[2*i],2*i+1,ret.gls[2*i+1]);
+    for (int i = 0; i<k;i++) {
+        ret.gls[i] = log(0.0);// = -infinity
+        if (tmpgls[2 * i] != tmpgls[2 * i + 1]) {
+            fprintf(stderr,"@tmps: %d,%d\n",tmpgls[2 * i], tmpgls[2 * i + 1]);
+            double mmax = std::max(tmpgls[2 * i]/4, tmpgls[2 * i + 1]/6);
+            double val =
+                    std::min(tmpgls[2 * i]/4, tmpgls[2 * i + 1]/6) - mmax; //??? Why fill it min - max ANS:PREVENT UNDERFLOW
+
+            ret.gls[i] = val;
+            if (tmpgls[2 * i]/4 < tmpgls[2 * i + 1]/6)
+                ret.gls[i] = -ret.gls[i];//????Why reverse
+
+//        }
+
+            fprintf(stderr, "@ret.gls[%d] = %f\n",i, ret.gls[i]);
+        }
     }
+    ret.lastp = k;
     return ret;
 
 }
 
 // int main(){
 //     rawdata check;
-//     check = readvcf("out4.vcf.gz","chrM");
+//     check = readvcf("NA12878.chr22.vcf.gz","22");
 // }

@@ -62,25 +62,17 @@ int psmcversion(const char *fname){
     return 0;
 }
 
-int vcfversion(const char *fname){
-  FILE* vcf_in;
-  vcf_in = fopen(fname,"r");
-  if(vcf_in==NULL){
-    fprintf(stderr,"\t-> Problem opening file: \'%s\'",fname);
-    exit(0);
-  }
-  char buf[21];
-  fread(buf,sizeof(char),20,vcf_in);
-  buf[20] = '\0';
-  printf("\t-> Magic nr is: \'%s\'\n",buf);
-  fclose(vcf_in);
-  if(0==strcmp(buf,"##fileformat=VCFv4.2"))
-    return 2; 
-  else 
-    return 0;
+int vcfversion(const char *fname){// TODO: FIX FOR VCF AND VCF.GZ
+   htsFile *vcf_in;
+   vcf_in = hts_open(fname, "r");
+   if (vcf_in != NULL){
+       hts_close(vcf_in);
+       return 2;
+   }
+   return 0;
 }
 int infversion(const char *fname){
-  if (strstr(fname,".gz") == NULL){
+  if (strstr(fname,"vcf.gz") != NULL || strstr(fname,".vcf") != NULL ){
     return vcfversion(fname);
   }
   else{

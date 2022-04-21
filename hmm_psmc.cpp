@@ -241,6 +241,7 @@ void fastPSMC::calculate_FW_BW_Probs(double *tk,int tk_l,double *epsize,double *
 }
 
 void fastPSMC::allocate(int tk_l_arg){
+  
   int numWindows = windows.size();
   tk_l = tk_l_arg;
   if(index==0)
@@ -250,14 +251,18 @@ void fastPSMC::allocate(int tk_l_arg){
   //fw = new double *[tk_l];
   //bw = new double *[tk_l];
   //pp = new double *[tk_l];
- 
+
   baumwelch = new double *[tk_l+1];
+  fprintf(stderr,"@tk_l = %d \n", tk_l);
   for(int i=0;i<tk_l;i++){
-    
+    fprintf(stderr,"@it = %d \n", i);
     baumwelch[i] = new double[tk_l];
+    
     //fw[i] = new double[numWindows+1];
     //bw[i] = new double[numWindows+1];
   }
+
+   
   baumwelch[tk_l] = new double[tk_l];
   for(int i=0;i<tk_l+1;i++)
     for(int j=0;j<tk_l;j++)
@@ -293,38 +298,57 @@ void fastPSMC::allocate(int tk_l_arg){
   Function will set the indices for the windows
   first index and last index INCLUSIVE
  */
-void fastPSMC::setWindows(int *pos ,int last,int block){
-  int beginIndex =0;
-  int endIndex=0;
-  int beginPos = 0;
-  int endPos = beginPos+block-1;
+// void fastPSMC::setWindows(int *pos ,int last,int block){// Функция плохо подходит к vcf файлам, так как в них все позиции упорядочены, нет нужны различать индекс и позицию, можно взять позицию и отступ.
+//   int beginIndex = 0;
+//   int endIndex = 0;
+//   int beginPos = 0;
+//   int endPos = beginPos+block-1;
   
-  while(1) {
-    //fprintf(stdout,"Beginpos:%d EndPos:%d\n",beginPos,endPos);
-    wins w;
-    if(endPos>pos[last-1])
-      break;
+//   while(1) {
+//     //fprintf(stdout,"Beginpos:%d EndPos:%d\n",beginPos,endPos);
+//     wins w;
+//     if(endPos>pos[last-1])
+//       break;
     
-    while(pos[beginIndex]<beginPos)
-      beginIndex++;
-    endIndex=beginIndex;
-    if(pos[endIndex]<endPos){
-      while(pos[endIndex]<endPos){
-	//	fprintf(stdout,"runs?\n");
-	endIndex++;
-      }
-      endIndex--;
-    }
-#if 0
-    fprintf(stdout,"\t-> winsize:%d bp:%d,ep:%d bi:%d ei:%d ei-bi:%d\n",block,beginPos,endPos,beginIndex,endIndex,endIndex-beginIndex);
-#endif
-    w.from = beginIndex;
-    w.to = endIndex;
-    windows.push_back(w);
-    beginPos+=block;
-    endPos+=block;
-  }
+//     while(pos[beginIndex]<beginPos)
+//       beginIndex++;
+//     endIndex=beginIndex;
+//     if(pos[endIndex]<endPos){
+//       while(pos[endIndex]<endPos){
+// 	      //	fprintf(stdout,"runs?\n");
+// 	      endIndex++;
+//       }
+//       endIndex--;
+//     }
+// #if 0
+//     fprintf(stdout,"\t-> winsize:%d bp:%d,ep:%d bi:%d ei:%d ei-bi:%d\n",block,beginPos,endPos,beginIndex,endIndex,endIndex-beginIndex);
+// #endif
+//     w.from = beginIndex;
+//     w.to = endIndex;
+//     windows.push_back(w);
+//     beginPos+=block;
+//     endPos+=block;
+//   }
+// }
 
+
+void fastPSMC::setWindows(int *pos ,int last,int block){
+  int begin = pos[0];
+  while(last - begin > block){
+    wins w;
+    w.from = begin;
+    w.to = begin + block - 1;
+    windows.push_back(w);
+    begin+=block;
+    // fprintf(stderr,"@ from %d to %d\n",w.from,w.to);
+  }
+  if (last >= begin){
+    wins w;
+    w.from = begin;
+    w.to = last;
+    windows.push_back(w);
+    // fprintf(stderr,"@ from %d to %d\n",w.from,w.to);
+  }
 }
 
 
