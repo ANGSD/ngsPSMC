@@ -37,3 +37,4 @@ perpsmc* perpsmc_init(char *fname,int nChr);
 void writepsmc_header(FILE *fp,perpsmc *pp,int onlysubset);
 void perpsmc_destroy(perpsmc *pp);
 rawdata readstuff(perpsmc *pp,char *chr,int blockSize,int start,int stop);
+std::map<const char*,rawdata> get_vcf_data(perpsmc* pp, int start, int stop);
