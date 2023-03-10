@@ -40,7 +40,7 @@ ifdef HTSSRC
 	$(CC) -MM $(CFLAGS)  -I$(HTS_INCDIR) $*.c >$*.d
 
 %.o: %.cpp
-	$(CXX) -c  $(CXXFLAGS)  -I$(HTS_INCDIR) $*.cpp
+	$(CXX) -c  $(CXXFLAGS)  -I$(HTS_INCDIR) -std=c++14 $*.cpp
 	$(CXX) -MM $(CXXFLAGS)  -I$(HTS_INCDIR) $*.cpp >$*.d
 
 ngsPSMC: version.h $(OBJ)
@@ -51,7 +51,7 @@ else
 	$(CC) -MM $(CFLAGS)  $*.c >$*.d
 
 %.o: %.cpp
-	$(CXX) -c  $(CXXFLAGS)  $*.cpp
+	$(CXX) -c  $(CXXFLAGS)  -std=c++14 $*.cpp
 	$(CXX) -MM $(CXXFLAGS)  $*.cpp >$*.d
 
 ngsPSMC: version.h $(OBJ)

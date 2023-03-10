@@ -295,36 +295,40 @@ std::map<const char*,rawdata> get_vcf_data(perpsmc* pp, int start, int stop){
     std::map<const char*,rawdata> vcf_data;
     std::map<const char*, std::vector<int > > positions;
     std::map<const char*, std::vector<double > > likelihoods;
-    int* pl = NULL;
-    int npl_arr = 0;
+    int* ploidy = NULL;
+    int pl_arr_len = 0;
     htsFile* input_file = bcf_open(pp->fname,"r");
     bcf_hdr_t* header = bcf_hdr_read(input_file);
     bcf1_t *record = bcf_init();
     int i = 0;
+    //Reading data from vcf file
     while(bcf_read(input_file, header, record) == 0) {
+        //Skipping INDELS
+        if(bcf_get_info_flag(header,record,"INDEL",NULL,NULL)==1) continue;
+
         i++;
         double homo_pl = 0;
         double hetero_pl =0;
         double likelihood;
-        bcf_get_format_int32(header, record, "PL", &pl, &npl_arr);;
+        bcf_get_format_int32(header, record, "PL", &ploidy, &pl_arr_len);
+        //Counting PL scores
         switch(record->n_allele){
             case 2:
-                homo_pl = pl[0]+pl[2];
-                hetero_pl = pl[1];
+                homo_pl = ploidy[0]+ploidy[2];
+                hetero_pl = ploidy[1];
                 break;
             case 3:
-                homo_pl = pl[0] + pl[3] + pl[5];
-                hetero_pl = pl[1] + pl[2] + pl[4];
+                homo_pl = ploidy[0] + ploidy[3] + ploidy[5];
+                hetero_pl = ploidy[1] + ploidy[2] + ploidy[4];
                 break;
             case 4:
-                homo_pl = pl[0] + pl[4] + pl[7] + pl[9];
-                hetero_pl = pl[1] + pl[2] + pl[3] + pl[5] + pl[6] + pl[8];
+                homo_pl = ploidy[0] + ploidy[4] + ploidy[7] + ploidy[9];
+                hetero_pl = ploidy[1] + ploidy[2] + ploidy[3] + ploidy[5] + ploidy[6] + ploidy[8];
             default:
                 break;
         }
         homo_pl/=4;
         hetero_pl/=6;
-        //std::cout<<bcf_hdr_id2name(header,record->rid)<<'\t'<<record->pos + 1<<'\t'<< homo_pl<< '\t' << hetero_pl<<std::endl;
         if (homo_pl !=hetero_pl) {
             double mmax = std::max(homo_pl,hetero_pl);
             double val = std::min(homo_pl,hetero_pl) - mmax;
@@ -335,6 +339,7 @@ std::map<const char*,rawdata> get_vcf_data(perpsmc* pp, int start, int stop){
 
             //code here should be implemented for using phredstyle gls //if(sizeof(mygltype))
         }
+        //Storing positions and likelihoods
         std::vector<int> & positions_vector = positions[bcf_hdr_id2name(header,record->rid)];
         std::vector<double>  & likelihoods_vector = likelihoods[bcf_hdr_id2name(header,record->rid)];
         if(positions_vector.size()!=positions_vector.capacity()){
@@ -352,13 +357,12 @@ std::map<const char*,rawdata> get_vcf_data(perpsmc* pp, int start, int stop){
     bcf_destroy(record);
     bcf_close(input_file);
     rawdata output_rawdata;
+    //Creating rawdata objects from vectors
     for(std::map<const char*, std::vector<int > >::iterator it = positions.begin();it!=positions.end();it++){
-        output_rawdata.pos=new int[it->second.size()];
-        std::copy(it->second.begin(),it->second.end(),output_rawdata.pos);
-        output_rawdata.gls=new double[it->second.size()];
-        std::copy(likelihoods[it->first].begin(),likelihoods[it->first].end(),output_rawdata.pos);
+        output_rawdata.pos=positions[it->first].data();
+        output_rawdata.gls=likelihoods[it->first].data();
         output_rawdata.len = positions[it->first].size();
-#if 1 //the code below should be readded if we ever want to run on specific specified regions
+#if 1 //the code below should be read if we ever want to run on specific specified regions
         output_rawdata.firstp=0;
         if(start!=-1)
             while(output_rawdata.firstp<output_rawdata.len&&output_rawdata.pos[output_rawdata.firstp]<start)
