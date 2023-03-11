@@ -21,7 +21,7 @@
 #include "psmcreader.h"
 #include "header.h"
 #include "main_psmc.h"
-#define ngsPSMC_VERSION 1
+#include "version.h"
 
 int SIG_COND =1;
 double ttol = 1e-16; 
