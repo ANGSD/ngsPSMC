@@ -444,134 +444,160 @@ void main_analysis(double *tk,int tk_l,double *epsize,double theta,double rho,ch
 void setpars( char *fname,psmc_par *pp,int which) ;
 int *psmc_parse_pattern(const char *pattern, int *n_free, int *n_pars);
 int psmc_wrapper(args *pars,int blocksize) {
-  DOSPLINE=pars->dospline;
-  if(pars->psmc_infile)
-    setpars(pars->psmc_infile,pars->par,pars->RD);
+    DOSPLINE = pars->dospline;
+    if (pars->psmc_infile)
+        setpars(pars->psmc_infile, pars->par, pars->RD);
 
-  if(pars->par->pattern==NULL)
-    pars->par->pattern = strdup(DEFAULT_PATTERN);
+    if (pars->par->pattern == NULL)
+        pars->par->pattern = strdup(DEFAULT_PATTERN);
 
-  if(pars->par->pattern!=NULL){
-    if(pars->par->par_map)
-      free(pars->par->par_map);
-    pars->par->par_map = psmc_parse_pattern(pars->par->pattern, &pars->par->n_free, &pars->par->n);
-  }
-
-  fprintf(stderr,"\t-> we are in file: %s function: %s line:%d blocksize:%d\n",__FILE__,__FUNCTION__,__LINE__,blocksize);
-
-  fprintf(stderr,"\t-> par->n:%d\tpar->n_free:%d\tpar_map:%p\tpar->pattern:%s\tpar->times:%p\tpar->params:%p\n",pars->par->n,pars->par->n_free,pars->par->par_map,pars->par->pattern,pars->par->times,pars->par->params);
-
-  if(pars->msstr){
-    pars->msstr_arg = parse_msStr(pars->msstr); 
-    msarg_toPars(pars->msstr_arg,pars->par,pars->perc->version==0?pars->blocksize:1);
-  }else
-    make_remapper(pars->par);
-
-  //adjust theta:
-  pars->par->TR[0] = pars->par->TR[0]/2.0;
-  fprintf(stderr,"\t-> p->perc->version:%d (one is gls, otherwise fasta)\n",pars->perc->version);
-  if(pars->perc->version==1){//if it is gls
-    fprintf(stderr,"\t-> Adjusing theta with blocksize: %d\n",pars->blocksize);
-    pars->par->TR[0] = pars->par->TR[0]/(1.0*pars->blocksize);
-  }
-
-  
-  int tk_l = pars->par->n+1;
-  double *tk,*epsize;
-  tk=epsize=NULL;
-  int ndim=-1;
-  char *pattern = NULL;
-  double max_t =pars->psmc_infile?pars->par->MT: pars->init_max_t;
-  if(DOSPLINE!=0){
-    spl = new splineEPSize(14,3,7,pars->init_max_t);
-    fprintf(stderr,"\t-> spl.tk_l:%d spl->ndim:%d\n",spl->tk_l,spl->ndim);
-    tk_l = spl->tk_l;
-    tk=spl->tk;
-    pattern=strdup("spline");
-    ndim=spl->ndim;
-    spl->fillit();
-    spl->computeSpline();
-    epsize = new double [tk_l];
-    assert(pars->init==-1);
-    spl->computeEPSize(epsize);
-    for(int i=0;0&&i<tk_l;i++)
-      fprintf(stderr,"%d %f\n",i,epsize[i]);
-  }else{
-    fprintf(stderr,"\t-> allocating array with length: tk_l:%d\n",tk_l);
-    tk = new double [tk_l];
-    setTk(tk_l-1,tk,max_t,0.1,pars->par->times);//<- last position will be infinity
-    pattern=pars->par->pattern;
-    ndim=pars->par->n_free;
-    epsize = new double [tk_l];
-    setEPSize(epsize,tk_l,pars->par->params);
-  }
-  fprintf(stderr,"tk_l:%d\n",tk_l);
-
-  double theta=pars->par->TR[0];
-  double rho=pars->par->TR[1];
-
- 
-
-  if(pars->init!=-1)
-    for(int i=0;i<tk_l;i++)
-      epsize[i] = pars->init;
-  if(pars->init_theta!=-1)
-    theta=pars->init_theta;
-  if(pars->init_rho!=-1)
-    rho=pars->init_rho;
-  
-  assert(theta!=-1&&rho!=-1&&tk_l>0);
-  
-#if 0
-  for(int i=0;i<tk_l;i++)
-    fprintf(stderr,"psmc_wrapper: (tk,epsize)[%d]:(%f,%f)\n",i,tk[i],epsize[i]);
-  exit(0);
-#endif
-  fprintf(stderr,"\t-> tk_l in psmc_wrapper pars->par->n+1 tk_l:%d p->times:%p\n",tk_l,pars->par->times);  
-  int nobs = pars->chooseChr?1:pars->perc->mm.size();
-  fprintf(stderr,"\t-> nobs/nchr: %d\n",nobs);
-  objs = new fastPSMC*[nobs];
-  ops = new oPars[nobs];
-  timer datareader_timer = starttimer();
-  for (myMap::const_iterator it = pars->perc->mm.begin() ;it!=pars->perc->mm.end();it++) {
-    rawdata rd = readstuff(pars->perc,pars->chooseChr!=NULL?pars->chooseChr:it->first,pars->blocksize,-1,-1);
-    
-    //    fprintf(stderr,"\t-> Parsing chr:%s \n",it2->first);
-    fastPSMC *obj=objs[nChr++]=new fastPSMC;
-    obj->cnam=strdup(pars->chooseChr!=NULL?pars->chooseChr:it->first);
-
-    obj->setWindows(rd.pos,rd.lastp,pars->blocksize);
-    obj->allocate(tk_l);
-    obj->gls=rd.gls;
-
-    //    fprintf(stderr,"transer:%p\n",obj[0].trans);
-    delete [] rd.pos;
-    if(pars->chooseChr!=NULL)
-      break;
-  }
-  //stupid hook for allocating //fw bw
-  fws_bws = new fw_bw[std::min(nThreads,nChr)];
-  for(int i=0;i<std::min(nThreads,nChr);i++){
-    fws_bws[i].fw = new double*[tk_l];
-    fws_bws[i].bw = new double*[tk_l];
-    for(int j=0;j<tk_l;j++){
-      fws_bws[i].fw[j] = new double[objs[i]->windows.size()+1];
-      fws_bws[i].bw[j] = new double[objs[i]->windows.size()+1];
+    if (pars->par->pattern != NULL) {
+        if (pars->par->par_map)
+            free(pars->par->par_map);
+        pars->par->par_map = psmc_parse_pattern(pars->par->pattern, &pars->par->n_free, &pars->par->n);
     }
-    fws_bws[i].len = objs[i]->windows.size()+1;
-  }
-    
-  
-  stoptimer(datareader_timer);
-  fprintf(stdout,"MM\tfilereading took: (wall(min),cpu(min)):(%f,%f)\n",datareader_timer.tids[1],datareader_timer.tids[0]);
-  main_analysis(tk,tk_l,epsize,theta,rho,pattern,ndim,pars->nIter,max_t);
 
-  for (int i=0;i<nChr;i++)
-    delete objs[i];
-  delete [] objs;
-  delete [] remap;
-  delete [] tk;
-  delete [] epsize;
-  delete [] ops;
-  return 1;
+
+    fprintf(stderr, "\t-> we are in file: %s function: %s line:%d blocksize:%d\n", __FILE__, __FUNCTION__, __LINE__,
+            blocksize);
+
+    fprintf(stderr, "\t-> par->n:%d\tpar->n_free:%d\tpar_map:%p\tpar->pattern:%s\tpar->times:%p\tpar->params:%p\n",
+            pars->par->n, pars->par->n_free, pars->par->par_map, pars->par->pattern, pars->par->times,
+            pars->par->params);
+
+    if (pars->msstr) {
+        pars->msstr_arg = parse_msStr(pars->msstr);
+        msarg_toPars(pars->msstr_arg, pars->par, pars->perc->version == 0 ? pars->blocksize : 1);
+    } else
+        make_remapper(pars->par);
+
+    //adjust theta:
+    pars->par->TR[0] = pars->par->TR[0] / 2.0;
+    fprintf(stderr, "\t-> p->perc->version:%d (one is gls, otherwise fasta)\n", pars->perc->version);
+    if (pars->perc->version == 1) {//if it is gls
+        fprintf(stderr, "\t-> Adjusing theta with blocksize: %d\n", pars->blocksize);
+        pars->par->TR[0] = pars->par->TR[0] / (1.0 * pars->blocksize);
+    }
+
+
+    int tk_l = pars->par->n + 1;
+    double *tk, *epsize;
+    tk = epsize = NULL;
+    int ndim = -1;
+    char *pattern = NULL;
+    double max_t = pars->psmc_infile ? pars->par->MT : pars->init_max_t;
+    if (DOSPLINE != 0) {
+        spl = new splineEPSize(14, 3, 7, pars->init_max_t);
+        fprintf(stderr, "\t-> spl.tk_l:%d spl->ndim:%d\n", spl->tk_l, spl->ndim);
+        tk_l = spl->tk_l;
+        tk = spl->tk;
+        pattern = strdup("spline");
+        ndim = spl->ndim;
+        spl->fillit();
+        spl->computeSpline();
+        epsize = new double[tk_l];
+        assert(pars->init == -1);
+        spl->computeEPSize(epsize);
+        for (int i = 0; 0 && i < tk_l; i++)
+            fprintf(stderr, "%d %f\n", i, epsize[i]);
+    } else {
+        fprintf(stderr, "\t-> allocating array with length: tk_l:%d\n", tk_l);
+        tk = new double[tk_l];
+        setTk(tk_l - 1, tk, max_t, 0.1, pars->par->times);//<- last position will be infinity
+        pattern = pars->par->pattern;
+        ndim = pars->par->n_free;
+        epsize = new double[tk_l];
+        setEPSize(epsize, tk_l, pars->par->params);
+    }
+    fprintf(stderr, "tk_l:%d\n", tk_l);
+
+    double theta = pars->par->TR[0];
+    double rho = pars->par->TR[1];
+
+
+    if (pars->init != -1)
+        for (int i = 0; i < tk_l; i++)
+            epsize[i] = pars->init;
+    if (pars->init_theta != -1)
+        theta = pars->init_theta;
+    if (pars->init_rho != -1)
+        rho = pars->init_rho;
+
+    assert(theta != -1 && rho != -1 && tk_l > 0);
+
+#if 0
+    for(int i=0;i<tk_l;i++)
+      fprintf(stderr,"psmc_wrapper: (tk,epsize)[%d]:(%f,%f)\n",i,tk[i],epsize[i]);
+    exit(0);
+#endif
+    fprintf(stderr, "\t-> tk_l in psmc_wrapper pars->par->n+1 tk_l:%d p->times:%p\n", tk_l, pars->par->times);
+    //int nobs = pars->chooseChr ? 1 : pars->perc->mm.size();
+    int nobs=1;
+    fprintf(stderr, "\t-> nobs/nchr: %d\n", nobs);
+    objs = new fastPSMC *[nobs];
+    ops = new oPars[nobs];
+    timer datareader_timer = starttimer();
+    if(pars->perc->version!=2) {
+        for (myMap::const_iterator it = pars->perc->mm.begin(); it != pars->perc->mm.end(); it++) {
+            rawdata rd = readstuff(pars->perc, pars->chooseChr != NULL ? pars->chooseChr : it->first, pars->blocksize,
+                                   -1,
+                                   -1);
+
+            //    fprintf(stderr,"\t-> Parsing chr:%s \n",it2->first);
+            fastPSMC *obj = objs[nChr++] = new fastPSMC;
+            obj->cnam = strdup(pars->chooseChr != NULL ? pars->chooseChr : it->first);
+
+            obj->setWindows(rd.pos, rd.lastp, pars->blocksize);
+            obj->allocate(tk_l);
+            obj->gls = rd.gls;
+
+            //    fprintf(stderr,"transer:%p\n",obj[0].trans);
+            delete[] rd.pos;
+            if (pars->chooseChr != NULL)
+                break;
+        }
+    }
+    else{
+        fprintf(stderr,"going_to_read_vcf");
+        std::map<const char*,rawdata> data = get_vcf_data(pars->perc,-1,-1);
+        for(std::map<const char*,rawdata>::iterator it = data.begin();it != data.end();it++){
+            fastPSMC *obj = objs[nChr++] = new fastPSMC;
+            obj->cnam = strdup(pars->chooseChr != NULL ? pars->chooseChr : it->first);
+
+            obj->setWindows(it->second.pos, it->second.lastp, pars->blocksize);
+            obj->allocate(tk_l);
+            obj->gls = it->second.gls;
+
+            //    fprintf(stderr,"transer:%p\n",obj[0].trans);
+            delete[] it->second.pos;
+            if (pars->chooseChr != NULL)
+                break;
+        }
+    }
+    //stupid hook for allocating //fw bw
+    fws_bws = new fw_bw[std::min(nThreads, nChr)];
+    for (int i = 0; i < std::min(nThreads, nChr); i++) {
+        fws_bws[i].fw = new double *[tk_l];
+        fws_bws[i].bw = new double *[tk_l];
+        for (int j = 0; j < tk_l; j++) {
+            fws_bws[i].fw[j] = new double[objs[i]->windows.size() + 1];
+            fws_bws[i].bw[j] = new double[objs[i]->windows.size() + 1];
+        }
+        fws_bws[i].len = objs[i]->windows.size() + 1;
+    }
+
+
+    stoptimer(datareader_timer);
+    fprintf(stdout, "MM\tfilereading took: (wall(min),cpu(min)):(%f,%f)\n", datareader_timer.tids[1],
+            datareader_timer.tids[0]);
+    main_analysis(tk, tk_l, epsize, theta, rho, pattern, ndim, pars->nIter, max_t);
+
+    for (int i = 0; i < nChr; i++)
+        delete objs[i];
+    delete[] objs;
+    delete[] remap;
+    delete[] tk;
+    delete[] epsize;
+    delete[] ops;
+    return 1;
 }
