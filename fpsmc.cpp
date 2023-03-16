@@ -558,7 +558,7 @@ int psmc_wrapper(args *pars,int blocksize) {
         }
     }
     else{
-        fprintf(stderr,"going_to_read_vcf");
+        fprintf(stderr,"going to read vcf\n");
         std::map<const char*,rawdata> data = get_vcf_data(pars->perc,-1,-1);
         for(std::map<const char*,rawdata>::iterator it = data.begin();it != data.end();it++){
             fastPSMC *obj = objs[nChr++] = new fastPSMC;
@@ -568,7 +568,7 @@ int psmc_wrapper(args *pars,int blocksize) {
             obj->allocate(tk_l);
             obj->gls = it->second.gls;
 
-            //    fprintf(stderr,"transer:%p\n",obj[0].trans);
+            fprintf(stderr,"transer:%p\n",obj[0].trans);
             delete[] it->second.pos;
             if (pars->chooseChr != NULL)
                 break;
