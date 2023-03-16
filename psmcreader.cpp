@@ -303,8 +303,9 @@ std::map<const char*,rawdata> get_vcf_data(perpsmc* pp, int start, int stop){
     int i = 0;
     //Reading data from vcf file
     while(bcf_read(input_file, header, record) == 0) {
-        //Skipping INDELS
-        if(bcf_get_info_flag(header,record,"INDEL",NULL,NULL)==1) continue;
+        bcf_unpack(record,BCF_UN_STR);
+        //Skipping INDELS and N in REF
+        if(bcf_get_info_flag(header,record,"INDEL",NULL,NULL)==1 || record->d.als[0]=='N') continue;
 
         i++;
         double homo_pl = 0;
@@ -347,8 +348,8 @@ std::map<const char*,rawdata> get_vcf_data(perpsmc* pp, int start, int stop){
             likelihoods_vector.push_back(likelihood);
         }
         else {
-            positions_vector.reserve(positions_vector.capacity() + 1000);
-            likelihoods_vector.reserve(likelihoods_vector.capacity() + 1000);
+            positions_vector.reserve(positions_vector.capacity() + 10000);
+            likelihoods_vector.reserve(likelihoods_vector.capacity() + 10000);
             positions_vector.push_back(record->pos + 1);
             likelihoods_vector.push_back(likelihood);
         }
